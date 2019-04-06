@@ -265,14 +265,12 @@ namespace Rockweb.Blocks.Crm
                 _targetPerson = CurrentPerson;
             }
 
-
             if ( _targetPerson == null )
             {
                 pnlInstructions.Visible = false;
                 pnlQuestion.Visible = false;
                 pnlResult.Visible = false;
                 nbError.Visible = true;
-
                 if ( _isQuerystringPersonKey )
                 {
                     nbError.Text = "There is an issue locating the person associated with the request.";
@@ -286,9 +284,6 @@ namespace Rockweb.Blocks.Crm
         /// <param name="e">The <see cref="T:System.EventArgs" /> object that contains the event data.</param>
         protected override void OnLoad( EventArgs e )
         {
-            // Hide notification panels on every postback
-            nbError.Visible = false;
-
             if ( !Page.IsPostBack )
             {
                 if ( _targetPerson != null )
@@ -304,6 +299,11 @@ namespace Rockweb.Blocks.Crm
                         ShowResult( savedScores );
                     }
                 }
+            }
+            else
+            {
+                // Hide notification panels on every postback
+                nbError.Visible = false;
             }
         }
 

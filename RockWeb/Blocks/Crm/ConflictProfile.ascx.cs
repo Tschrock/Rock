@@ -184,6 +184,17 @@ Brief Definitions for Conflict Profile Modes<br>
             }
 
             _assessmentId = PageParameter( "AssessmentId" ).AsIntegerOrNull();
+            if ( _targetPerson == null )
+            {
+                pnlInstructions.Visible = false;
+                pnlQuestion.Visible = false;
+                pnlResult.Visible = false;
+                nbError.Visible = true;
+                if ( _isQuerystringPersonKey )
+                {
+                    nbError.Text = "There is an issue locating the person associated with the request.";
+                }
+            }
         }
 
         /// <summary>
@@ -192,9 +203,6 @@ Brief Definitions for Conflict Profile Modes<br>
         /// <param name="e">The <see cref="T:System.EventArgs" /> object that contains the event data.</param>
         protected override void OnLoad( EventArgs e )
         {
-            // Hide notification panels on every postback
-            nbError.Visible = false;
-
             if ( !Page.IsPostBack )
             {
                 var rockContext = new RockContext();
@@ -210,43 +218,41 @@ Brief Definitions for Conflict Profile Modes<br>
                                                          ( a.PersonAliasId == primaryAliasId && a.AssessmentTypeId == assessmentType.Id ) )
                                             .OrderByDescending( a => a.CreatedDateTime )
                                             .FirstOrDefault();
-                }
 
-                if ( assessment != null )
-                {
-                    hfAssessmentId.SetValue( assessment.Id );
-                }
-                else
-                {
-                    hfAssessmentId.SetValue( 0 );
-                }
 
-                if ( assessment != null && assessment.Status == AssessmentRequestStatus.Complete )
-                {
-                    ConflictProfileService.AssessmentResults savedScores = ConflictProfileService.LoadSavedAssessmentResults( _targetPerson );
-                    ShowResult( savedScores, assessment );
-
-                }
-                else if ( ( assessment == null && !assessmentType.RequiresRequest ) || ( assessment != null && assessment.Status == AssessmentRequestStatus.Pending ) )
-                {
-                    ShowInstructions();
-                }
-                else
-                {
-                    pnlInstructions.Visible = false;
-                    pnlQuestion.Visible = false;
-                    pnlResult.Visible = false;
-                    nbError.Visible = true;
-
-                    if ( _isQuerystringPersonKey )
+                    if ( assessment != null )
                     {
-                        nbError.Text = "There is an issue locating the person associated with the request.";
+                        hfAssessmentId.SetValue( assessment.Id );
                     }
-                    else if ( assessmentType.RequiresRequest )
+                    else
                     {
+                        hfAssessmentId.SetValue( 0 );
+                    }
+
+                    if ( assessment != null && assessment.Status == AssessmentRequestStatus.Complete )
+                    {
+                        ConflictProfileService.AssessmentResults savedScores = ConflictProfileService.LoadSavedAssessmentResults( _targetPerson );
+                        ShowResult( savedScores, assessment );
+
+                    }
+                    else if ( ( assessment == null && !assessmentType.RequiresRequest ) || ( assessment != null && assessment.Status == AssessmentRequestStatus.Pending ) )
+                    {
+                        ShowInstructions();
+                    }
+                    else
+                    {
+                        pnlInstructions.Visible = false;
+                        pnlQuestion.Visible = false;
+                        pnlResult.Visible = false;
+                        nbError.Visible = true;
                         nbError.Text = "You can take the test without the request.";
                     }
                 }
+            }
+            else
+            {
+                // Hide notification panels on every postback
+                nbError.Visible = false;
             }
         }
 
