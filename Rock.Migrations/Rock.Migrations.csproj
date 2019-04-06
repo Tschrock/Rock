@@ -232,6 +232,10 @@
     <Compile Include="Migrations\201903152051583_AddedAssessments.Designer.cs">
       <DependentUpon>201903152051583_AddedAssessments.cs</DependentUpon>
     </Compile>
+    <Compile Include="Migrations\201904041403330_AddConflictProfile.cs" />
+    <Compile Include="Migrations\201904041403330_AddConflictProfile.Designer.cs">
+      <DependentUpon>201904041403330_AddConflictProfile.cs</DependentUpon>
+    </Compile>
     <Compile Include="Migrations\CreateDatabase\201311251734059_CreateDatabase.cs" />
     <Compile Include="Migrations\CreateDatabase\201311251734059_CreateDatabase.Designer.cs">
       <DependentUpon>201311251734059_CreateDatabase.cs</DependentUpon>
@@ -646,6 +650,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Migrations\201903152051583_AddedAssessments.resx">
       <DependentUpon>201903152051583_AddedAssessments.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201904041403330_AddConflictProfile.resx">
+      <DependentUpon>201904041403330_AddConflictProfile.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Migrations\CreateDatabase\201311251734059_CreateDatabase.resx">
       <DependentUpon>201311251734059_CreateDatabase.cs</DependentUpon>

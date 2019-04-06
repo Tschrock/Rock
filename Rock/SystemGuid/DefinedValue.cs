@@ -671,5 +671,34 @@ namespace Rock.SystemGuid
         public const string SPIRITUAL_GIFTS_WISDOM = "5F1F5A92-D981-4027-A4BC-C3642E784D0B";
 
         #endregion
+
+        #region Conflict Profile
+
+        /// <summary>
+        /// Conflict Profile: Avoiding 
+        /// </summary>
+        public const string CONFLICT_PROFILE_AVOIDING = "663B0F4A-DE1F-46BE-8BDD-D7C98863DDC4";
+
+        /// <summary>
+        /// Conflict Profile: Compromising 
+        /// </summary>
+        public const string CONFLICT_PROFILE_COMPROMISING = "CF78D6B1-38AA-4FF7-9A4B-E900438FA85A";
+
+        /// <summary>
+        /// Conflict Profile: Resolving 
+        /// </summary>
+        public const string CONFLICT_PROFILE_RESOLVING = "DF7B1EB2-7E7E-4F91-BD26-C6DFD88E38DF";
+
+        /// <summary>
+        /// Conflict Profile: Winning 
+        /// </summary>
+        public const string CONFLICT_PROFILE_WINNING = "56300095-86AD-43FE-98D2-50829E9223C2";
+
+        /// <summary>
+        /// Conflict Profile: Yielding 
+        /// </summary>
+        public const string CONFLICT_PROFILE_YEILDING = "4AB06A6F-F5B1-4385-9365-199EA7969E50";
+
+        #endregion
     }
 }
