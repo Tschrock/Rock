@@ -184,6 +184,7 @@ namespace Rockweb.Blocks.Crm
 
         // used for private variables
         Person _targetPerson = null;
+        int? _assessmentId = null;
         bool _isQuerystringPersonKey = false;
 
         // protected variables
@@ -265,6 +266,7 @@ namespace Rockweb.Blocks.Crm
                 _targetPerson = CurrentPerson;
             }
 
+            _assessmentId = PageParameter( "AssessmentId" ).AsIntegerOrNull();
             if ( _targetPerson == null )
             {
                 pnlInstructions.Visible = false;
@@ -286,17 +288,46 @@ namespace Rockweb.Blocks.Crm
         {
             if ( !Page.IsPostBack )
             {
+                var rockContext = new RockContext();
+                var assessmentType = new AssessmentTypeService( rockContext ).Get( Rock.SystemGuid.AssessmentType.GIFTS.AsGuid() );
+                Assessment assessment = null;
+
                 if ( _targetPerson != null )
                 {
-                    SpiritualGiftsService.AssessmentResults savedScores = SpiritualGiftsService.LoadSavedAssessmentResults( _targetPerson );
+                    var primaryAliasId = _targetPerson.PrimaryAliasId;
+                    assessment = new AssessmentService( rockContext )
+                                            .Queryable()
+                                            .Where( a => ( _assessmentId.HasValue && a.Id == _assessmentId ) ||
+                                                         ( a.PersonAliasId == primaryAliasId && a.AssessmentTypeId == assessmentType.Id ) )
+                                            .OrderByDescending( a => a.CreatedDateTime )
+                                            .FirstOrDefault();
 
-                    if ( !savedScores.LastSaveDate.HasValue && !_isQuerystringPersonKey )
+                    if ( assessment != null )
+                    {
+                        hfAssessmentId.SetValue( assessment.Id );
+                    }
+                    else
+                    {
+                        hfAssessmentId.SetValue( 0 );
+                    }
+
+                    if ( assessment != null && assessment.Status == AssessmentRequestStatus.Complete )
+                    {
+                        SpiritualGiftsService.AssessmentResults savedScores = SpiritualGiftsService.LoadSavedAssessmentResults( _targetPerson );
+                        ShowResult( savedScores, assessment );
+
+                    }
+                    else if ( ( assessment == null && !assessmentType.RequiresRequest ) || ( assessment != null && assessment.Status == AssessmentRequestStatus.Pending ) )
                     {
                         ShowInstructions();
                     }
                     else
                     {
-                        ShowResult( savedScores );
+                        pnlInstructions.Visible = false;
+                        pnlQuestion.Visible = false;
+                        pnlResult.Visible = false;
+                        nbError.Visible = true;
+                        nbError.Text = "You can take the test without the request.";
                     }
                 }
             }
@@ -341,6 +372,7 @@ namespace Rockweb.Blocks.Crm
         /// <param name="e">The <see cref="EventArgs"/> instance containing the event data.</param>
         protected void btnRetakeTest_Click( object sender, EventArgs e )
         {
+            hfAssessmentId.SetValue( 0 );
             ShowInstructions();
         }
 
@@ -366,7 +398,33 @@ namespace Rockweb.Blocks.Crm
             {
                 SpiritualGiftsService.AssessmentResults result = SpiritualGiftsService.GetResult( AssessmentResponses.ToDictionary( a => a.Code, b => b.Response.Value ) );
                 SpiritualGiftsService.SaveAssessmentResults( _targetPerson, result );
-                ShowResult( result );
+                var rockContext = new RockContext();
+
+                var assessmentService = new AssessmentService( rockContext );
+                Assessment assessment = null;
+
+                if ( hfAssessmentId.ValueAsInt() != 0 )
+                {
+                    assessment = assessmentService.Get( int.Parse( hfAssessmentId.Value ) );
+                }
+
+                if ( assessment == null )
+                {
+                    var assessmentType = new AssessmentTypeService( rockContext ).Get( Rock.SystemGuid.AssessmentType.GIFTS.AsGuid() );
+                    assessment = new Assessment()
+                    {
+                        AssessmentTypeId = assessmentType.Id,
+                        PersonAliasId = _targetPerson.PrimaryAliasId.Value
+                    };
+                    assessmentService.Add( assessment );
+                }
+
+                assessment.Status = AssessmentRequestStatus.Complete;
+                assessment.CompletedDateTime = RockDateTime.Now;
+                assessment.AssessmentResultData = AssessmentResponses.ToDictionary( a => a.Code, b => b.Response.Value ).ToJson();
+                rockContext.SaveChanges();
+
+                ShowResult( result, assessment );
             }
         }
 
@@ -444,7 +502,7 @@ namespace Rockweb.Blocks.Crm
         /// <summary>
         /// Shows the result.
         /// </summary>
-        private void ShowResult( SpiritualGiftsService.AssessmentResults result )
+        private void ShowResult( SpiritualGiftsService.AssessmentResults result, Assessment assessment )
         {
             pnlInstructions.Visible = false;
             pnlQuestion.Visible = false;
@@ -452,7 +510,7 @@ namespace Rockweb.Blocks.Crm
 
             var allowRetakes = GetAttributeValue( ALLOW_RETAKES ).AsBoolean();
             var minDays = GetAttributeValue( MIN_DAYS_TO_RETAKE ).AsInteger();
-            if ( !_isQuerystringPersonKey && allowRetakes && result.LastSaveDate.HasValue && result.LastSaveDate.Value.AddDays( minDays ) <= RockDateTime.Now )
+            if ( !_isQuerystringPersonKey && allowRetakes && assessment.CompletedDateTime.HasValue && assessment.CompletedDateTime.Value.AddDays( minDays ) <= RockDateTime.Now )
             {
                 btnRetakeTest.Visible = true;
             }
