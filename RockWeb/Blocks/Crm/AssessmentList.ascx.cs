@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
+using System.Data.Entity;
 using System.Linq;
 using System.Web.UI.WebControls;
 
@@ -41,19 +42,19 @@ namespace Rockweb.Blocks.Crm
 
     [BooleanField(
         "Only Show Requested",
-        "When checked, limits the list to show only assessments that have been requested..",
+        "If enabled, limits the list to show only assessments that have been requested or completed.",
         true,
         order: 0 )]
 
     [BooleanField(
         "Hide If No Active Requests",
-        "If enabled, the person can retake the test after the minimum days passes.",
+        "If enabled, nothing will be shown if there are not pending (waiting to be taken) assessment requests.",
         false,
         order: 1 )]
 
     [BooleanField(
         "Hide If No Requests",
-        "If enabled, the person can retake the test after the minimum days passes.",
+        "If enabled, nothing will be shown where there are no requests (pending or completed).",
         false,
         order: 2 )]
 
@@ -100,26 +101,32 @@ namespace Rockweb.Blocks.Crm
 
     public partial class AssessmentList : Rock.Web.UI.RockBlock
     {
-        #region Control Events
+        #region Fields
 
-        private bool _onlyShowRequested = true;
+        private bool _onlyShowRequestedOrCompleted = true;
         private bool _hideIfNoActiveRequests = false;
         private bool _hideIfNoRequests = false;
 
+        #endregion
+
+        #region Base Control Methods
+
         /// <summary>
-        /// On-Init
+        /// On initialize
         /// </summary>
         /// <param name="e"></param>
         protected override void OnInit( EventArgs e )
         {
             // show hide requested
-            _onlyShowRequested = GetAttributeValue( "OnlyShowRequested" ).AsBoolean();
+            _onlyShowRequestedOrCompleted = GetAttributeValue( "OnlyShowRequested" ).AsBoolean();
 
             // hide if no active requests
             _hideIfNoActiveRequests = GetAttributeValue( "HideIfNoActiveRequests" ).AsBoolean();
 
             // hide if no requests
             _hideIfNoRequests = GetAttributeValue( "HideIfNoRequests" ).AsBoolean();
+
+            this.BlockUpdated += Block_BlockUpdated;
 
             base.OnInit( e );
         }
@@ -130,103 +137,115 @@ namespace Rockweb.Blocks.Crm
         /// <param name="e">The <see cref="T:System.EventArgs" /> object that contains the event data.</param>
         protected override void OnLoad( EventArgs e )
         {
+            if ( CurrentPerson == null )
+            {
+                return;
+            }
+
             if ( !Page.IsPostBack )
             {
-                MergeLavaFields();
+                BindData();
             }
         }
 
         #endregion
 
-        #region Methods
-        Boolean _areThereAnyActiveRequests = false;
-        Boolean _areThereAnyRequests = false;
+        #region Events
+
         /// <summary>
-        /// Merges the Lavafields to the control template.
+        /// Handles the BlockUpdated event of the control.
         /// </summary>
-        private void MergeLavaFields()
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The <see cref="EventArgs"/> instance containing the event data.</param>
+        protected void Block_BlockUpdated( object sender, EventArgs e )
         {
-            lAssessments.Visible = true;
-            nbAssessmentWarning.Visible = false;
-
-            // Gets Assessment types and assessments for each
-            RockContext rc = new RockContext();
-            AssessmentTypeService aService = new AssessmentTypeService( rc );
-            
-        var getallAssessmentTypes = aService.Queryable().Where(x=>x.IsActive == true).Select( a => new
-            {
-                Title = a.Title,
-                AssessmentPath = a.AssessmentPath,
-                AssessmentResultsPath = a.AssessmentResultsPath,
-                LastRequestObject = a.Assessments
-                    .Where( r => r.PersonAlias.Person.Id == CurrentPersonId )
-                    .OrderByDescending( b => b.CreatedDateTime)
-                    .Select( r => new
-                    {
-                        RequestedDate = r.RequestedDateTime,
-                        CompletedDate = r.CompletedDateTime,
-                        Status = r.Status,
-                        Requester = r.RequesterPersonAlias.Person.NickName + " " + r.RequesterPersonAlias.Person.LastName
-                    } ).OrderBy(x=>x.Status).FirstOrDefault()
-            } ).OrderByDescending( x=>x.LastRequestObject.Status ).ToList();
-            
-            // Checks Current Request Types to use against the settings
-            foreach ( var item in getallAssessmentTypes )
-            {
-                if (item.LastRequestObject!=null && item.LastRequestObject.Status==AssessmentRequestStatus.Pending )
-                {
-                    _areThereAnyActiveRequests = true;
-                }
-
-                if ( item.LastRequestObject != null && item.LastRequestObject.Requester!=null )
-                {
-                    _areThereAnyRequests = true;
-                }
-
-            }
-            
-            // Resolve the text field merge fields
-            var mergeFields = Rock.Lava.LavaHelper.GetCommonMergeFields( this.RockPage, CurrentPerson );
-
-            CheckForRequestTypes();
-
-            // Shows all assessments if Only Show Requested is set to false and only requested if set to true, on the requester
-            if ( !_onlyShowRequested )
-            {
-                mergeFields.Add( "AssessmentTypes", getallAssessmentTypes );
-            }
-            else if ( _onlyShowRequested )
-            {
-                var onlyRequested = getallAssessmentTypes.Where( x => x.LastRequestObject != null )
-                    .Where(x=>x.LastRequestObject.Requester != null
-                    && x.LastRequestObject.Status == AssessmentRequestStatus.Pending );
-                
-                mergeFields.Add( "AssessmentTypes", onlyRequested );
-            }
-
-            lAssessments.Text = GetAttributeValue( "LavaTemplate" ).ResolveMergeFields( mergeFields, GetAttributeValue( "EnabledLavaCommands" ) );
-            
+            BindData();
         }
 
+        #endregion
+
+        #region Methods
+
         /// <summary>
-        /// Sets controls based on settings.
+        /// Bind the data and merges the Lava fields using the template.
         /// </summary>
-        private void CheckForRequestTypes()
+        private void BindData()
         {
-            // Checks for setting to hide if no active requests based on if there are any PENDING requests
-            if ( _hideIfNoActiveRequests && !_areThereAnyActiveRequests )
+            lAssessments.Visible = true;
+            
+            // Gets Assessment types and assessments for each
+            RockContext rockContext = new RockContext();
+            AssessmentTypeService assessmentTypeService = new AssessmentTypeService( rockContext );
+
+            var allAssessmentsOfEachType = assessmentTypeService.Queryable().AsNoTracking()
+                .Where(x => x.IsActive == true )
+                .Select( t => new
+                    {
+                        Title = t.Title,
+                        AssessmentPath = t.AssessmentPath,
+                        AssessmentResultsPath = t.AssessmentResultsPath,
+                        RequiresRequest = t.RequiresRequest,
+                        LastRequestObject = t.Assessments
+                            .Where( a => a.PersonAlias.Person.Id == CurrentPersonId )
+                            .OrderBy( a => a.Status ) // pending first
+                            .Select( a => new
+                            {
+                                RequestedDate = a.RequestedDateTime,
+                                CompletedDate = a.CompletedDateTime,
+                                Status = a.Status,
+                                Requester = a.RequesterPersonAlias.Person.NickName + " " + a.RequesterPersonAlias.Person.LastName
+                            } ).OrderByDescending( x => x.CompletedDate ).FirstOrDefault()
+                    }
+                )
+                // order by requested then by pending, completed, then by available to take
+                .OrderByDescending( x => x.LastRequestObject ).ThenBy( x => x.LastRequestObject.Status ).ToList();
+
+            // Checks current request types to use against the settings
+            bool areThereAnyPendingRequests = false;
+            bool areThereAnyRequests = false;
+
+            foreach ( var item in allAssessmentsOfEachType.Where( a => a.LastRequestObject != null ) )
             {
-                nbAssessmentWarning.Visible = true;
-                nbAssessmentWarning.Text = "There are no active requests assigned to you.";
+                areThereAnyRequests = true;
+
+                if ( item.LastRequestObject.Status == AssessmentRequestStatus.Pending )
+                {
+                    areThereAnyPendingRequests = true;
+                }
+            }
+            
+            var mergeFields = Rock.Lava.LavaHelper.GetCommonMergeFields( this.RockPage, CurrentPerson );
+
+            // Decide if anything is going to display
+            if ( ( _hideIfNoActiveRequests && !areThereAnyPendingRequests ) ||
+                 ( _hideIfNoRequests && !areThereAnyRequests ) )
+            {
                 lAssessments.Visible = false;
             }
-
-            // Checks for setting to hide if no requests based on if there are any Requesters associated with the assessments
-            if ( _hideIfNoRequests && !_areThereAnyRequests )
+            else
             {
-                nbAssessmentWarning.Visible = true;
-                nbAssessmentWarning.Text = "There are no requests assigned to you.";
-                lAssessments.Visible = false;
+                // Show only the tests requested or completed?...
+                if ( _onlyShowRequestedOrCompleted )
+                {
+                    var onlyRequestedOrCompleted = allAssessmentsOfEachType
+                        .Where( x => x.LastRequestObject != null && x.LastRequestObject.Requester != null &&
+                        ( x.LastRequestObject.Status == AssessmentRequestStatus.Pending || x.LastRequestObject.CompletedDate != null ) );
+
+                    mergeFields.Add( "AssessmentTypes", onlyRequestedOrCompleted );
+                }
+                else
+                {
+                    // ...Otherwise show any allowed, requested or completed requests.
+                    var onlyAllowedRequestedOrCompleted = allAssessmentsOfEachType
+                        .Where( x => x.RequiresRequest != true ||
+                            ( x.LastRequestObject != null && x.LastRequestObject.Status == AssessmentRequestStatus.Pending ) ||
+                            ( x.LastRequestObject != null && x.LastRequestObject.CompletedDate != null )
+                        );
+
+                    mergeFields.Add( "AssessmentTypes", onlyAllowedRequestedOrCompleted );
+                }
+
+                lAssessments.Text = GetAttributeValue( "LavaTemplate" ).ResolveMergeFields( mergeFields, GetAttributeValue( "EnabledLavaCommands" ) );
             }
         }
 
