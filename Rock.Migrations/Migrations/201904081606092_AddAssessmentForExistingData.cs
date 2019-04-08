@@ -29,45 +29,47 @@ namespace Rock.Migrations
         /// </summary>
         public override void Up()
         {
-            Sql( @"
-DECLARE @DiscAttributeId INT = ( SELECT TOP 1 [Id] FROM [Attribute] where [Guid]='990275DB-611B-4D2E-94EA-3FFA1186A5E1' )
-DECLARE @DiscAssessmentTypeId INT = ( SELECT TOP 1 [Id] FROM [AssessmentType] where [Guid]='A5CB2E3D-118A-41F2-972B-325A328B0B54' )
+            int completeStatusValue = Rock.Model.AssessmentRequestStatus.Complete.ConvertToInt();
+            Sql( $@"
+-- Convert existing DISC test to an Assessment record
+DECLARE @DiscLastSaveDateAttributeId INT = ( SELECT TOP 1 [Id] FROM [Attribute] where [Guid]='{SystemGuid.Attribute.PERSON_DISC_LAST_SAVE_DATE}' )
+DECLARE @DiscAssessmentTypeId INT = ( SELECT TOP 1 [Id] FROM [AssessmentType] where [Guid]='{SystemGuid.AssessmentType.DISC}' )
 
 INSERT INTO Assessment
 ([PersonAliasId], [AssessmentTypeId], [Status], [CompletedDateTime], [Guid])
 SELECT DISTINCT
-B.[Id],@DiscAssessmentTypeId,3,[ValueAsDateTime],NEWID()
+B.[Id],@DiscAssessmentTypeId,{completeStatusValue},[ValueAsDateTime],NEWID()
 FROM
 	[AttributeValue] A
 INNER JOIN
 	[PersonAlias] B
 ON
-	A.[EntityId]=B.[PersonId]
+	A.[EntityId] = B.[PersonId]
 WHERE
-	A.[AttributeId]=@DiscAttributeId
-	AND
-	A.[EntityId] NOT IN (SELECT D.[PersonId] FROM [Assessment] C INNER JOIN [PersonAlias] D ON C.[PersonAliasId] = D.[Id] WHERE C.[AssessmentTypeId]=@DiscAssessmentTypeId)
+	A.[AttributeId]=@DiscLastSaveDateAttributeId
+	AND	A.[EntityId] NOT IN (SELECT D.[PersonId] FROM [Assessment] C INNER JOIN [PersonAlias] D ON C.[PersonAliasId] = D.[Id] WHERE C.[AssessmentTypeId]=@DiscAssessmentTypeId)
+	AND A.[ValueAsDateTime] IS NOT NULL
 " );
 
-            Sql( @"
-DECLARE @GiftAttributeId INT = ( SELECT TOP 1 [Id] FROM [Attribute] where [Guid]='3668547C-3DC4-450B-B92D-4B98A693A371' )
-DECLARE @GiftAssessmentTypeId INT = ( SELECT TOP 1 [Id] FROM [AssessmentType] where [Guid]='B8FBD371-6B32-4BE5-872F-51400D16EC5D' )
+            Sql( $@"
+-- Convert existing Spiritual Gifts test to an Assessment record
+DECLARE @GiftLastSaveDateAttributeId INT = ( SELECT TOP 1 [Id] FROM [Attribute] where [Guid]='{SystemGuid.Attribute.PERSON_SPIRITUAL_GIFTS_LAST_SAVE_DATE}' )
+DECLARE @GiftAssessmentTypeId INT = ( SELECT TOP 1 [Id] FROM [AssessmentType] where [Guid]='{SystemGuid.AssessmentType.GIFTS}' )
 
 INSERT INTO Assessment
 ([PersonAliasId], [AssessmentTypeId], [Status], [CompletedDateTime], [Guid])
 SELECT DISTINCT
-B.[Id],@GiftAssessmentTypeId,3,[ValueAsDateTime],NEWID()
+B.[Id],@GiftAssessmentTypeId,{completeStatusValue},[ValueAsDateTime],NEWID()
 FROM
 	[AttributeValue] A
 INNER JOIN
 	[PersonAlias] B
 ON
-	A.[EntityId]=B.[PersonId]
+	A.[EntityId] = B.[PersonId]
 WHERE
-	A.[AttributeId]=@GiftAttributeId
-	AND
-	A.[EntityId] NOT IN (SELECT D.[PersonId] FROM [Assessment] C INNER JOIN [PersonAlias] D ON C.[PersonAliasId] = D.[Id] WHERE C.[AssessmentTypeId]=@GiftAssessmentTypeId)
-
+	A.[AttributeId]=@GiftLastSaveDateAttributeId
+	AND	A.[EntityId] NOT IN (SELECT D.[PersonId] FROM [Assessment] C INNER JOIN [PersonAlias] D ON C.[PersonAliasId] = D.[Id] WHERE C.[AssessmentTypeId]=@GiftAssessmentTypeId)
+	AND A.[ValueAsDateTime] IS NOT NULL
 " );
         }
         

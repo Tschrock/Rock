@@ -88,6 +88,13 @@ namespace Rock.SystemGuid
         /// </summary>
         public const string PERSON_GIVING_ENVELOPE_NUMBER = "76C33FBC-8799-4DF1-B2FE-A6C41AC3DD49";
 
+        #region Assessment Test Related
+
+        /// <summary>
+        /// The attribute that stores the date the person took the DISC test
+        /// </summary>
+        public const string PERSON_DISC_LAST_SAVE_DATE = "990275DB-611B-4D2E-94EA-3FFA1186A5E1";
+
         /// <summary>
         /// The person attribute for the dominant gifts
         /// </summary>
@@ -147,6 +154,8 @@ namespace Rock.SystemGuid
         /// The person attribute for the conflict approach engaged  
         /// </summary>
         public const string PERSON_CONFLICT_APPROACH_ENGAGED = "33235605-D8BB-4C1E-B231-6F085970A14F";
+
+        #endregion
 
         /// <summary>
         /// The family attribute for storing a family's checkin identifiers
