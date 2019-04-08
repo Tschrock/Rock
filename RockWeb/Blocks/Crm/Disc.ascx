@@ -106,6 +106,7 @@
 
             </div>
             <div class="panel-body">
+                <asp:HiddenField ID="hfAssessmentId" runat="server" />
                 <asp:Literal ID="lInstructions" runat="server"></asp:Literal>
 
                 <div class="actions">
