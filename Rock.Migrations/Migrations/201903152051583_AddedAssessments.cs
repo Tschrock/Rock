@@ -110,6 +110,7 @@ namespace Rock.Migrations
 		[Title],
         [Description],
 		[AssessmentPath],
+        [AssessmentResultsPath],
 		[IsActive], 
 		[RequiresRequest],
 		[MinimumDaysToRetake],
@@ -119,6 +120,7 @@ namespace Rock.Migrations
     VALUES       
 	('{0}',
      '',
+     '{1}',
      '{1}',
       1,
       0,
