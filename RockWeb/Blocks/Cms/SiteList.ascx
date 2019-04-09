@@ -6,7 +6,10 @@
 
         <div class="panel panel-block">
             <div class="panel-heading">
-                <h1 class="panel-title"><i class="fa fa-desktop"></i>Site List</h1>
+                <h1 class="panel-title">
+                    <asp:Literal ID="lIcon" runat="server" />
+                    <asp:Literal ID="lTitle" runat="server" /></h1>
+                </h1>
             </div>
             <div class="panel-body">
                 <div class="grid grid-panel">

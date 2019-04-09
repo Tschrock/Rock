@@ -37,12 +37,28 @@ namespace RockWeb.Blocks.Cms
     [LinkedPage( "Detail Page" )]
 
     [EnumsField( "Site Type", "Includes Items with the following Type.", typeof( SiteType ), false, "", order: 1, key: AttributeKey.SiteType )]
+    [TextField( "Icon",
+        description: "Icon to display.",
+        required: false,
+        defaultValue: "fa fa-desktop",
+        category: "",
+        order: 2,
+        key: AttributeKey.SiteIcon )]
+    [TextField( "Title",
+        description: "Title to display.",
+        required: false,
+        defaultValue: "Site List",
+        category: "",
+        order: 3,
+        key: AttributeKey.SiteTitle )]
     public partial class SiteList : RockBlock, ICustomGridColumns
     {
         #region Attribute Keys
         protected static class AttributeKey
         {
             public const string SiteType = "SiteType";
+            public const string SiteIcon = "SiteIcon";
+            public const string SiteTitle = "SiteTitle";
         }
         #endregion
         private const string INCLUE_INACTIVE = "Include Inactive";
@@ -80,10 +96,20 @@ namespace RockWeb.Blocks.Cms
         {
             if ( !Page.IsPostBack )
             {
+              
                 BindGrid();
             }
 
+            ApplyBlockAttributes();
             base.OnLoad( e );
+        }
+
+        private void ApplyBlockAttributes()
+        {
+            var icon = GetAttributeValue( AttributeKey.SiteIcon );
+            var title = GetAttributeValue( AttributeKey.SiteTitle );
+            lIcon.Text = string.Format("<i class='{0}'></i>",icon);
+            lTitle.Text = title;
         }
 
         #endregion
