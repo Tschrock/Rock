@@ -245,7 +245,7 @@ Brief Definitions for Conflict Profile Modes<br>
                         pnlQuestion.Visible = false;
                         pnlResult.Visible = false;
                         nbError.Visible = true;
-                        nbError.Text = "You can take the test without the request.";
+                        nbError.Text = "Sorry, this test requires a request from someone before it can be taken.";
                     }
                 }
             }
