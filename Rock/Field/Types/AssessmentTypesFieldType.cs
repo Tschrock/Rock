@@ -26,8 +26,8 @@ using Rock.Web.UI.Controls;
 namespace Rock.Field.Types
 {
     /// <summary>
-    /// Field Type used to display  Assessment type check boxes
-    /// Stored as Assessment type's Guid
+    /// Field Type used to display Assessment type check boxes.
+    /// Stored as Assessment type's Guid.
     /// </summary>
     public class AssessmentTypesFieldType : SelectFromListFieldType
     {
@@ -58,7 +58,7 @@ namespace Rock.Field.Types
         {
             var controls = base.ConfigurationControls();
 
-            // Add checkbox for deciding if the list should include inactive items
+            // Add CheckBox for deciding if the list should include inactive items
             var cb = new RockCheckBox();
             controls.Add( cb );
             cb.AutoPostBack = true;
@@ -139,7 +139,7 @@ namespace Rock.Field.Types
         }
 
         /// <summary>
-        /// Gets the list source of Assesment types from the database
+        /// Gets the list source of Assessment types from the database
         /// </summary>
         /// <value>
         /// The list source.
@@ -148,22 +148,18 @@ namespace Rock.Field.Types
         {
             get
             {
-                RockContext rockContext = new RockContext();
-                List<AssessmentType> assessmentTypeList = new List<AssessmentType>();
-                assessmentTypeList = new AssessmentTypeService(rockContext).Queryable().AsNoTracking()
-                    .Where(x =>x.IsActive == true|| x.IsActive == false )
-                    .ToList();
-
                 bool includeInactive = ( _configurationValues != null && _configurationValues.ContainsKey( INCLUDE_INACTIVE_KEY ) && _configurationValues[INCLUDE_INACTIVE_KEY].Value.AsBoolean() );
 
-                if ( !includeInactive )
-                {
-                    assessmentTypeList = assessmentTypeList
-                   .Where( x => x.IsActive == true )
-                   .ToList();
-                }
-
-                return assessmentTypeList.ToDictionary( c => c.Guid.ToString(), c => c.Title );
+                return new AssessmentTypeService( new RockContext() )
+                    .Queryable().AsNoTracking()
+                    .OrderBy( t => t.Title )
+                    .Where( t => t.IsActive || includeInactive )
+                    .Select( t => new
+                    {
+                        t.Guid,
+                        t.Title,
+                    } )
+                    .ToDictionary( t => t.Guid.ToString(), t => t.Title );
             }
         }
     }
