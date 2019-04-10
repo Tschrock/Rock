@@ -13,7 +13,7 @@ namespace Rock.Migrations
         
         string IMigrationMetadata.Id
         {
-            get { return "201904050001011_AssetManagerInHtmlEditor"; }
+            get { return "201904081825224_AssetManagerInHtmlEditor"; }
         }
         
         string IMigrationMetadata.Source

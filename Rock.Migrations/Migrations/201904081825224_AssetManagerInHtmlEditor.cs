@@ -34,7 +34,6 @@ namespace Rock.Migrations
             RockMigrationHelper.UpdateBlockType("HtmlEditor AssetManager","Block to be used as part of the RockAssetManager HtmlEditor Plugin","~/Blocks/Utility/HtmlEditorAssetManager.ascx","Utility","72FB6069-7C55-4B5C-B386-A1668C481BEF");
             // Add Block to Page: HtmlEditor RockAssetManager Plugin Frame Site: Rock RMS
             RockMigrationHelper.AddBlock( true, "DEB88EA2-D0CE-47B2-9EB3-FDDDAC2C3389".AsGuid(),null,"C2D29296-6A87-47A9-A753-EE4E9159C4C4".AsGuid(),"72FB6069-7C55-4B5C-B386-A1668C481BEF".AsGuid(), "HtmlEditor AssetManager","Main",@"",@"",0,"C5839BE7-EB9B-4776-B786-D7128BDBF5A8"); 
-
         }
         
         /// <summary>
