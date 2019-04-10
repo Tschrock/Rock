@@ -5,9 +5,9 @@
             <div class="panel-heading panel-follow clearfix">
                 <div class="panel-heading">
                     <h1 class="panel-title"><i class="fa fa-desktop"></i>
-                        <asp:Literal ID="lReadOnlyTitle" runat="server" Text="TODO: Need to Populate from Site Entity" /></h1>
+                        <asp:Literal ID="lReadOnlyTitle" runat="server" /></h1>
                     <div class="panel-labels">
-                        <asp:Literal ID="ltVersion" runat="server" Text="LatestVersion: 00000000" />
+                        <asp:Literal ID="ltVersion" runat="server" />
                     </div>
                 </div>
             </div>
@@ -22,11 +22,12 @@
                 </div>
             </asp:Panel>
             <asp:Panel ID="pnlApplicationDetails" runat="server" Visible="false">
+                <asp:HiddenField ID="hfSiteId" runat="server" />
                 <div class="panel-body">
                     <div class="row">
                         <div class="col-md-6">
                             <label class="control-label">Application Type</label>
-                            <asp:Literal ID="ltApplicationTyp" runat="server" />
+                            <asp:Literal ID="ltApplicationType" runat="server" />
                             <br />
                             <label class="control-label">Layouts</label>
                             <asp:Literal ID="ltLayouts" runat="server" />
@@ -58,7 +59,7 @@
                     </div>
                     <div class="row">
                         <div class="col-md-12">
-                            <Rock:DataTextBox ID="tbDescription" runat="server" SourceTypeName="Rock.Model.Group, Rock" PropertyName="Description" TextMode="MultiLine" Rows="4" />
+                            <Rock:DataTextBox ID="tbDescription" runat="server" SourceTypeName="Rock.Model.Site, Rock" PropertyName="Description" TextMode="MultiLine" Rows="4" />
                         </div>
                     </div>
                     <div class="row">
@@ -102,24 +103,30 @@
             </asp:Panel>
             <asp:Panel ID="pnlLayout" runat="server" Visible="false">
                 <div class="panel-body">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <Rock:DataTextBox ID="tbLayoutName" runat="server" Label="Name" SourceTypeName="Rock.Model.Site, Rock" PropertyName="Name" />
-                        </div>
+                    <asp:HiddenField ID="hfLayoutId" runat="server" />
+                    <div class="col-md-1">
+                        <asp:Literal ID="ltLayoutMenue" runat ="server" /> 
                     </div>
-                    <div class="row">
-                        <div class="col-md-12">
-                            <Rock:DataTextBox ID="tbLayoutDescription" runat="server" SourceTypeName="Rock.Model.Group, Rock" PropertyName="Description" TextMode="MultiLine" Rows="4" />
+                    <div class="col-md-11">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <Rock:DataTextBox ID="tbLayoutName" runat="server" Label="Name" SourceTypeName="Rock.Model.Site, Rock" PropertyName="Name" />
+                            </div>
                         </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-12">
-                            <Rock:CodeEditor ID="cePhoneLayoutXaml" TextMode="MultiLine" Label="Phone Layout XAML" runat="server" />
+                        <div class="row">
+                            <div class="col-md-12">
+                                <Rock:DataTextBox ID="tbLayoutDescription" runat="server" SourceTypeName="Rock.Model.Group, Rock" PropertyName="Description" TextMode="MultiLine" Rows="4" />
+                            </div>
                         </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-md-12">
-                            <Rock:CodeEditor ID="ceTabletLayoutXaml" TextMode="MultiLine" Label="Tablet Layout XAML" runat="server" />
+                        <div class="row">
+                            <div class="col-md-12">
+                                <Rock:CodeEditor ID="cePhoneLayoutXaml" TextMode="MultiLine" Label="Phone Layout XAML" runat="server" />
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-12">
+                                <Rock:CodeEditor ID="ceTabletLayoutXaml" TextMode="MultiLine" Label="Tablet Layout XAML" runat="server" />
+                            </div>
                         </div>
                     </div>
                     <div class="actions">
