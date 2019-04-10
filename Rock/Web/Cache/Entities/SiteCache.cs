@@ -559,6 +559,8 @@ namespace Rock.Web.Cache
         /// </value>
         public string ConfigurationMobileTabletFileUrl { get; set; }
 
+        public string SiteLogoBinaryFileUrl { get; set; }
+
         public string ThumbnailFileUrl { get; set; }
 
         #endregion
@@ -614,10 +616,12 @@ namespace Rock.Web.Cache
             ConfigurationMobilePhoneFileId = site.ConfigurationMobilePhoneFileId;
             ConfigurationMobileTabletFileId = site.ConfigurationMobileTabletFileId;
             ConfigurationMobilePhoneFileUrl = site.ConfigurationMobilePhoneFileUrl;
-            ConfigurationMobileTabletFileUrl = site.ConfigurationTabletFileUrl;
+            ConfigurationMobileTabletFileUrl = site.ConfigurationTabletFileUrl;     
             ThumbnailFileId = site.ThumbnailFileId;
             ThumbnailFileUrl = site.ThumbnailFileUrl;
+            SiteLogoBinaryFileUrl = site.SiteLogoBinaryFileUrl;
             LatestVersionDateTime = site.LatestVersionDateTime;
+
 
             foreach ( var domain in site.SiteDomains.Select( d => d.Domain ).ToList() )
             {

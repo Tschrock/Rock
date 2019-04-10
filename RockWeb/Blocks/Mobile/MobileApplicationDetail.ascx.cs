@@ -5,13 +5,12 @@ using System.Linq;
 using System.Text;
 using System.Web.UI.HtmlControls;
 using System.Web.UI.WebControls;
+using Newtonsoft.Json;
 using Rock;
-using Rock.Constants;
 using Rock.Data;
 using Rock.Mobile.Common;
 using Rock.Mobile.Common.Enums;
 using Rock.Model;
-using Rock.Security;
 using Rock.Web.Cache;
 using Rock.Web.UI;
 using Rock.Web.UI.Controls;
@@ -28,6 +27,12 @@ public partial class Blocks_Mobile_MobileApplicationDetail : RockBlock, IDetailB
     }
     #endregion
 
+    protected override void OnInit( EventArgs e )
+    {
+        base.OnInit( e );
+        btnApplicationDelete.Attributes["onclick"] = string.Format( "javascript: return Rock.dialogs.confirmDelete(event, 'Application');");
+
+    }
     /// <summary>
     /// Handles the Load event of the Page control.
     /// </summary>
@@ -73,6 +78,7 @@ public partial class Blocks_Mobile_MobileApplicationDetail : RockBlock, IDetailB
             hfTabSelected.Value = value.ToString();
         }
     }
+    private List<Rock.Model.Layout> ExistingLayouts { get; set; }
     #endregion
 
     #region Methods
@@ -86,6 +92,7 @@ public partial class Blocks_Mobile_MobileApplicationDetail : RockBlock, IDetailB
         pnlApplicationDetails.Visible = true;
         var liApplication = this.FindControl( "liApplication" ) as HtmlGenericControl;
         liApplication.Attributes.Add( "class", "active" );
+
         InitializeRadioButtonLists();
 
         Guid fileTypeGuid = GetAttributeValue( AttributeKey.DefaultFileType ).AsGuid();
@@ -97,11 +104,12 @@ public partial class Blocks_Mobile_MobileApplicationDetail : RockBlock, IDetailB
         {
             site = new SiteService( new RockContext() ).Get( siteId );
             BindTitleBar( site );
+            InitializeApplicationTabReadOnlyView(siteId);
         }
 
         if ( site == null )
         {
-            site = new Site { Id = 0 ,SiteType = SiteType.Mobile};
+            site = new Site { Id = 0, SiteType = SiteType.Mobile };
             site.SiteDomains = new List<SiteDomain>();
         }
 
@@ -116,12 +124,59 @@ public partial class Blocks_Mobile_MobileApplicationDetail : RockBlock, IDetailB
         cbIsActive.Checked = site.IsActive;
 
         imgIcon.BinaryFileId = site.SiteLogoBinaryFileId;
-        ImgPreviewThumbnail.BinaryFileId = site.ThumbnailFileId;
+        imgPreviewThumbnail.BinaryFileId = site.ThumbnailFileId;
+
+        BindAdditionalSettings( site );
+    }
+
+    /// <summary>
+    /// Initializes the application tab read only view.
+    /// </summary>
+    /// <param name="site">The site.</param>
+    private void InitializeApplicationTabReadOnlyView( int? siteId )
+    {
+           var site = SiteCache.Get((int) siteId);
+         var additionalSettings = GetAdditionalSettingFromSite( site.AdditionalSettings);
+        if ( additionalSettings != null )
+        {
+            if ( additionalSettings.ShellType != null )
+            {
+                this.ltApplicationType.Text = string.Format( "</br><span>{0}</span></br>", additionalSettings.ShellType.ConvertToString() );
+            }
+        }
+
+        // Layout information
+        this.ExistingLayouts = new LayoutService( new RockContext() ).GetBySiteId( ( int ) siteId ).ToList();
+
+        if ( this.ExistingLayouts.Count > 0 )
+        {
+            StringBuilder sb = new StringBuilder();
+            sb.AppendLine( "<ul id='ulLayouts'>" );
+            foreach ( var layout in this.ExistingLayouts )
+            {
+                sb.AppendLine( string.Format( "<li id='li_{0}' ><label class='control-label'>{1}</label></li>", layout.Id, layout.Name ) );
+            }
+
+            sb.AppendLine( "</ul>" );
+
+            this.ltLayouts.Text = sb.ToString();
+        }
+
+        // Setup Image
+        if ( site.SiteLogoBinaryFileId != null )
+        {
+            ltIconImage.Text = string.Format( "<a href='{0}'><img src='/GetImage.ashx?id={1}' height='100' width='100' /></a>",site.SiteLogoBinaryFileUrl, site.SiteLogoBinaryFileId );
+        }
+
+        if ( site.ThumbnailFileId != null )
+        {
+            ltMobileImage.Text = string.Format( "<a href='{0}'><img src='/GetImage.ashx?id={1}' height='auto' width='100' /></a>",site.ThumbnailFileUrl, site.ThumbnailFileId );
+        }
     }
 
     private void BindTitleBar( Site site )
     {
-       
+
         this.lReadOnlyTitle.Text = site.Name;
         this.ltVersion.Text = string.Format( "<span class='label label-info'>Latest Version{0}</span>", ( ( DateTime ) site.LatestVersionDateTime ).ToString( @"MM/dd/yyyy hh:mm tt" ) );
     }
@@ -137,11 +192,12 @@ public partial class Blocks_Mobile_MobileApplicationDetail : RockBlock, IDetailB
             rblApplicationType.Items.Add( new ListItem { Text = shellType.ToString(), Selected = false } );
         }
 
-        rblAndroidTabLocation.Items.AddRange( new ListItem[]
-            {
-                new ListItem { Text="Top" ,Selected = false},
-                new ListItem { Text = "Bottom", Selected = false }
-            } );
+        var tabLocations = Enum.GetValues( typeof( TabLocation ) );
+
+        foreach ( var tabLocationType in tabLocations )
+        {
+            rblAndroidTabLocation.Items.Add( new ListItem { Text = tabLocationType.ToString(), Selected = false } );
+        }
     }
 
     /// <summary>
@@ -166,9 +222,9 @@ public partial class Blocks_Mobile_MobileApplicationDetail : RockBlock, IDetailB
         {
             siteId = hfSiteId.Value.AsInteger();
         }
-        var existingLayouts = layoutService.GetBySiteId( ( int ) siteId );
+        this.ExistingLayouts =  layoutService.GetBySiteId( ( int ) siteId ).ToList();
 
-        BuildLayoutMenue( existingLayouts );
+        BuildLayoutMenue();
 
         Rock.Model.Layout layout = null;
 
@@ -176,7 +232,7 @@ public partial class Blocks_Mobile_MobileApplicationDetail : RockBlock, IDetailB
         {
             layout = layoutService.Get( ( int ) layoutId );
         }
-        
+
         if ( layout == null && siteId.HasValue )
         {
             var site = SiteCache.Get( siteId.Value );
@@ -210,20 +266,9 @@ public partial class Blocks_Mobile_MobileApplicationDetail : RockBlock, IDetailB
         pnlPages.Visible = false;
     }
 
-    private void BuildLayoutMenue( IQueryable<Rock.Model.Layout> existingLayouts )
+    private void BuildLayoutMenue()
     {
-        StringBuilder sb = new StringBuilder();
-        sb.AppendLine( "<ul id='ulLayouts' class='nav nav-tabs'>" );
-        int id = 0;
-        foreach ( var layout in existingLayouts )
-        {
-            sb.AppendLine( string.Format( "<li runat='server' id='li_{0}'>", id ) );
-            sb.AppendLine( string.Format( "<a href='#' runat='server' onserverclick='LayoutItem_SelectedClick'>{0}</a></li>", layout.Name ) );
-            sb.AppendLine( "</li>" );
-        }
-
-        sb.AppendLine( "</ul>" );
-        ltLayoutMenue.Text = sb.ToString();
+        //ltLayoutMenue.Text = sb.ToString();
     }
 
     /// <summary>
@@ -250,6 +295,47 @@ public partial class Blocks_Mobile_MobileApplicationDetail : RockBlock, IDetailB
 
         var liPages = this.FindControl( "liPages" ) as HtmlGenericControl;
         liPages.Attributes.Remove( "class" );
+    }
+
+    /// <summary>
+    /// De serialize and binds the additional settings.
+    /// </summary>
+    /// <param name="site">The site.</param>
+    private void BindAdditionalSettings( Site site )
+    {
+        if ( site.AdditionalSettings.IsNotNullOrWhiteSpace() )
+        {
+            var additionalSetting = GetAdditionalSettingFromSite( site.AdditionalSettings );
+
+            if ( additionalSetting != null )
+            {
+                // Css styles
+                if ( additionalSetting.CssStyle.IsNotNullOrWhiteSpace() )
+                {
+                    ceCssPreHtml.Text = additionalSetting.CssStyle;
+                }
+
+                // Tab Location
+                if ( additionalSetting.TabLocation != null )
+                {
+                    rblAndroidTabLocation.SelectedValue = additionalSetting.TabLocation.ConvertToString();
+                }
+
+                if ( additionalSetting.ShellType != null )
+                {
+                    rblApplicationType.SelectedValue = additionalSetting.ShellType.ConvertToString();
+                }
+            }
+        }
+    }
+
+    private AdditionalSettings GetAdditionalSettingFromSite( string additionalSettings )
+    {
+        if ( additionalSettings.IsNotNullOrWhiteSpace() )
+        {
+            return JsonConvert.DeserializeObject<AdditionalSettings>( additionalSettings );
+        }
+        return null;
     }
 
     #endregion
@@ -291,7 +377,7 @@ public partial class Blocks_Mobile_MobileApplicationDetail : RockBlock, IDetailB
                 DisplayApplicationTab();
                 break;
             case "Layout":
-                DisplayLayoutTab(null, hfSiteId.Value.AsInteger() );
+                DisplayLayoutTab( null, hfSiteId.Value.AsInteger() );
                 break;
             case "Pages":
                 DisplayPagesTab();
@@ -328,6 +414,7 @@ public partial class Blocks_Mobile_MobileApplicationDetail : RockBlock, IDetailB
     protected void btnSaveMobileDetails_Click( object sender, EventArgs e )
     {
         Site site;
+
         if ( Page.IsValid )
         {
             var rockContext = new RockContext();
@@ -341,7 +428,7 @@ public partial class Blocks_Mobile_MobileApplicationDetail : RockBlock, IDetailB
             if ( siteId == 0 )
             {
                 newApplication = true;
-                site = new Rock.Model.Site() {SiteType = SiteType.Mobile};
+                site = new Rock.Model.Site() { SiteType = SiteType.Mobile };
                 siteService.Add( site );
             }
             else
@@ -360,12 +447,13 @@ public partial class Blocks_Mobile_MobileApplicationDetail : RockBlock, IDetailB
             }
 
             int? existingThumbnailId = null;
-            if ( site.ThumbnailFileId != ImgPreviewThumbnail.BinaryFileId )
+            if ( site.ThumbnailFileId != imgPreviewThumbnail.BinaryFileId )
             {
                 existingThumbnailId = site.ThumbnailFileId;
-                site.ThumbnailFileId = ImgPreviewThumbnail.BinaryFileId;
+                site.ThumbnailFileId = imgPreviewThumbnail.BinaryFileId;
             }
 
+            UpdateAdditionalSettings( site );
             site.LatestVersionDateTime = RockDateTime.Now;
 
             rockContext.WrapTransaction( () =>
@@ -414,6 +502,44 @@ public partial class Blocks_Mobile_MobileApplicationDetail : RockBlock, IDetailB
     }
 
     /// <summary>
+    /// Updates the additional settings.
+    /// </summary>
+    /// <param name="site">The site.</param>
+    private void UpdateAdditionalSettings( Site site )
+    {
+        bool hasAdditionalSetting = false;
+        var selecteShellType = rblApplicationType.SelectedValueAsEnumOrNull<ShellType>();
+        var selectedTab = rblAndroidTabLocation.SelectedValueAsEnumOrNull<TabLocation>();
+
+        var additionalSettings = new AdditionalSettings();
+
+        if ( selecteShellType != null )
+        {
+            additionalSettings.ShellType = ( ShellType ) selecteShellType;
+            hasAdditionalSetting = true;
+        }
+
+        // We only show Tab Android Tab location when Shell Type is Tabb
+        if ( selectedTab != null && additionalSettings.ShellType == ShellType.Tabbed )
+        {
+            additionalSettings.TabLocation = ( TabLocation ) selectedTab;
+            hasAdditionalSetting = true;
+        }
+
+        if ( ceCssPreHtml.Text.IsNotNullOrWhiteSpace() )
+        {
+            additionalSettings.CssStyle = ceCssPreHtml.Text;
+            hasAdditionalSetting = true;
+        }
+
+        if ( hasAdditionalSetting )
+        {
+            var serializedAdditionalSetting = JsonConvert.SerializeObject( additionalSettings ).ToString();
+            site.AdditionalSettings = serializedAdditionalSetting;
+        }
+    }
+
+    /// <summary>
     /// Handles the Click event of the btnCancelMobileDetails control.
     /// </summary>
     /// <param name="sender">The source of the event.</param>
@@ -442,7 +568,7 @@ public partial class Blocks_Mobile_MobileApplicationDetail : RockBlock, IDetailB
             LayoutService layoutService = new LayoutService( rockContext );
             Rock.Model.Layout layout;
 
-            int layoutId = hfLayoutId.Value.IsNullOrWhiteSpace() ? 0: int.Parse( hfLayoutId.Value );
+            int layoutId = hfLayoutId.Value.IsNullOrWhiteSpace() ? 0 : int.Parse( hfLayoutId.Value );
 
             // If adding a new layout
             if ( layoutId.Equals( 0 ) )
@@ -481,8 +607,36 @@ public partial class Blocks_Mobile_MobileApplicationDetail : RockBlock, IDetailB
 
     }
 
+    protected void btnApplicationDelete_Click( object sender, EventArgs e )
+    {
+        bool canDelete = false;
+
+        var rockContext = new RockContext();
+        SiteService siteService = new SiteService( rockContext );
+        Site site = siteService.Get( hfSiteId.Value.AsInteger() );
+        LayoutService layoutService = new LayoutService( rockContext );
+        if ( site != null )
+        {
+            var layoutQry = layoutService.Queryable()
+                   .Where( l =>
+                       l.SiteId == site.Id );
+            layoutService.DeleteRange( layoutQry );
+            rockContext.SaveChanges( true );
+
+            string errorMessage;
+            canDelete = siteService.CanDelete( site, out errorMessage, includeSecondLvl: true );
+            if ( !canDelete )
+            {
+               // mdDeleteWarning.Show( errorMessage, ModalAlertType.Alert );
+                return;
+            }
+
+            siteService.Delete( site );
+            rockContext.SaveChanges();
+        }
+
+        NavigateToParentPage();
+    }
+
     #endregion
-
-
-
 }

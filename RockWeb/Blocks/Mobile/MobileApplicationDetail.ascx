@@ -11,6 +11,7 @@
                     </div>
                 </div>
             </div>
+            <!-- Tabs -->
             <asp:Panel runat="server" ID="pnlTabs">
                 <asp:HiddenField ID="hfTabSelected" runat="server" Value="false" />
                 <div class="panel-body">
@@ -21,32 +22,39 @@
                     </ul>
                 </div>
             </asp:Panel>
+            <!-- Application Tab Read Only View -->
             <asp:Panel ID="pnlApplicationDetails" runat="server" Visible="false">
                 <asp:HiddenField ID="hfSiteId" runat="server" />
-                <div class="panel-body">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <label class="control-label">Application Type</label>
-                            <asp:Literal ID="ltApplicationType" runat="server" />
-                            <br />
-                            <label class="control-label">Layouts</label>
-                            <asp:Literal ID="ltLayouts" runat="server" />
-                        </div>
-                        <div class="col-md-6">
-                            <div class="photo">
-                                <asp:Literal ID="ltIconImage" runat="server" />
+                <fieldset id="fieldsetApplicationViewDetails" runat="server">
+                    <div class="panel-body">
+                        <div class="row">
+                            <div class="col-md-8">
+                                <label class="control-label">Application Type</label>
+                                <asp:Literal ID="ltApplicationType" runat="server" />
+                                <br />
+                                <label class="control-label">Layouts</label>
+                                <asp:Literal ID="ltLayouts" runat="server" />
                             </div>
-                            <div class="photo">
-                                <asp:Literal ID="litMobileImage" runat="server" />
+                            <div class="col-md-2">
+                                <div class="photo">
+                                    <asp:Literal ID="ltIconImage" runat="server" />
+                                </div>
+                            </div>
+                            <div class="col-md-2">
+                                <div class="photo">
+                                    <asp:Literal ID="ltMobileImage" runat="server" />
+                                </div>
                             </div>
                         </div>
+                        <asp:Panel ID="pnlReadOnlyModeActions" runat="server" CssClass="actions">
+                            <asp:LinkButton ID="btnEdit" runat="server" AccessKey="m" ToolTip="Alt+m" Text="Edit" CssClass="btn btn-primary" OnClick="btnEdit_Click" />
+                            <asp:LinkButton ID="btnApplicationDelete" runat="server" Text="Delete" OnClick="btnApplicationDelete_Click" CssClass="btn btn-link" CausesValidation="false" />
+                            <asp:LinkButton ID="btnPublish" runat="server" Text="Publish" CssClass="btn btn-secondary" OnClick="btnPublish_Click" />
+                        </asp:Panel>
                     </div>
-                    <asp:Panel ID="pnlReadOnlyModeActions" runat="server" CssClass="actions">
-                        <asp:LinkButton ID="btnEdit" runat="server" AccessKey="m" ToolTip="Alt+m" Text="Edit" CssClass="btn btn-primary" OnClick="btnEdit_Click" />
-                        <asp:LinkButton ID="btnPublish" runat="server" Text="Publish" CssClass="btn btn-secondary" OnClick="btnPublish_Click" />
-                    </asp:Panel>
-                </div>
+                </fieldset>
             </asp:Panel>
+            <!-- Application Tab Edit Details -->
             <asp:Panel ID="pnlApplicationEditDetails" runat="server" Visible="false">
                 <div class="panel-body">
                     <div class="row">
@@ -89,7 +97,7 @@
                                 Help="The icon to be used by the application when it's built. This will only be updated when a new application is deployed to the various stores." />
                         </div>
                         <div class="col-md-6">
-                            <Rock:ImageUploader ID="ImgPreviewThumbnail"
+                            <Rock:ImageUploader ID="imgPreviewThumbnail"
                                 runat="server"
                                 Label="Preview Thumbnail"
                                 Help="Preview thumbnail to be used by Rock to distinguish applications." />
@@ -101,11 +109,12 @@
                     </div>
                 </div>
             </asp:Panel>
+            <!-- Layout Tab View -->
             <asp:Panel ID="pnlLayout" runat="server" Visible="false">
                 <div class="panel-body">
                     <asp:HiddenField ID="hfLayoutId" runat="server" />
                     <div class="col-md-1">
-                        <asp:Literal ID="ltLayoutMenue" runat ="server" /> 
+                        <asp:Literal ID="ltLayoutMenue" runat="server" />
                     </div>
                     <div class="col-md-11">
                         <div class="row">
@@ -135,6 +144,7 @@
                     </div>
                 </div>
             </asp:Panel>
+            <!-- Page Tab View -->
             <asp:Panel ID="pnlPages" runat="server" Visible="false">
                 <div class="row">
                     <div class="col-md-6">

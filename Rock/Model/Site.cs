@@ -437,6 +437,16 @@ namespace Rock.Model
         [DataMember]
         public DateTime? LatestVersionDateTime { get; set; }
 
+
+        [NotMapped]
+        public string SiteLogoBinaryFileUrl
+        {
+            get
+            {
+                return Site.GetFileUrl( this.SiteLogoBinaryFileId );
+            }
+            private set { }
+        }
         /// <summary>
         /// Gets or sets the configuration mobile file path.
         /// </summary>
@@ -821,16 +831,16 @@ namespace Rock.Model
         /// <summary>
         /// Gets the file URL.
         /// </summary>
-        /// <param name="configurationMobilePhoneFileId">The configuration mobile phone file identifier.</param>
+        /// <param name="BinaryFileId">The configuration mobile phone file identifier.</param>
         /// <returns>full path of resource from Binary file path</returns>
-        private static string GetFileUrl( int? configurationMobilePhoneFileId )
+        private static string GetFileUrl( int? BinaryFileId )
         {
             string virtualPath = string.Empty;
-            if ( configurationMobilePhoneFileId.HasValue )
+            if ( BinaryFileId.HasValue )
             {
                 using ( var rockContext = new RockContext() )
                 {
-                    var binaryFile = new BinaryFileService( rockContext ).Get( ( int ) configurationMobilePhoneFileId );
+                    var binaryFile = new BinaryFileService( rockContext ).Get( ( int ) BinaryFileId );
                     if ( binaryFile != null )
                     {
                         if ( binaryFile.Path.Contains( "~" ) )

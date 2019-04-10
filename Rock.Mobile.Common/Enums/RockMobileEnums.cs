@@ -12,6 +12,12 @@ namespace Rock.Mobile.Common.Enums
         Tabbed = 2
     }
 
+    public enum TabLocation
+    {
+        Top=0,
+        Bottom = 1,
+    }
+
     /// <summary>The device type running the application (Phone, Tablet, Watch).</summary>
     public enum DeviceType
     {
