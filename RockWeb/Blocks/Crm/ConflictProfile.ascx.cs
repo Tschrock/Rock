@@ -59,8 +59,15 @@ namespace Rockweb.Blocks.Crm
 <p>
    Your scores on this report are how YOU see yourself currently dealing with conflict in the environment chosen. This may or may not be accurate depending on how you are aware of yourself in the midst of conflict. It is most helpful to discuss your scores with someone who understands both you and this assessment.  Remember, in the future, the way you approach conflict should be dictated by the situation, not just how you are used to dealing with conflict. In doing so, everyone benefits, including you.
 </p>
+
+{[ chart type:'pie' ]}
+    [[ dataitem label:'Passive' value:'{{Passive}}' fillcolor:'#4BC0C0' ]] [[ enddataitem ]]
+    [[ dataitem label:'Aggressive' value:'{{Aggressive}}' fillcolor:'#FF3D67' ]] [[ enddataitem ]]
+    [[ dataitem label:'Engaged' value:'{{Engaged}}' fillcolor:'#FFCD56' ]] [[ enddataitem ]]
+{[ endchart ]}
+
  Passive - {{Passive}} <br/>
- Resolving - {{Resolving}} <br/>
+ Aggressive - {{Aggressive}} <br/>
  Engaged - {{Engaged}}
 <p>
 Brief Definitions for Conflict Engagement Modes<br>
@@ -68,10 +75,19 @@ Brief Definitions for Conflict Engagement Modes<br>
 <b>ACCOMMODATING</b> combines AVOIDING and YIELDING modes for solving conflict. Those who are ACCOMMODATING are most effective in roles where allowing others to have their way is better for the team. They are often most effective in support roles or roles where an emphasis on the contribution of others is significant.<br>
 A <b>WINNING</b> engagement profile relates to the WINNING mode for solving conflict. Depending on your role, WINNING engagement is important for times when quick decisions need to be made and essential for sole-proprietors.
 </p>
+
+{[ chart type:'bar' ]}
+    [[ dataitem label:'Winning' value:'{{Winning}}' fillcolor:'#FF3D67' ]] [[ enddataitem ]]
+    [[ dataitem label:'Resolving' value:'{{Resolving}}' fillcolor:'#059BFF' ]] [[ enddataitem ]]
+    [[ dataitem label:'Compromising' value:'{{Compromising}}' fillcolor:'#4BC0C0' ]] [[ enddataitem ]]
+    [[ dataitem label:'Avoiding' value:'{{Avoiding}}' fillcolor:'#FFCD56' ]] [[ enddataitem ]]
+    [[ dataitem label:'Yielding' value:'{{Yielding}}' fillcolor:'#880D37' ]] [[ enddataitem ]]
+{[ endchart ]}
+
  Winning - {{Winning}} <br/>
  Avoiding - {{Avoiding}} <br/>
  Compromising - {{Compromising}} <br/>
- Aggressive - {{Aggressive}} <br/>
+ Resolving - {{Resolving}} <br/>
  Yielding - {{Yielding}}
 <p>
 Brief Definitions for Conflict Profile Modes<br>
