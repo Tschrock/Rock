@@ -30,7 +30,7 @@ public partial class Blocks_Mobile_MobileApplicationDetail : RockBlock, IDetailB
     protected override void OnInit( EventArgs e )
     {
         base.OnInit( e );
-        btnApplicationDelete.Attributes["onclick"] = string.Format( "javascript: return Rock.dialogs.confirmDelete(event, 'Application');");
+        btnApplicationDelete.Attributes["onclick"] = string.Format( "javascript: return Rock.dialogs.confirmDelete(event, 'Application');" );
 
     }
     /// <summary>
@@ -104,7 +104,7 @@ public partial class Blocks_Mobile_MobileApplicationDetail : RockBlock, IDetailB
         {
             site = new SiteService( new RockContext() ).Get( siteId );
             BindTitleBar( site );
-            InitializeApplicationTabReadOnlyView(siteId);
+            InitializeApplicationTabReadOnlyView( siteId );
         }
 
         if ( site == null )
@@ -127,6 +127,8 @@ public partial class Blocks_Mobile_MobileApplicationDetail : RockBlock, IDetailB
         imgPreviewThumbnail.BinaryFileId = site.ThumbnailFileId;
 
         BindAdditionalSettings( site );
+
+        BuildLayoutMenue();
     }
 
     /// <summary>
@@ -135,8 +137,8 @@ public partial class Blocks_Mobile_MobileApplicationDetail : RockBlock, IDetailB
     /// <param name="site">The site.</param>
     private void InitializeApplicationTabReadOnlyView( int? siteId )
     {
-           var site = SiteCache.Get((int) siteId);
-         var additionalSettings = GetAdditionalSettingFromSite( site.AdditionalSettings);
+        var site = SiteCache.Get( ( int ) siteId );
+        var additionalSettings = GetAdditionalSettingFromSite( site.AdditionalSettings );
         if ( additionalSettings != null )
         {
             if ( additionalSettings.ShellType != null )
@@ -165,20 +167,22 @@ public partial class Blocks_Mobile_MobileApplicationDetail : RockBlock, IDetailB
         // Setup Image
         if ( site.SiteLogoBinaryFileId != null )
         {
-            ltIconImage.Text = string.Format( "<a href='{0}'><img src='/GetImage.ashx?id={1}' height='100' width='100' /></a>",site.SiteLogoBinaryFileUrl, site.SiteLogoBinaryFileId );
+            ltIconImage.Text = string.Format( "<a href='{0}'><img src='/GetImage.ashx?id={1}' height='100' width='100' /></a>", site.SiteLogoBinaryFileUrl, site.SiteLogoBinaryFileId );
         }
 
         if ( site.ThumbnailFileId != null )
         {
-            ltMobileImage.Text = string.Format( "<a href='{0}'><img src='/GetImage.ashx?id={1}' height='auto' width='100' /></a>",site.ThumbnailFileUrl, site.ThumbnailFileId );
+            ltMobileImage.Text = string.Format( "<a href='{0}'><img src='/GetImage.ashx?id={1}' height='auto' width='100' /></a>", site.ThumbnailFileUrl, site.ThumbnailFileId );
         }
+
+        this.liLayout.Attributes.Remove( "class" );
     }
 
     private void BindTitleBar( Site site )
     {
-
         this.lReadOnlyTitle.Text = site.Name;
         this.ltVersion.Text = string.Format( "<span class='label label-info'>Latest Version{0}</span>", ( ( DateTime ) site.LatestVersionDateTime ).ToString( @"MM/dd/yyyy hh:mm tt" ) );
+        this.liLayout.Attributes.Remove( "class" );
     }
 
     /// <summary>
@@ -211,6 +215,12 @@ public partial class Blocks_Mobile_MobileApplicationDetail : RockBlock, IDetailB
         pnlApplicationEditDetails.Visible = false;
     }
 
+    private void UpdateExistingLayouts(int siteId)
+    {
+        var layoutService = new LayoutService( new RockContext() );
+        this.ExistingLayouts = layoutService.GetBySiteId( ( int ) siteId ).Select( l => l ).ToList();
+
+    }
     /// <summary>
     /// Displays the layout tab.
     /// </summary>
@@ -222,9 +232,8 @@ public partial class Blocks_Mobile_MobileApplicationDetail : RockBlock, IDetailB
         {
             siteId = hfSiteId.Value.AsInteger();
         }
-        this.ExistingLayouts =  layoutService.GetBySiteId( ( int ) siteId ).ToList();
 
-        BuildLayoutMenue();
+        UpdateExistingLayouts( ( int ) siteId );
 
         Rock.Model.Layout layout = null;
 
@@ -252,6 +261,8 @@ public partial class Blocks_Mobile_MobileApplicationDetail : RockBlock, IDetailB
             hfLayoutId.Value = layout.Id.ToString();
         }
 
+        this.LoadSelectedLayout( layoutId );
+
         //TODO : Layout edit mode read only based on Permissions?
 
         //if ( !IsUserAuthorized( Authorization.EDIT ) )
@@ -266,9 +277,24 @@ public partial class Blocks_Mobile_MobileApplicationDetail : RockBlock, IDetailB
         pnlPages.Visible = false;
     }
 
+    /// <summary>
+    /// Builds the layout menue.
+    /// </summary>
     private void BuildLayoutMenue()
     {
-        //ltLayoutMenue.Text = sb.ToString();
+        rptLayoutMenu.DataSource = this.ExistingLayouts;
+        rptLayoutMenu.DataBind();
+        if ( rptLayoutMenu.Items.Count > 0 )
+        {
+            var layoutId = this.ExistingLayouts.First().Id;
+            var selectedLayout = rptLayoutMenu.Items[0].FindControl(string.Format("layoutItem_{0}", layoutId ) ) as LinkButton;
+            if ( selectedLayout != null )
+            {
+                selectedLayout.Focus();   
+            }
+
+            LoadSelectedLayout((int) layoutId );
+        }     
     }
 
     /// <summary>
@@ -329,6 +355,11 @@ public partial class Blocks_Mobile_MobileApplicationDetail : RockBlock, IDetailB
         }
     }
 
+    /// <summary>
+    /// Gets the additional setting from site.
+    /// </summary>
+    /// <param name="additionalSettings">The additional settings.</param>
+    /// <returns></returns>
     private AdditionalSettings GetAdditionalSettingFromSite( string additionalSettings )
     {
         if ( additionalSettings.IsNotNullOrWhiteSpace() )
@@ -336,6 +367,41 @@ public partial class Blocks_Mobile_MobileApplicationDetail : RockBlock, IDetailB
             return JsonConvert.DeserializeObject<AdditionalSettings>( additionalSettings );
         }
         return null;
+    }
+
+    /// <summary>
+    /// Resets the layout for add.
+    /// </summary>
+    private void ResetLayoutForAdd()
+    {
+        hfLayoutId.Value = string.Empty;
+        tbLayoutName.Text = string.Empty;
+        tbDescription.Text = string.Empty;
+        cePhoneLayoutXaml.Text = string.Empty;
+        ceTabletLayoutXaml.Text = string.Empty;
+        tbLayoutName.Focus();
+    }
+
+    /// <summary>
+    /// Deletes the current layout.
+    /// </summary>
+    private void DeleteCurrentLayout()
+    {
+        if ( hfLayoutId.Value.AsIntegerOrNull() != null )
+        {
+            var rockContext = new RockContext();
+            var layoutService = new LayoutService( rockContext );
+            var currentLayout = layoutService.Get( hfLayoutId.Value.AsInteger() );
+            if ( currentLayout != null )
+            {
+                var siteId = currentLayout.SiteId;
+                layoutService.Delete( currentLayout );
+                rockContext.SaveChanges();
+                UpdateExistingLayouts(siteId);
+                BuildLayoutMenue();
+                ResetLayoutForAdd();
+            }
+        }
     }
 
     #endregion
@@ -377,7 +443,7 @@ public partial class Blocks_Mobile_MobileApplicationDetail : RockBlock, IDetailB
                 DisplayApplicationTab();
                 break;
             case "Layout":
-                DisplayLayoutTab( null, hfSiteId.Value.AsInteger() );
+                DisplayLayoutTab( hfLayoutId.Value.AsIntegerOrNull(), hfSiteId.Value.AsInteger() );
                 break;
             case "Pages":
                 DisplayPagesTab();
@@ -390,9 +456,44 @@ public partial class Blocks_Mobile_MobileApplicationDetail : RockBlock, IDetailB
         this.TabSelected = true;
     }
 
+    private void SetApplicationTabActive()
+    {
+        Tab_SelectedClick( this.tabApplication, null );
+    }
+
+    /// <summary>
+    /// Handles the SelectedClick event of the LayoutItem control.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The <see cref="EventArgs"/> instance containing the event data.</param>
     protected void LayoutItem_SelectedClick( object sender, EventArgs e )
     {
+        var selectedLayoutId = ( ( LinkButton ) sender ).CommandArgument.AsIntegerOrNull();
+        if ( selectedLayoutId.HasValue )
+        {
+            LoadSelectedLayout( selectedLayoutId );
+        }
+    }
 
+    /// <summary>
+    /// Loads the selected layout.
+    /// </summary>
+    /// <param name="selectedLayoutId">The selected layout identifier.</param>
+    private void LoadSelectedLayout( int? selectedLayoutId )
+    {
+        if ( selectedLayoutId != null )
+        {
+            var layoutService = new LayoutService( new RockContext() );
+            var selectedLayout = layoutService.Get( ( int ) selectedLayoutId );
+            if ( selectedLayout != null )
+            {
+                this.tbLayoutName.Text = selectedLayout.Name;
+                this.tbLayoutDescription.Text = selectedLayout.Description;
+                this.cePhoneLayoutXaml.Text = selectedLayout.LayoutMobilePhone;
+                this.ceTabletLayoutXaml.Text = selectedLayout.LayoutMobileTablet;
+                this.hfLayoutId.Value = selectedLayout.Id.ToString();
+            }
+        }
     }
 
     /// <summary>
@@ -540,17 +641,6 @@ public partial class Blocks_Mobile_MobileApplicationDetail : RockBlock, IDetailB
     }
 
     /// <summary>
-    /// Handles the Click event of the btnCancelMobileDetails control.
-    /// </summary>
-    /// <param name="sender">The source of the event.</param>
-    /// <param name="e">The <see cref="EventArgs"/> instance containing the event data.</param>
-    protected void btnCancelMobileDetails_Click( object sender, EventArgs e )
-    {
-        pnlApplicationDetails.Visible = true;
-        pnlApplicationEditDetails.Visible = false;
-    }
-
-    /// <summary>
     /// Handles the Click event of the btnPublish control.
     /// </summary>
     /// <param name="sender">The source of the event.</param>
@@ -560,6 +650,11 @@ public partial class Blocks_Mobile_MobileApplicationDetail : RockBlock, IDetailB
 
     }
 
+    /// <summary>
+    /// Handles the Click event of the btnSaveLayout control.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The <see cref="EventArgs"/> instance containing the event data.</param>
     protected void btnSaveLayout_Click( object sender, EventArgs e )
     {
         if ( Page.IsValid )
@@ -595,18 +690,32 @@ public partial class Blocks_Mobile_MobileApplicationDetail : RockBlock, IDetailB
 
             if ( layout.Id.Equals( 0 ) )
             {
-                layoutService.Add( layout );
+                layoutService.Add( layout ); 
             }
 
             rockContext.SaveChanges();
+            hfLayoutId.Value = layout.Id.ToString();
+            UpdateExistingLayouts(layout.SiteId);
+            BuildLayoutMenue();
         }
     }
 
-    protected void btnLayoutCancel_Click( object sender, EventArgs e )
+    /// <summary>
+    /// Handles the Clicked event of the btnCancel control.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The <see cref="EventArgs"/> instance containing the event data.</param>
+    protected void btnCancel_Clicked( object sender, EventArgs e )
     {
-
+        DisplayApplicationTab();
+        SetApplicationTabActive();
     }
 
+    /// <summary>
+    /// Handles the Click event of the btnApplicationDelete control.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The <see cref="EventArgs"/> instance containing the event data.</param>
     protected void btnApplicationDelete_Click( object sender, EventArgs e )
     {
         bool canDelete = false;
@@ -627,7 +736,7 @@ public partial class Blocks_Mobile_MobileApplicationDetail : RockBlock, IDetailB
             canDelete = siteService.CanDelete( site, out errorMessage, includeSecondLvl: true );
             if ( !canDelete )
             {
-               // mdDeleteWarning.Show( errorMessage, ModalAlertType.Alert );
+                // mdDeleteWarning.Show( errorMessage, ModalAlertType.Alert );
                 return;
             }
 
@@ -637,6 +746,44 @@ public partial class Blocks_Mobile_MobileApplicationDetail : RockBlock, IDetailB
 
         NavigateToParentPage();
     }
+
+    /// <summary>
+    /// Handles the Click event of the btnAddLayout control.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The <see cref="EventArgs"/> instance containing the event data.</param>
+    protected void btnAddLayout_Click( object sender, EventArgs e )
+    {
+        ResetLayoutForAdd();
+    }
+
+    /// <summary>
+    /// Handles the Click event of the btnDeleteLayout control.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The <see cref="EventArgs"/> instance containing the event data.</param>
+    protected void btnDeleteLayout_Click( object sender, EventArgs e )
+    {
+       DeleteCurrentLayout();  
+    }
+
+    /// <summary>
+    /// Handles the DataBinding event of the LayoutItem control.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The <see cref="EventArgs"/> instance containing the event data.</param>
+    protected void LayoutItem_DataBinding( object sender, EventArgs e )
+    {
+        var linkButton = sender as LinkButton;
+        if ( linkButton != null )
+        {
+            var layoutItem = ( ( RepeaterItem ) linkButton.DataItemContainer ).DataItem as Rock.Model.Layout;
+            linkButton.ID = string.Format( "layoutItem_{0}", layoutItem.Id );
+            linkButton.Text = layoutItem.ToString();
+            linkButton.CommandArgument = layoutItem.Id.ToString();
+        }
+    }
+
 
     #endregion
 }

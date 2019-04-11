@@ -16,9 +16,9 @@
                 <asp:HiddenField ID="hfTabSelected" runat="server" Value="false" />
                 <div class="panel-body">
                     <ul class="nav nav-tabs">
-                        <li runat="server" id="liApplication"><a href="#" runat="server" onserverclick="Tab_SelectedClick">Application</a></li>
-                        <li runat="server" id="liLayout"><a href="#" runat="server" onserverclick="Tab_SelectedClick">Layout</a></li>
-                        <li runat="server" id="liPages"><a href="#" runat="server" onserverclick="Tab_SelectedClick">Pages</a></li>
+                        <li runat="server" id="liApplication"><a href="#" id="tabApplication" runat="server" onserverclick="Tab_SelectedClick">Application</a></li>
+                        <li runat="server" id="liLayout" class="disabled" ><a href="#" id="tabLayout" runat="server"  onserverclick="Tab_SelectedClick">Layout</a></li>
+                        <li runat="server" id="liPages" class="disabled"><a href="#" id="tabPages" runat="server" onserverclick="Tab_SelectedClick">Pages</a></li>
                     </ul>
                 </div>
             </asp:Panel>
@@ -105,7 +105,7 @@
                     </div>
                     <div class="actions">
                         <Rock:BootstrapButton ID="btnSaveMobileDetails" runat="server" CssClass="btn btn-primary" Text="Save" CausesValidation="true" OnClick="btnSaveMobileDetails_Click" DataLoadingText="Saving..." />
-                        <asp:LinkButton ID="btnCancelMobileDetails" runat="server" CssClass="btn btn-default btn-cancel" Text="Cancel" CausesValidation="false" OnClick="btnCancelMobileDetails_Click" />
+                        <asp:LinkButton ID="btnCancelMobileDetails" runat="server" CssClass="btn btn-default btn-cancel" Text="Cancel" CausesValidation="false" OnClick="btnCancel_Clicked" />
                     </div>
                 </div>
             </asp:Panel>
@@ -114,7 +114,23 @@
                 <div class="panel-body">
                     <asp:HiddenField ID="hfLayoutId" runat="server" />
                     <div class="col-md-1">
-                        <asp:Literal ID="ltLayoutMenue" runat="server" />
+                        <asp:Repeater ID="rptLayoutMenu" runat="server">
+                            <HeaderTemplate>
+                                <ul>
+                            </HeaderTemplate>
+                            <ItemTemplate>
+                                <li runat="server">
+                                    <asp:LinkButton runat="server"
+                                        OnDataBinding="LayoutItem_DataBinding"
+                                        OnClick="LayoutItem_SelectedClick"
+                                        CausesValidation="false" />
+                                </li>
+                            </ItemTemplate>
+                            <FooterTemplate>  
+                                </ul>
+                               <div><a href="#" id="aAddLayout" runat="server" class="fa fa-plus-square-o" onserverclick="btnAddLayout_Click" /></div> 
+                            </FooterTemplate>
+                        </asp:Repeater>
                     </div>
                     <div class="col-md-11">
                         <div class="row">
@@ -140,7 +156,8 @@
                     </div>
                     <div class="actions">
                         <Rock:BootstrapButton ID="btnSaveLayout" runat="server" CssClass="btn btn-primary" Text="Save" CausesValidation="true" OnClick="btnSaveLayout_Click" DataLoadingText="Saving..." />
-                        <asp:LinkButton ID="btnLayoutCancel" runat="server" CssClass="btn btn-default btn-cancel" Text="Cancel" CausesValidation="false" OnClick="btnLayoutCancel_Click" />
+                        <asp:LinkButton ID="btnLayoutCancel" runat="server" CssClass="btn btn-default btn-cancel" Text="Cancel" CausesValidation="false" OnClick="btnCancel_Clicked" />
+                        <asp:LinkButton ID="btnDeleteCurrentLayout" runat="server" Text="Delete" OnClick="btnDeleteLayout_Click" CssClass="btn btn-link" CausesValidation="false" />
                     </div>
                 </div>
             </asp:Panel>
