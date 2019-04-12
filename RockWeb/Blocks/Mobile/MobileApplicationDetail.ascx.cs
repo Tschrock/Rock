@@ -11,6 +11,7 @@ using Rock.Data;
 using Rock.Mobile.Common;
 using Rock.Mobile.Common.Enums;
 using Rock.Model;
+using Rock.Security;
 using Rock.Web.Cache;
 using Rock.Web.UI;
 using Rock.Web.UI.Controls;
@@ -27,20 +28,12 @@ public partial class Blocks_Mobile_MobileApplicationDetail : RockBlock, IDetailB
     }
     #endregion
 
+    private List<PageInfo> _pageWithDepth = new List<PageInfo>();
+    private int _depth = 0;
     protected override void OnInit( EventArgs e )
     {
         base.OnInit( e );
         btnApplicationDelete.Attributes["onclick"] = string.Format( "javascript: return Rock.dialogs.confirmDelete(event, 'Application');" );
-
-    }
-    /// <summary>
-    /// Handles the Load event of the Page control.
-    /// </summary>
-    /// <param name="sender">The source of the event.</param>
-    /// <param name="e">The <see cref="EventArgs"/> instance containing the event data.</param>
-    protected void Page_Load( object sender, EventArgs e )
-    {
-
     }
 
     /// <summary>
@@ -56,6 +49,12 @@ public partial class Blocks_Mobile_MobileApplicationDetail : RockBlock, IDetailB
             {
                 ShowDetail( PageParameter( "siteId" ).AsInteger() );
 
+                if ( !IsUserAuthorized( Authorization.EDIT ) )
+                {
+                    btnEdit.Visible = false;
+                    btnApplicationDelete.Visible = false;
+                    btnPublish.Visible = false;
+                }
             }
         }
     }
@@ -79,6 +78,7 @@ public partial class Blocks_Mobile_MobileApplicationDetail : RockBlock, IDetailB
         }
     }
     private List<Rock.Model.Layout> ExistingLayouts { get; set; }
+
     #endregion
 
     #region Methods
@@ -99,6 +99,10 @@ public partial class Blocks_Mobile_MobileApplicationDetail : RockBlock, IDetailB
         imgIcon.BinaryFileTypeGuid = fileTypeGuid;
 
         Site site = null;
+        if ( siteId == 0 )
+        {
+            DisplayDeleteAndPublishButton( false );
+        }
 
         if ( !siteId.Equals( 0 ) )
         {
@@ -127,8 +131,35 @@ public partial class Blocks_Mobile_MobileApplicationDetail : RockBlock, IDetailB
         imgPreviewThumbnail.BinaryFileId = site.ThumbnailFileId;
 
         BindAdditionalSettings( site );
-
+        UpdateExistingLayouts( site.Id );
         BuildLayoutMenue();
+        BuildLayoutDisplay();
+    }
+
+    /// <summary>
+    /// Displays the delete and publish button.
+    /// </summary>
+    /// <param name="isVisible">if set to <c>true</c> [is visible].</param>
+    private void DisplayDeleteAndPublishButton( bool isVisible )
+    {
+        btnApplicationDelete.Visible = isVisible;
+        btnPublish.Visible = isVisible;
+    }
+
+    /// <summary>
+    /// Enables the layout tab.
+    /// </summary>
+    /// <param name="enabled">if set to <c>true</c> [enabled].</param>
+    private void EnableLayoutTab( bool enabled )
+    {
+        if ( !enabled )
+        {
+            this.liLayout.Attributes.Add( "class", "disabled" );
+            this.tabLayout.Attributes.Add( "class", "disabled" );
+            return;
+        }
+
+        this.liLayout.Attributes.Remove( "class" );
     }
 
     /// <summary>
@@ -149,20 +180,7 @@ public partial class Blocks_Mobile_MobileApplicationDetail : RockBlock, IDetailB
 
         // Layout information
         this.ExistingLayouts = new LayoutService( new RockContext() ).GetBySiteId( ( int ) siteId ).ToList();
-
-        if ( this.ExistingLayouts.Count > 0 )
-        {
-            StringBuilder sb = new StringBuilder();
-            sb.AppendLine( "<ul id='ulLayouts'>" );
-            foreach ( var layout in this.ExistingLayouts )
-            {
-                sb.AppendLine( string.Format( "<li id='li_{0}' ><label class='control-label'>{1}</label></li>", layout.Id, layout.Name ) );
-            }
-
-            sb.AppendLine( "</ul>" );
-
-            this.ltLayouts.Text = sb.ToString();
-        }
+        BuildLayoutDisplay();
 
         // Setup Image
         if ( site.SiteLogoBinaryFileId != null )
@@ -175,14 +193,46 @@ public partial class Blocks_Mobile_MobileApplicationDetail : RockBlock, IDetailB
             ltMobileImage.Text = string.Format( "<a href='{0}'><img src='/GetImage.ashx?id={1}' height='auto' width='100' /></a>", site.ThumbnailFileUrl, site.ThumbnailFileId );
         }
 
-        this.liLayout.Attributes.Remove( "class" );
     }
 
+    /// <summary>
+    /// Builds the layout display.
+    /// </summary>
+    private void BuildLayoutDisplay()
+    {
+        if ( this.ExistingLayouts != null && this.ExistingLayouts.Count > 0 )
+        {
+            StringBuilder sb = new StringBuilder();
+            sb.AppendLine( "<ul id='ulLayouts'>" );
+            foreach ( var layout in this.ExistingLayouts )
+            {
+                sb.AppendLine( string.Format( "<li id='li_{0}' ><label class='control-label'>{1}</label></li>", layout.Id, layout.Name ) );
+            }
+
+            sb.AppendLine( "</ul>" );
+
+            this.ltLayouts.Text = sb.ToString();
+            btnPublish.Visible = true;
+        }
+        else
+        {
+            this.ltLayouts.Text = string.Empty;
+            btnPublish.Visible = false;
+        }
+    }
+
+    /// <summary>
+    /// Binds the title bar.
+    /// </summary>
+    /// <param name="site">The site.</param>
     private void BindTitleBar( Site site )
     {
         this.lReadOnlyTitle.Text = site.Name;
-        this.ltVersion.Text = string.Format( "<span class='label label-info'>Latest Version{0}</span>", ( ( DateTime ) site.LatestVersionDateTime ).ToString( @"MM/dd/yyyy hh:mm tt" ) );
-        this.liLayout.Attributes.Remove( "class" );
+        var latetestVersion = site.LatestVersionDateTime;
+        if ( latetestVersion != null )
+        {
+            this.ltVersion.Text = string.Format( "<span class='label label-info'>Latest Version{0}</span>", ( ( DateTime ) site.LatestVersionDateTime ).ToString( @"MM/dd/yyyy hh:mm tt" ) );
+        }
     }
 
     /// <summary>
@@ -215,11 +265,14 @@ public partial class Blocks_Mobile_MobileApplicationDetail : RockBlock, IDetailB
         pnlApplicationEditDetails.Visible = false;
     }
 
-    private void UpdateExistingLayouts(int siteId)
+    /// <summary>
+    /// Updates the existing layouts.
+    /// </summary>
+    /// <param name="siteId">The site identifier.</param>
+    private void UpdateExistingLayouts( int siteId )
     {
         var layoutService = new LayoutService( new RockContext() );
         this.ExistingLayouts = layoutService.GetBySiteId( ( int ) siteId ).Select( l => l ).ToList();
-
     }
     /// <summary>
     /// Displays the layout tab.
@@ -261,16 +314,7 @@ public partial class Blocks_Mobile_MobileApplicationDetail : RockBlock, IDetailB
             hfLayoutId.Value = layout.Id.ToString();
         }
 
-        this.LoadSelectedLayout( layoutId );
-
-        //TODO : Layout edit mode read only based on Permissions?
-
-        //if ( !IsUserAuthorized( Authorization.EDIT ) )
-        //{
-        //    readOnly = true;
-        //    nbEditModeMessage.Text = EditModeMessage.ReadOnlyEditActionNotAllowed( Rock.Model.Layout.FriendlyTypeName );
-        //}
-
+        LoadSelectedLayout( layoutId );
         pnlLayout.Visible = true;
         pnlApplicationDetails.Visible = false;
         pnlApplicationEditDetails.Visible = false;
@@ -284,17 +328,40 @@ public partial class Blocks_Mobile_MobileApplicationDetail : RockBlock, IDetailB
     {
         rptLayoutMenu.DataSource = this.ExistingLayouts;
         rptLayoutMenu.DataBind();
+
         if ( rptLayoutMenu.Items.Count > 0 )
         {
             var layoutId = this.ExistingLayouts.First().Id;
-            var selectedLayout = rptLayoutMenu.Items[0].FindControl(string.Format("layoutItem_{0}", layoutId ) ) as LinkButton;
+            var selectedLayout = rptLayoutMenu.Items[0].FindControl( string.Format( "layoutItem_{0}", layoutId ) ) as LinkButton;
             if ( selectedLayout != null )
             {
-                selectedLayout.Focus();   
+                selectedLayout.Focus();
             }
 
-            LoadSelectedLayout((int) layoutId );
-        }     
+            LoadSelectedLayout( ( int ) layoutId );
+
+            // If we have at least one show add button
+            DisplayLayoutAddButton( true );
+            btnDeleteCurrentLayout.Visible = true;
+            btnPublish.Visible = true;
+        }
+        else
+        {
+            // This is either the first one or all have been deleted
+            DisplayLayoutAddButton( false );
+            btnDeleteCurrentLayout.Visible = false;
+            btnPublish.Visible = false;
+        }
+    }
+
+    private void DisplayLayoutAddButton( bool isVisible )
+    {
+        // Display Add button if we at least have one
+        var btnAddLayout = this.FindControl( "aAddLayout" );
+        if ( btnAddLayout != null )
+        {
+            btnAddLayout.Visible = isVisible;
+        }
     }
 
     /// <summary>
@@ -306,6 +373,7 @@ public partial class Blocks_Mobile_MobileApplicationDetail : RockBlock, IDetailB
         pnlApplicationEditDetails.Visible = false;
         pnlLayout.Visible = false;
         pnlPages.Visible = false;
+        EnableLayoutTab( false );
     }
 
     /// <summary>
@@ -319,8 +387,8 @@ public partial class Blocks_Mobile_MobileApplicationDetail : RockBlock, IDetailB
         var liLayout = this.FindControl( "liLayout" ) as HtmlGenericControl;
         liLayout.Attributes.Remove( "class" );
 
-        var liPages = this.FindControl( "liPages" ) as HtmlGenericControl;
-        liPages.Attributes.Remove( "class" );
+        //var liPages = this.FindControl( "liPages" ) as HtmlGenericControl;
+        //liPages.Attributes.Remove( "class" );
     }
 
     /// <summary>
@@ -350,6 +418,18 @@ public partial class Blocks_Mobile_MobileApplicationDetail : RockBlock, IDetailB
                 if ( additionalSetting.ShellType != null )
                 {
                     rblApplicationType.SelectedValue = additionalSetting.ShellType.ConvertToString();
+                    if ( additionalSetting.ShellType == ShellType.Tabbed )
+                    {
+                        if ( additionalSetting.TabLocation != null )
+                        {
+                            rblAndroidTabLocation.SelectedValue = additionalSetting.TabLocation.ConvertToString();
+                        }
+                        rblAndroidTabLocation.Visible = true;
+                    }
+                    else
+                    {
+                        rblAndroidTabLocation.Visible = false;
+                    }
                 }
             }
         }
@@ -376,7 +456,7 @@ public partial class Blocks_Mobile_MobileApplicationDetail : RockBlock, IDetailB
     {
         hfLayoutId.Value = string.Empty;
         tbLayoutName.Text = string.Empty;
-        tbDescription.Text = string.Empty;
+        tbLayoutDescription.Text = string.Empty;
         cePhoneLayoutXaml.Text = string.Empty;
         ceTabletLayoutXaml.Text = string.Empty;
         tbLayoutName.Focus();
@@ -397,10 +477,26 @@ public partial class Blocks_Mobile_MobileApplicationDetail : RockBlock, IDetailB
                 var siteId = currentLayout.SiteId;
                 layoutService.Delete( currentLayout );
                 rockContext.SaveChanges();
-                UpdateExistingLayouts(siteId);
+                UpdateExistingLayouts( siteId );
                 BuildLayoutMenue();
-                ResetLayoutForAdd();
+                SetToFirstLayout();
             }
+        }
+    }
+
+    /// <summary>
+    /// Sets to first layout.
+    /// </summary>
+    private void SetToFirstLayout()
+    {
+        if ( this.ExistingLayouts.Count > 0 )
+        {
+            var firstLayout = this.ExistingLayouts.First();
+            LoadSelectedLayout( firstLayout.Id );
+        }
+        else
+        {
+            ResetLayoutForAdd();
         }
     }
 
@@ -433,19 +529,28 @@ public partial class Blocks_Mobile_MobileApplicationDetail : RockBlock, IDetailB
     /// <param name="e">The <see cref="EventArgs"/> instance containing the event data.</param>
     protected void Tab_SelectedClick( object sender, EventArgs e )
     {
-        ClearActiveTabs();
-
         var tab = sender as HtmlAnchor;
         var tabSelected = tab.InnerText;
         switch ( tabSelected )
         {
             case "Application":
+                ClearActiveTabs();
                 DisplayApplicationTab();
                 break;
             case "Layout":
+                if ( !this.pnlApplicationEditDetails.Visible )
+                {
+                    return;
+                }
+                ClearActiveTabs();
                 DisplayLayoutTab( hfLayoutId.Value.AsIntegerOrNull(), hfSiteId.Value.AsInteger() );
                 break;
             case "Pages":
+                if ( !this.pnlApplicationEditDetails.Visible )
+                {
+                    return;
+                }
+                ClearActiveTabs();
                 DisplayPagesTab();
                 break;
             default:
@@ -505,6 +610,10 @@ public partial class Blocks_Mobile_MobileApplicationDetail : RockBlock, IDetailB
     {
         pnlApplicationDetails.Visible = false;
         pnlApplicationEditDetails.Visible = true;
+        if ( hfSiteId.Value.AsIntegerOrNull() != null && hfSiteId.Value.AsInteger() > 0 )
+        {
+            EnableLayoutTab( true );
+        }
     }
 
     /// <summary>
@@ -597,9 +706,10 @@ public partial class Blocks_Mobile_MobileApplicationDetail : RockBlock, IDetailB
 
             hfSiteId.Value = site.Id.ToString();
             BindTitleBar( site );
+            DisplayDeleteAndPublishButton( true );
         }
 
-        DisplayApplicationTab();
+        SetApplicationTabActive();
     }
 
     /// <summary>
@@ -647,7 +757,100 @@ public partial class Blocks_Mobile_MobileApplicationDetail : RockBlock, IDetailB
     /// <param name="e">The <see cref="EventArgs"/> instance containing the event data.</param>
     protected void btnPublish_Click( object sender, EventArgs e )
     {
+        var siteId = hfSiteId.Value.AsIntegerOrNull();
+        if ( siteId == null && siteId == 0 )
+        {
+            return;
+        }
 
+        List<Rock.Model.Layout> mobilePackageLayoutInfo = new List<Rock.Model.Layout>();
+        List<Rock.Model.Layout> tabletPackageLayoutInfo = new List<Rock.Model.Layout>();
+
+        var rockContext = new RockContext();
+        var siteToPublish = new SiteService( rockContext ).Get( ( int ) siteId );
+        if ( siteToPublish != null )
+        {
+            var existingLayouts = new LayoutService( rockContext ).GetBySiteId( ( int ) siteId ).ToList();
+            this.ExistingLayouts = existingLayouts;
+
+
+            foreach ( var layout in existingLayouts )
+            {
+                if ( layout.LayoutMobilePhone.IsNotNullOrWhiteSpace() )
+                {
+                    mobilePackageLayoutInfo.Add( layout );
+                }
+                if ( layout.LayoutMobileTablet.IsNotNullOrWhiteSpace() )
+                {
+                    tabletPackageLayoutInfo.Add( layout );
+                }
+            }
+        }
+
+        var mobilePhonePackage = new UpdatePackage();
+        var mobileTabletPackage = new UpdatePackage();
+
+        var pages = new PageService( rockContext ).GetBySiteId( siteId ).Select( p => new PageInfo { Page = p, Block = p.Blocks } ).ToList();
+        var rootPages = pages.Where( p => p.Page.ParentPageId == null ).Select( p => p ).ToList();
+
+        foreach ( var rootPage in rootPages )
+        {
+            _depth = 0;
+            rootPage.Depth = _depth;
+            _pageWithDepth.Add( rootPage );
+            AssignPageDepth( rootPage.Page,0);
+        }
+
+        var latestVersionDate = RockDateTime.Now;
+        // Unix time stamp UTC - epoc-time of 1970-01-01.
+        Int32 unixTimestamp = ( Int32 ) ( latestVersionDate.ToUniversalTime().Subtract( new DateTime( 1970, 1, 1 ) ) ).TotalSeconds;
+        siteToPublish.LatestVersionDateTime = latestVersionDate;
+
+        var appSetting = this.GetAdditionalSettingFromSite( siteToPublish.AdditionalSettings );
+
+        mobilePhonePackage.ApplicationVersionId = unixTimestamp;
+        if ( appSetting != null )
+        {
+            mobilePhonePackage.ApplicationType = ( ShellType ) appSetting.ShellType;
+            mobileTabletPackage.ApplicationVersionId = unixTimestamp;
+
+            if ( appSetting.CssStyle.IsNotNullOrWhiteSpace() )
+            {
+                mobilePhonePackage.CssStyles = appSetting.CssStyle;
+            }
+
+            if ( appSetting.ShellType == ShellType.Tabbed )
+            {
+                mobilePhonePackage.TabsOnBottomOnAndroid = appSetting.TabLocation == TabLocation.Bottom;
+            }
+        }
+
+        foreach ( var mobilePackageInfo in mobilePackageLayoutInfo )
+        {
+            var mobileLayout = new Rock.Mobile.Common.Layout { LayoutGuid = mobilePackageInfo.Guid, LayoutXaml = mobilePackageInfo.LayoutMobilePhone, Name = mobilePackageInfo.Name };
+            mobilePhonePackage.Layouts.Add( mobileLayout );
+        }
+
+        foreach ( var tabletPackageInfo in tabletPackageLayoutInfo )
+        {
+            var tabletLayout = new Rock.Mobile.Common.Layout { LayoutGuid = tabletPackageInfo.Guid, LayoutXaml = tabletPackageInfo.LayoutMobilePhone, Name = tabletPackageInfo.Name };
+            mobilePhonePackage.Layouts.Add( tabletLayout );
+        }
+    }
+
+    private void AssignPageDepth(Rock.Model.Page currentPage,int currentLevel)
+    {
+        foreach ( var child in currentPage.Pages)
+        {
+            currentLevel += 1;
+            _pageWithDepth.Add( new PageInfo { Page = child,Depth = currentLevel} );
+            if ( child.Pages.Count > 0)
+            {
+                AssignPageDepth( child, currentLevel);
+            }
+        }
+
+        new PageInfo { Page = currentPage, Depth = currentLevel };
     }
 
     /// <summary>
@@ -690,13 +893,15 @@ public partial class Blocks_Mobile_MobileApplicationDetail : RockBlock, IDetailB
 
             if ( layout.Id.Equals( 0 ) )
             {
-                layoutService.Add( layout ); 
+                layoutService.Add( layout );
             }
 
             rockContext.SaveChanges();
             hfLayoutId.Value = layout.Id.ToString();
-            UpdateExistingLayouts(layout.SiteId);
+            UpdateExistingLayouts( layout.SiteId );
             BuildLayoutMenue();
+            BuildLayoutDisplay();
+            DisplayApplicationTab();
         }
     }
 
@@ -707,7 +912,13 @@ public partial class Blocks_Mobile_MobileApplicationDetail : RockBlock, IDetailB
     /// <param name="e">The <see cref="EventArgs"/> instance containing the event data.</param>
     protected void btnCancel_Clicked( object sender, EventArgs e )
     {
-        DisplayApplicationTab();
+        if ( hfSiteId.Value.AsIntegerOrNull() != null )
+        {
+            UpdateExistingLayouts( hfSiteId.Value.AsInteger() );
+        }
+
+        BuildLayoutMenue();
+        BuildLayoutDisplay();
         SetApplicationTabActive();
     }
 
@@ -764,7 +975,7 @@ public partial class Blocks_Mobile_MobileApplicationDetail : RockBlock, IDetailB
     /// <param name="e">The <see cref="EventArgs"/> instance containing the event data.</param>
     protected void btnDeleteLayout_Click( object sender, EventArgs e )
     {
-       DeleteCurrentLayout();  
+        DeleteCurrentLayout();
     }
 
     /// <summary>
@@ -784,6 +995,12 @@ public partial class Blocks_Mobile_MobileApplicationDetail : RockBlock, IDetailB
         }
     }
 
+    public class PageInfo
+    {
+        public Rock.Model.Page Page { get; set; }
+        public ICollection<Rock.Model.Block> Block { get; set; }
+        public int Depth { get; set; }
+    }
 
     #endregion
 }

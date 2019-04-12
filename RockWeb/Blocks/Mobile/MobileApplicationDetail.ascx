@@ -3,13 +3,11 @@
     <ContentTemplate>
         <div class="panel panel-block">
             <div class="panel-heading panel-follow clearfix">
-                <div class="panel-heading">
                     <h1 class="panel-title"><i class="fa fa-desktop"></i>
                         <asp:Literal ID="lReadOnlyTitle" runat="server" /></h1>
                     <div class="panel-labels">
                         <asp:Literal ID="ltVersion" runat="server" />
                     </div>
-                </div>
             </div>
             <!-- Tabs -->
             <asp:Panel runat="server" ID="pnlTabs">
@@ -18,7 +16,7 @@
                     <ul class="nav nav-tabs">
                         <li runat="server" id="liApplication"><a href="#" id="tabApplication" runat="server" onserverclick="Tab_SelectedClick">Application</a></li>
                         <li runat="server" id="liLayout" class="disabled" ><a href="#" id="tabLayout" runat="server"  onserverclick="Tab_SelectedClick">Layout</a></li>
-                        <li runat="server" id="liPages" class="disabled"><a href="#" id="tabPages" runat="server" onserverclick="Tab_SelectedClick">Pages</a></li>
+                        <li runat="server" id="liPages" class="disabled"><a href="#" id="tabPages"  runat="server" onserverclick="Tab_SelectedClick">Pages</a></li>
                     </ul>
                 </div>
             </asp:Panel>
@@ -49,7 +47,7 @@
                         <asp:Panel ID="pnlReadOnlyModeActions" runat="server" CssClass="actions">
                             <asp:LinkButton ID="btnEdit" runat="server" AccessKey="m" ToolTip="Alt+m" Text="Edit" CssClass="btn btn-primary" OnClick="btnEdit_Click" />
                             <asp:LinkButton ID="btnApplicationDelete" runat="server" Text="Delete" OnClick="btnApplicationDelete_Click" CssClass="btn btn-link" CausesValidation="false" />
-                            <asp:LinkButton ID="btnPublish" runat="server" Text="Publish" CssClass="btn btn-secondary" OnClick="btnPublish_Click" />
+                            <asp:LinkButton ID="btnPublish" Visible="false" runat="server" Text="Publish" CssClass="btn btn-secondary" OnClick="btnPublish_Click" />
                         </asp:Panel>
                     </div>
                 </fieldset>
@@ -127,10 +125,10 @@
                                 </li>
                             </ItemTemplate>
                             <FooterTemplate>  
-                                </ul>
-                               <div><a href="#" id="aAddLayout" runat="server" class="fa fa-plus-square-o" onserverclick="btnAddLayout_Click" /></div> 
+                                </ul>  
                             </FooterTemplate>
                         </asp:Repeater>
+                        <div><a href="#" id="aAddLayout" title="Add layout" runat="server" class="fa fa-plus-square-o" onserverclick="btnAddLayout_Click" visible="false" /></div> 
                     </div>
                     <div class="col-md-11">
                         <div class="row">
@@ -157,7 +155,7 @@
                     <div class="actions">
                         <Rock:BootstrapButton ID="btnSaveLayout" runat="server" CssClass="btn btn-primary" Text="Save" CausesValidation="true" OnClick="btnSaveLayout_Click" DataLoadingText="Saving..." />
                         <asp:LinkButton ID="btnLayoutCancel" runat="server" CssClass="btn btn-default btn-cancel" Text="Cancel" CausesValidation="false" OnClick="btnCancel_Clicked" />
-                        <asp:LinkButton ID="btnDeleteCurrentLayout" runat="server" Text="Delete" OnClick="btnDeleteLayout_Click" CssClass="btn btn-link" CausesValidation="false" />
+                        <asp:LinkButton ID="btnDeleteCurrentLayout" runat="server" Text="Delete" OnClick="btnDeleteLayout_Click" CssClass="btn btn-link" CausesValidation="false" Visible="false" />
                     </div>
                 </div>
             </asp:Panel>

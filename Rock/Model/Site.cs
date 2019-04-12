@@ -841,7 +841,7 @@ namespace Rock.Model
                 using ( var rockContext = new RockContext() )
                 {
                     var binaryFile = new BinaryFileService( rockContext ).Get( ( int ) BinaryFileId );
-                    if ( binaryFile != null )
+                    if ( binaryFile != null && binaryFile.Path != null )
                     {
                         if ( binaryFile.Path.Contains( "~" ) )
                         {
