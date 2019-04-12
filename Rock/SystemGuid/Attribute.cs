@@ -116,44 +116,44 @@ namespace Rock.SystemGuid
         public const string PERSON_SPIRITUAL_GIFTS_LAST_SAVE_DATE = "3668547C-3DC4-450B-B92D-4B98A693A371";
 
         /// <summary>
-        /// The person attribute for the conflict approach winning
+        /// The person attribute for the conflict mode: winning
         /// </summary>
-        public const string PERSON_CONFLICT_APPROACH_WINNING = "7147F706-388E-45E6-BE21-893FC7D652AA";
+        public const string PERSON_CONFLICT_MODE_WINNING = "7147F706-388E-45E6-BE21-893FC7D652AA";
 
         /// <summary>
-        /// The person attribute for the conflict approach resolving 
+        /// The person attribute for the conflict mode: resolving 
         /// </summary>
-        public const string PERSON_CONFLICT_APPROACH_RESOLVING = "5B811EAC-51B2-41F2-A55A-C966D9DB05EE";
+        public const string PERSON_CONFLICT_MODE_RESOLVING = "5B811EAC-51B2-41F2-A55A-C966D9DB05EE";
 
         /// <summary>
-        /// The person attribute for the conflict approach compromising  
+        /// The person attribute for the conflict mode: compromising  
         /// </summary>
-        public const string PERSON_CONFLICT_APPROACH_COMPROMISING = "817D6B13-E4AA-4E93-8547-FE711A0065F2";
+        public const string PERSON_CONFLICT_MODE_COMPROMISING = "817D6B13-E4AA-4E93-8547-FE711A0065F2";
 
         /// <summary>
-        /// The person attribute for the conflict approach avoiding  
+        /// The person attribute for the conflict mode: avoiding  
         /// </summary>
-        public const string PERSON_CONFLICT_APPROACH_AVOIDING = "071A8EFA-AD1C-436A-8E1E-23D215617004";
+        public const string PERSON_CONFLICT_MODE_AVOIDING = "071A8EFA-AD1C-436A-8E1E-23D215617004";
 
         /// <summary>
-        /// The person attribute for the conflict approach yielding  
+        /// The person attribute for the conflict mode: yielding  
         /// </summary>
-        public const string PERSON_CONFLICT_APPROACH_YIELDING = "D30A33AD-7A60-43E0-84DA-E23600156BF7";
+        public const string PERSON_CONFLICT_MODE_YIELDING = "D30A33AD-7A60-43E0-84DA-E23600156BF7";
 
         /// <summary>
-        /// The person attribute for the conflict approach passive  
+        /// The person attribute for the conflict engagement profile: accommodating  
         /// </summary>
-        public const string PERSON_CONFLICT_APPROACH_PASSIVE = "404A64FB-7396-4896-9C94-84DE21E995CA";
+        public const string PERSON_CONFLICT_ENGAGEMENT_ACCOMMODATING = "404A64FB-7396-4896-9C94-84DE21E995CA";
 
         /// <summary>
-        /// The person attribute for the conflict approach aggressive  
+        /// The person attribute for the conflict engagement profile: winning  
         /// </summary>
-        public const string PERSON_CONFLICT_APPROACH_AGGRESSIVE = "6DE5878D-7CDB-404D-93A7-27CFF5E98C3B";
+        public const string PERSON_CONFLICT_ENGAGEMENT_WINNING = "6DE5878D-7CDB-404D-93A7-27CFF5E98C3B";
 
         /// <summary>
-        /// The person attribute for the conflict approach engaged  
+        /// The person attribute for the conflict engagement profile: solving  
         /// </summary>
-        public const string PERSON_CONFLICT_APPROACH_ENGAGED = "33235605-D8BB-4C1E-B231-6F085970A14F";
+        public const string PERSON_CONFLICT_ENGAGEMENT_SOLVING = "33235605-D8BB-4C1E-B231-6F085970A14F";
 
         #endregion
 

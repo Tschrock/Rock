@@ -55,27 +55,28 @@ namespace Rockweb.Blocks.Crm
     calm your mind, and help you respond to each item as honestly as you can. Don't spend much time
     on each item. Your first instinct is probably your best response.
 </p>" )]
+
     [CodeEditorField( "Results Message", "The text (HTML) to display at the top of the results section.<span class='tip tip-lava'></span><span class='tip tip-html'></span>", CodeEditorMode.Html, CodeEditorTheme.Rock, 400, true, @"
 <p>
    Your scores on this report are how YOU see yourself currently dealing with conflict in the environment chosen. This may or may not be accurate depending on how you are aware of yourself in the midst of conflict. It is most helpful to discuss your scores with someone who understands both you and this assessment.  Remember, in the future, the way you approach conflict should be dictated by the situation, not just how you are used to dealing with conflict. In doing so, everyone benefits, including you.
 </p>
 
+<h2>Conflict Engagement Profile</h2>
 {[ chart type:'pie' ]}
-    [[ dataitem label:'Passive' value:'{{Passive}}' fillcolor:'#4BC0C0' ]] [[ enddataitem ]]
-    [[ dataitem label:'Aggressive' value:'{{Aggressive}}' fillcolor:'#FF3D67' ]] [[ enddataitem ]]
-    [[ dataitem label:'Engaged' value:'{{Engaged}}' fillcolor:'#FFCD56' ]] [[ enddataitem ]]
+    [[ dataitem label:'Solving' value:'{{EngagementProfileSolving}}' fillcolor:'#FFCD56' ]] [[ enddataitem ]]
+    [[ dataitem label:'Accommodating' value:'{{EngagementProfileAccommodating}}' fillcolor:'#4BC0C0' ]] [[ enddataitem ]]
+    [[ dataitem label:'Winning' value:'{{EngagementProfileWinning}}' fillcolor:'#FF3D67' ]] [[ enddataitem ]]
 {[ endchart ]}
 
- Passive - {{Passive}} <br/>
- Aggressive - {{Aggressive}} <br/>
- Engaged - {{Engaged}}
+<h4>Brief Definitions for Conflict Engagement Modes</h4>
+
 <p>
-Brief Definitions for Conflict Engagement Modes<br>
-<b>SOLVING</b> describes those who seek to use both RESOLVING and COMPROMISING modes for solving conflict. By combining these two modes, those who seek to solve problems as a team. Their leadership styles are highly cooperative and empowering for the benefit of the entire group.<br>
-<b>ACCOMMODATING</b> combines AVOIDING and YIELDING modes for solving conflict. Those who are ACCOMMODATING are most effective in roles where allowing others to have their way is better for the team. They are often most effective in support roles or roles where an emphasis on the contribution of others is significant.<br>
-A <b>WINNING</b> engagement profile relates to the WINNING mode for solving conflict. Depending on your role, WINNING engagement is important for times when quick decisions need to be made and essential for sole-proprietors.
+    <b>SOLVING</b> describes those who seek to use both RESOLVING and COMPROMISING modes for solving conflict. By combining these two modes, those who seek to solve problems as a team. Their leadership styles are highly cooperative and empowering for the benefit of the entire group.<br>
+    <b>ACCOMMODATING</b> combines AVOIDING and YIELDING modes for solving conflict. Those who are ACCOMMODATING are most effective in roles where allowing others to have their way is better for the team. They are often most effective in support roles or roles where an emphasis on the contribution of others is significant.<br>
+    A <b>WINNING</b> engagement profile relates to the WINNING mode for solving conflict. Depending on your role, WINNING engagement is important for times when quick decisions need to be made and essential for sole-proprietors.
 </p>
 
+<h2>Your Results Across All Five Modes</h2>
 {[ chart type:'bar' ]}
     [[ dataitem label:'Winning' value:'{{Winning}}' fillcolor:'#FF3D67' ]] [[ enddataitem ]]
     [[ dataitem label:'Resolving' value:'{{Resolving}}' fillcolor:'#059BFF' ]] [[ enddataitem ]]
@@ -84,18 +85,13 @@ A <b>WINNING</b> engagement profile relates to the WINNING mode for solving conf
     [[ dataitem label:'Yielding' value:'{{Yielding}}' fillcolor:'#880D37' ]] [[ enddataitem ]]
 {[ endchart ]}
 
- Winning - {{Winning}} <br/>
- Avoiding - {{Avoiding}} <br/>
- Compromising - {{Compromising}} <br/>
- Resolving - {{Resolving}} <br/>
- Yielding - {{Yielding}}
+<h4>Brief Definitions for Conflict Profile Modes</h4>
 <p>
-Brief Definitions for Conflict Profile Modes<br>
-<b>WINNING is competing and uncooperative. You believe you have the right answer and you must prove you are right whatever it takes. This may be standing up for your own rights, beliefs or position.<br>
-<b>RESOLVING</b> is attempting to work with the other person in depth to find the best solution regardless of where it may lie on the continuum. This involves digging beneath the presenting issue to find a way out that benefits both parties.<br>
-<b>COMPROMISING is finding a middle ground in the conflict. This often involves meeting in the middle or finding some mutually agreeable point between both positions and is useful for quick solutions.<br>
-<b>AVOIDING is not pursuing your own rights or those of the other person. You do not address the conflict. This may be diplomatically sidestepping an issue or avoiding a threatening situation.<br>
-<b>YIELDING is neglecting your own interests and giving in to those of the other person. This is self-sacrifice and may be charity, serving or choosing to obey another when you prefer not to.
+    <b>WINNING</b> is competing and uncooperative. You believe you have the right answer and you must prove you are right whatever it takes. This may be standing up for your own rights, beliefs or position.<br>
+    <b>RESOLVING</b> is attempting to work with the other person in depth to find the best solution regardless of where it may lie on the continuum. This involves digging beneath the presenting issue to find a way out that benefits both parties.<br>
+    <b>COMPROMISING</b> is finding a middle ground in the conflict. This often involves meeting in the middle or finding some mutually agreeable point between both positions and is useful for quick solutions.<br>
+    <b>AVOIDING</b> is not pursuing your own rights or those of the other person. You do not address the conflict. This may be diplomatically sidestepping an issue or avoiding a threatening situation.<br>
+    <b>YIELDING</b> is neglecting your own interests and giving in to those of the other person. This is self-sacrifice and may be charity, serving or choosing to obey another when you prefer not to.
 </p>
 " )]
     public partial class ConflictProfile : Rock.Web.UI.RockBlock
@@ -458,14 +454,18 @@ Brief Definitions for Conflict Profile Modes<br>
             {
                 _targetPerson.LoadAttributes();
                 mergeFields.Add( "Person", _targetPerson );
-                mergeFields.Add( "Winning", result.WinningScore );
-                mergeFields.Add( "Avoiding", result.AvoidingScore );
-                mergeFields.Add( "Compromising", result.CompromisingScore );
-                mergeFields.Add( "Aggressive", result.AggressiveScore );
-                mergeFields.Add( "Yielding", result.YieldingScore );
-                mergeFields.Add( "Passive", result.PassiveScore );
-                mergeFields.Add( "Resolving", result.ResolvingScore );
-                mergeFields.Add( "Engaged", result.EngagedScore );
+
+                // The five Mode scores
+                mergeFields.Add( "Winning", result.ModeWinningScore );
+                mergeFields.Add( "Avoiding", result.ModeAvoidingScore );
+                mergeFields.Add( "Compromising", result.ModeCompromisingScore );
+                mergeFields.Add( "Yielding", result.ModeYieldingScore );
+                mergeFields.Add( "Resolving", result.ModeResolvingScore );
+                // The optional 'Conflict Engagement Profile' scores:
+                mergeFields.Add( "EngagementProfileSolving", result.EngagementSolvingScore );
+                mergeFields.Add( "EngagementProfileAccommodating", result.EngagementAccommodatingScore );
+                mergeFields.Add( "EngagementProfileWinning", result.EngagementWinningScore );
+
             }
             lResult.Text = GetAttributeValue( RESULTS_MESSAGE ).ResolveMergeFields( mergeFields );
         }

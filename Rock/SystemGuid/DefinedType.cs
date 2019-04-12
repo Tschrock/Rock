@@ -90,6 +90,11 @@ namespace Rock.SystemGuid
         public const string DISC_RESULTS_TYPE = "F06DDAD8-6058-4182-AD0A-B523BB7A2D78";
 
         /// <summary>
+        /// Guid for the Conflict Profile assessment.
+        /// </summary>
+        public const string ASSESSMENT_CONFLICT_PROFILE = "EE7E089E-DF81-4407-8BFA-AD865FA5427A";
+
+        /// <summary>
         /// Guid for the Domains Sharing Logins
         /// </summary>
         public const string DOMAINS_SHARING_LOGINS = "6CE00E1B-FE09-45FE-BD9D-56C57A11BE1A";

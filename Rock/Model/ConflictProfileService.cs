@@ -11,21 +11,21 @@ namespace Rock.Model
     /// </summary>
     public class ConflictProfileService
     {
-        private const string ATTRIBUTE_WINNING = "core_ConflictApproachWinning";
+        private const string ATTRIBUTE_MODE_WINNING = "core_ConflictModeWinning";
 
-        private const string ATTRIBUTE_RESOLVING = "core_ConflictApproachResolving";
+        private const string ATTRIBUTE_MODE_RESOLVING = "core_ConflictModeResolving";
 
-        private const string ATTRIBUTE_COMPROMISING = "core_ConflictApproachCompromising";
+        private const string ATTRIBUTE_MODE_COMPROMISING = "core_ConflictModeCompromising";
 
-        private const string ATTRIBUTE_AVOIDING = "core_ConflictApproachAvoiding";
+        private const string ATTRIBUTE_MODE_AVOIDING = "core_ConflictModeAvoiding";
 
-        private const string ATTRIBUTE_YEILDING = "core_ConflictApproachYielding";
+        private const string ATTRIBUTE_MODE_YEILDING = "core_ConflictModeYielding";
 
-        private const string ATTRIBUTE_PASSIVE = "core_ConflictEngagementPassive";
+        private const string ATTRIBUTE_ENGAGEMENT_ACCOMMODATING = "core_ConflictEngagementAccommodating";
 
-        private const string ATTRIBUTE_AGGRESSIVE = "core_ConflictEngagementAggressive";
+        private const string ATTRIBUTE_ENGAGEMENT_WINNING = "core_ConflictEngagementWinning";
 
-        private const string ATTRIBUTE_ENGAGED = "core_ConflictEngagementEngaged";
+        private const string ATTRIBUTE_ENGAGEMENT_SOLVING = "core_ConflictEngagementSolving";
 
         /// <summary>
         /// Raw question data with code as key.
@@ -202,18 +202,19 @@ namespace Rock.Model
             testResults.AssessmentData.Avoiding = assessmentDatas[SystemGuid.DefinedValue.CONFLICT_PROFILE_AVOIDING.AsGuid()];
             testResults.AssessmentData.Yielding = assessmentDatas[SystemGuid.DefinedValue.CONFLICT_PROFILE_YEILDING.AsGuid()];
 
-            testResults.WinningScore = GetPercentFromScore( zScores[SystemGuid.DefinedValue.CONFLICT_PROFILE_WINNING.AsGuid()] );
-            testResults.ResolvingScore = GetPercentFromScore( zScores[SystemGuid.DefinedValue.CONFLICT_PROFILE_RESOLVING.AsGuid()] );
-            testResults.CompromisingScore = GetPercentFromScore( zScores[SystemGuid.DefinedValue.CONFLICT_PROFILE_COMPROMISING.AsGuid()] );
-            testResults.AvoidingScore = GetPercentFromScore( zScores[SystemGuid.DefinedValue.CONFLICT_PROFILE_AVOIDING.AsGuid()] );
-            testResults.YieldingScore = GetPercentFromScore( zScores[SystemGuid.DefinedValue.CONFLICT_PROFILE_YEILDING.AsGuid()] );
+            testResults.ModeWinningScore = GetPercentFromScore( zScores[SystemGuid.DefinedValue.CONFLICT_PROFILE_WINNING.AsGuid()] );
+            testResults.ModeResolvingScore = GetPercentFromScore( zScores[SystemGuid.DefinedValue.CONFLICT_PROFILE_RESOLVING.AsGuid()] );
+            testResults.ModeCompromisingScore = GetPercentFromScore( zScores[SystemGuid.DefinedValue.CONFLICT_PROFILE_COMPROMISING.AsGuid()] );
+            testResults.ModeAvoidingScore = GetPercentFromScore( zScores[SystemGuid.DefinedValue.CONFLICT_PROFILE_AVOIDING.AsGuid()] );
+            testResults.ModeYieldingScore = GetPercentFromScore( zScores[SystemGuid.DefinedValue.CONFLICT_PROFILE_YEILDING.AsGuid()] );
 
-            var totalPerc = testResults.WinningScore + testResults.ResolvingScore
-                                + testResults.CompromisingScore + testResults.AvoidingScore
-                                + testResults.YieldingScore;
-            testResults.EngagedScore = Math.Round( ( testResults.ResolvingScore + testResults.CompromisingScore ) * 100 / totalPerc, 1 );
-            testResults.PassiveScore = Math.Round( ( testResults.AvoidingScore + testResults.YieldingScore ) * 100 / totalPerc, 1 );
-            testResults.AggressiveScore = Math.Round( testResults.WinningScore * 100 / totalPerc, 1 );
+            var totalPerc = testResults.ModeWinningScore + testResults.ModeResolvingScore
+                                + testResults.ModeCompromisingScore + testResults.ModeAvoidingScore
+                                + testResults.ModeYieldingScore;
+            // Compute the optional "Conflict Engagement Profile" scores
+            testResults.EngagementSolvingScore = Math.Round( ( testResults.ModeResolvingScore + testResults.ModeCompromisingScore ) * 100 / totalPerc, 1 );
+            testResults.EngagementAccommodatingScore = Math.Round( ( testResults.ModeAvoidingScore + testResults.ModeYieldingScore ) * 100 / totalPerc, 1 );
+            testResults.EngagementWinningScore = Math.Round( testResults.ModeWinningScore * 100 / totalPerc, 1 );
             return testResults;
         }
 
@@ -244,14 +245,14 @@ namespace Rock.Model
         {
             person.LoadAttributes();
 
-            person.SetAttributeValue( ATTRIBUTE_WINNING, assessmentResults.WinningScore );
-            person.SetAttributeValue( ATTRIBUTE_RESOLVING, assessmentResults.ResolvingScore );
-            person.SetAttributeValue( ATTRIBUTE_COMPROMISING, assessmentResults.CompromisingScore );
-            person.SetAttributeValue( ATTRIBUTE_AVOIDING, assessmentResults.AvoidingScore );
-            person.SetAttributeValue( ATTRIBUTE_YEILDING, assessmentResults.YieldingScore );
-            person.SetAttributeValue( ATTRIBUTE_PASSIVE, assessmentResults.PassiveScore );
-            person.SetAttributeValue( ATTRIBUTE_AGGRESSIVE, assessmentResults.AggressiveScore );
-            person.SetAttributeValue( ATTRIBUTE_ENGAGED, assessmentResults.EngagedScore );
+            person.SetAttributeValue( ATTRIBUTE_MODE_WINNING, assessmentResults.ModeWinningScore );
+            person.SetAttributeValue( ATTRIBUTE_MODE_RESOLVING, assessmentResults.ModeResolvingScore );
+            person.SetAttributeValue( ATTRIBUTE_MODE_COMPROMISING, assessmentResults.ModeCompromisingScore );
+            person.SetAttributeValue( ATTRIBUTE_MODE_AVOIDING, assessmentResults.ModeAvoidingScore );
+            person.SetAttributeValue( ATTRIBUTE_MODE_YEILDING, assessmentResults.ModeYieldingScore );
+            person.SetAttributeValue( ATTRIBUTE_ENGAGEMENT_ACCOMMODATING, assessmentResults.EngagementAccommodatingScore );
+            person.SetAttributeValue( ATTRIBUTE_ENGAGEMENT_WINNING, assessmentResults.EngagementWinningScore );
+            person.SetAttributeValue( ATTRIBUTE_ENGAGEMENT_SOLVING, assessmentResults.EngagementSolvingScore );
             person.SaveAttributeValues();
         }
 
@@ -265,14 +266,14 @@ namespace Rock.Model
             AssessmentResults savedScores = new AssessmentResults();
 
             person.LoadAttributes();
-            savedScores.WinningScore = person.GetAttributeValue( ATTRIBUTE_WINNING ).AsDecimal();
-            savedScores.ResolvingScore = person.GetAttributeValue( ATTRIBUTE_RESOLVING ).AsDecimal();
-            savedScores.CompromisingScore = person.GetAttributeValue( ATTRIBUTE_COMPROMISING ).AsDecimal();
-            savedScores.AvoidingScore = person.GetAttributeValue( ATTRIBUTE_AVOIDING ).AsDecimal();
-            savedScores.YieldingScore = person.GetAttributeValue( ATTRIBUTE_YEILDING ).AsDecimal();
-            savedScores.PassiveScore = person.GetAttributeValue( ATTRIBUTE_PASSIVE ).AsDecimal();
-            savedScores.AggressiveScore = person.GetAttributeValue( ATTRIBUTE_AGGRESSIVE ).AsDecimal();
-            savedScores.EngagedScore = person.GetAttributeValue( ATTRIBUTE_ENGAGED ).AsDecimal();
+            savedScores.ModeWinningScore = person.GetAttributeValue( ATTRIBUTE_MODE_WINNING ).AsDecimal();
+            savedScores.ModeResolvingScore = person.GetAttributeValue( ATTRIBUTE_MODE_RESOLVING ).AsDecimal();
+            savedScores.ModeCompromisingScore = person.GetAttributeValue( ATTRIBUTE_MODE_COMPROMISING ).AsDecimal();
+            savedScores.ModeAvoidingScore = person.GetAttributeValue( ATTRIBUTE_MODE_AVOIDING ).AsDecimal();
+            savedScores.ModeYieldingScore = person.GetAttributeValue( ATTRIBUTE_MODE_YEILDING ).AsDecimal();
+            savedScores.EngagementAccommodatingScore = person.GetAttributeValue( ATTRIBUTE_ENGAGEMENT_ACCOMMODATING ).AsDecimal();
+            savedScores.EngagementWinningScore = person.GetAttributeValue( ATTRIBUTE_ENGAGEMENT_WINNING ).AsDecimal();
+            savedScores.EngagementSolvingScore = person.GetAttributeValue( ATTRIBUTE_ENGAGEMENT_SOLVING ).AsDecimal();
 
             return savedScores;
         }
@@ -283,68 +284,68 @@ namespace Rock.Model
         public class AssessmentResults
         {
             /// <summary>
-            /// Gets or sets the winning score.
+            /// Gets or sets the conflict mode winning score.
             /// </summary>
             /// <value>
-            /// The winning score.
+            /// The conflict mode winning score.
             /// </value>
-            public decimal WinningScore { get; set; }
+            public decimal ModeWinningScore { get; set; }
 
             /// <summary>
-            /// Gets or sets the resolving score.
+            /// Gets or sets the conflict mode resolving score.
             /// </summary>
             /// <value>
             /// The resolving score.
             /// </value>
-            public decimal ResolvingScore { get; set; }
+            public decimal ModeResolvingScore { get; set; }
 
             /// <summary>
-            /// Gets or sets the compromising score.
+            /// Gets or sets the conflict mode compromising score.
             /// </summary>
             /// <value>
             /// The compromising score.
             /// </value>
-            public decimal CompromisingScore { get; set; }
+            public decimal ModeCompromisingScore { get; set; }
 
             /// <summary>
-            /// Gets or sets the avoiding score.
+            /// Gets or sets the conflict mode avoiding score.
             /// </summary>
             /// <value>
             /// The avoiding score.
             /// </value>
-            public decimal AvoidingScore { get; set; }
+            public decimal ModeAvoidingScore { get; set; }
 
             /// <summary>
-            /// Gets or sets the yielding score.
+            /// Gets or sets the conflict mode yielding score.
             /// </summary>
             /// <value>
             /// The yielding score.
             /// </value>
-            public decimal YieldingScore { get; set; }
+            public decimal ModeYieldingScore { get; set; }
 
             /// <summary>
-            /// Gets or sets the engaged score.
+            /// Gets or sets the conflict engagement "solving" (aka engaged) score.
             /// </summary>
             /// <value>
-            /// The engaged score.
+            /// The conflict engagement "solving" score.
             /// </value>
-            public decimal EngagedScore { get; set; }
+            public decimal EngagementSolvingScore { get; set; }
 
             /// <summary>
-            /// Gets or sets the passive score.
+            /// Gets or sets the conflict engagement "accommodating" (aka passive) score.
             /// </summary>
             /// <value>
-            /// The passive score.
+            /// The conflict engagement "accommodating" score.
             /// </value>
-            public decimal PassiveScore { get; set; }
+            public decimal EngagementAccommodatingScore { get; set; }
 
             /// <summary>
-            /// Gets or sets the aggressive score.
+            /// Gets or sets the conflict engagement "winning" (aka aggressive) score.
             /// </summary>
             /// <value>
-            /// The aggressive score.
+            /// The conflict engagement "winning" score.
             /// </value>
-            public decimal AggressiveScore { get; set; }
+            public decimal EngagementWinningScore { get; set; }
 
             /// <summary>
             /// Gets or sets the assessment data.
