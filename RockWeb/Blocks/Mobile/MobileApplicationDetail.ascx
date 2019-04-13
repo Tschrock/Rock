@@ -3,11 +3,11 @@
     <ContentTemplate>
         <div class="panel panel-block">
             <div class="panel-heading panel-follow clearfix">
-                    <h1 class="panel-title"><i class="fa fa-desktop"></i>
-                        <asp:Literal ID="lReadOnlyTitle" runat="server" /></h1>
-                    <div class="panel-labels">
-                        <asp:Literal ID="ltVersion" runat="server" />
-                    </div>
+                <h1 class="panel-title"><i class="fa fa-desktop"></i>
+                    <asp:Literal ID="lReadOnlyTitle" runat="server" /></h1>
+                <div class="panel-labels">
+                    <asp:Literal ID="ltVersion" runat="server" />
+                </div>
             </div>
             <!-- Tabs -->
             <asp:Panel runat="server" ID="pnlTabs">
@@ -15,8 +15,8 @@
                 <div class="panel-body">
                     <ul class="nav nav-tabs">
                         <li runat="server" id="liApplication"><a href="#" id="tabApplication" runat="server" onserverclick="Tab_SelectedClick">Application</a></li>
-                        <li runat="server" id="liLayout" class="disabled" ><a href="#" id="tabLayout" runat="server"  onserverclick="Tab_SelectedClick">Layout</a></li>
-                        <li runat="server" id="liPages" class="disabled"><a href="#" id="tabPages"  runat="server" onserverclick="Tab_SelectedClick">Pages</a></li>
+                        <li runat="server" id="liLayout" class="disabled"><a href="#" id="tabLayout" runat="server" onserverclick="Tab_SelectedClick">Layout</a></li>
+                        <li runat="server" id="liPages" class="disabled"><a href="#" id="tabPages" runat="server" onserverclick="Tab_SelectedClick">Pages</a></li>
                     </ul>
                 </div>
             </asp:Panel>
@@ -51,6 +51,11 @@
                         </asp:Panel>
                     </div>
                 </fieldset>
+                <Rock:ModalDialog ID="mdConfirmPublish" runat="server" Title="Please Confirm" SaveButtonText="Yes" OnSaveClick="mdConfirmPublish_SaveClick">
+                    <Content>
+                        "Are you wish to create a new version of the application."
+                    </Content>
+                </Rock:ModalDialog>
             </asp:Panel>
             <!-- Application Tab Edit Details -->
             <asp:Panel ID="pnlApplicationEditDetails" runat="server" Visible="false">
@@ -124,11 +129,11 @@
                                         CausesValidation="false" />
                                 </li>
                             </ItemTemplate>
-                            <FooterTemplate>  
+                            <FooterTemplate>
                                 </ul>  
                             </FooterTemplate>
                         </asp:Repeater>
-                        <div><a href="#" id="aAddLayout" title="Add layout" runat="server" class="fa fa-plus-square-o" onserverclick="btnAddLayout_Click" visible="false" /></div> 
+                        <div><a href="#" id="aAddLayout" title="Add layout" runat="server" class="fa fa-plus-square-o" onserverclick="btnAddLayout_Click" visible="false" /></div>
                     </div>
                     <div class="col-md-11">
                         <div class="row">

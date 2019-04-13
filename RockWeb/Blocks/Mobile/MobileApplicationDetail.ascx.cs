@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Web.UI.HtmlControls;
@@ -29,7 +30,7 @@ public partial class Blocks_Mobile_MobileApplicationDetail : RockBlock, IDetailB
     #endregion
 
     private List<PageInfo> _pageWithDepth = new List<PageInfo>();
-    private int _depth = 0;
+
     protected override void OnInit( EventArgs e )
     {
         base.OnInit( e );
@@ -78,6 +79,39 @@ public partial class Blocks_Mobile_MobileApplicationDetail : RockBlock, IDetailB
         }
     }
     private List<Rock.Model.Layout> ExistingLayouts { get; set; }
+
+    #endregion
+
+    #region Data Structures
+    /// <summary>
+    /// Used Set Page and associated Depth
+    /// In support of Publish Process
+    /// </summary>
+    public class PageInfo
+    {
+        public Rock.Model.Page Page { get; set; }
+        public int Depth { get; set; }
+    }
+
+    /// <summary>
+    /// Used to process package Information
+    /// </summary>
+    public class PackageSourceInfo
+    {
+        public Rock.Model.Layout Layout { get; set; }
+        public ICollection<Rock.Model.Page> LayoutPages { get; set; }
+        public ICollection<Rock.Model.Block> Pageblocks { get; set; }
+        public ICollection<Rock.Model.Block> Blocks { get; set; }
+    }
+
+    /// <summary>
+    /// Local Enum to determine package type
+    /// </summary>
+    private enum PackageType
+    {
+        Phone = 0,
+        Tablet = 1
+    }
 
     #endregion
 
@@ -306,8 +340,6 @@ public partial class Blocks_Mobile_MobileApplicationDetail : RockBlock, IDetailB
             }
         }
 
-        bool readOnly = false;
-
         if ( layout != null )
         {
             hfSiteId.Value = layout.SiteId.ToString();
@@ -354,6 +386,10 @@ public partial class Blocks_Mobile_MobileApplicationDetail : RockBlock, IDetailB
         }
     }
 
+    /// <summary>
+    /// Displays the layout add button.
+    /// </summary>
+    /// <param name="isVisible">if set to <c>true</c> [is visible].</param>
     private void DisplayLayoutAddButton( bool isVisible )
     {
         // Display Add button if we at least have one
@@ -489,14 +525,182 @@ public partial class Blocks_Mobile_MobileApplicationDetail : RockBlock, IDetailB
     /// </summary>
     private void SetToFirstLayout()
     {
-        if ( this.ExistingLayouts.Count > 0 )
-        {
-            var firstLayout = this.ExistingLayouts.First();
-            LoadSelectedLayout( firstLayout.Id );
-        }
-        else
+        if ( this.ExistingLayouts.Count == 0 )
         {
             ResetLayoutForAdd();
+            return;
+        }
+
+        var firstLayout = this.ExistingLayouts.First();
+        LoadSelectedLayout( firstLayout.Id );
+    }
+
+    /// <summary>
+    /// Publishes the packages.
+    /// </summary>
+    private void PublishPackages()
+    {
+        mdConfirmPublish.Hide();
+
+        var rockContext = new RockContext();
+        var siteService = new SiteService( rockContext );
+        var layoutService = new LayoutService( rockContext );
+        var pageService = new PageService( rockContext );
+        var blockService = new BlockService( rockContext );
+        var binaryFileService = new BinaryFileService( rockContext );
+
+        var siteId = hfSiteId.Value.AsIntegerOrNull();
+        if ( siteId == null && siteId == 0 )
+        {
+            return;
+        }
+
+        List<PackageSourceInfo> phonePackageSourceInfos = new List<PackageSourceInfo>();
+        List<PackageSourceInfo> tabletPackageSourceInfos = new List<PackageSourceInfo>();
+
+        var publishSite = siteService.Get( ( int ) siteId );
+        if ( publishSite != null )
+        {
+            var packageSourceInfos = layoutService.GetBySiteId( ( int ) siteId ).Select( l =>
+            new PackageSourceInfo
+            {
+                Layout = l,
+                LayoutPages = l.Pages,
+                Blocks = l.Blocks
+            } ).ToList();
+
+            var existingLayouts = packageSourceInfos.Select( p => p.Layout ).ToList();
+            var allPages = pageService.GetBySiteId( siteId );
+
+            BuildListOfPagesAndDepth( allPages );
+
+            this.ExistingLayouts = existingLayouts;
+            foreach ( var packageSource in packageSourceInfos )
+            {
+                var layout = packageSource.Layout;
+                if ( layout.LayoutMobilePhone.IsNotNullOrWhiteSpace() )
+                {
+                    phonePackageSourceInfos.Add( packageSource );
+                }
+
+                if ( layout.LayoutMobileTablet.IsNotNullOrWhiteSpace() )
+                {
+                    tabletPackageSourceInfos.Add( packageSource );
+                }
+            }
+
+            var phonePackage = new UpdatePackage();
+            var tabletPackage = new UpdatePackage();
+
+            var latestVersionDate = RockDateTime.Now;
+
+            // Unix time stamp UTC - epoc-time of 1970-01-01.
+            var unixTimestamp = ( Int32 ) ( latestVersionDate.ToUniversalTime().Subtract( new DateTime( 1970, 1, 1 ) ) ).TotalSeconds;
+
+            phonePackage.ApplicationVersionId = unixTimestamp;
+            tabletPackage.ApplicationVersionId = unixTimestamp;
+
+            var appSetting = this.GetAdditionalSettingFromSite( publishSite.AdditionalSettings );
+
+            if ( appSetting != null )
+            {
+                phonePackage.ApplicationType = ( ShellType ) appSetting.ShellType;
+                tabletPackage.ApplicationVersionId = unixTimestamp;
+
+                if ( appSetting.CssStyle.IsNotNullOrWhiteSpace() )
+                {
+                    phonePackage.CssStyles = appSetting.CssStyle;
+                }
+
+                if ( appSetting.ShellType == ShellType.Tabbed )
+                {
+                    phonePackage.TabsOnBottomOnAndroid = appSetting.TabLocation == TabLocation.Bottom;
+                }
+            }
+
+            foreach ( var mobilePackageSource in phonePackageSourceInfos )
+            {
+                AddLayoutAndPagesToPackage( phonePackage, mobilePackageSource, PackageType.Phone );
+            }
+
+            foreach ( var tabletPackageSource in tabletPackageSourceInfos )
+            {
+                AddLayoutAndPagesToPackage( tabletPackage, tabletPackageSource, PackageType.Tablet );
+            }
+
+            var binaryFileType = new BinaryFileTypeService( rockContext ).Get( Rock.SystemGuid.BinaryFiletype.DEFAULT.AsGuid() );
+
+            var tablePackageFile = JsonConvert.SerializeObject( tabletPackage );
+
+            //  var phonePackageBytes = this.JsonStringToByteArray( JsonConvert.SerializeObject( phonePackage ) );
+            var tabletPackageBytes = Encoding.UTF8.GetBytes( JsonConvert.SerializeObject( tabletPackage ) );
+
+            byte[] phonePackageBytes = Encoding.UTF8.GetBytes( JsonConvert.SerializeObject( phonePackage ) );
+
+            // Add Packages to Binary File Data
+            rockContext.WrapTransaction( () =>
+            {
+                BinaryFile phonePackagebinaryFile = null;
+                BinaryFile tabletPackagebinaryFile = null;
+
+                bool phoneUpdate = false;
+                bool tabletUpdate = false;
+                // If phone package already exists we will updated 
+                if ( publishSite.ConfigurationMobileTabletFileId.HasValue )
+                {
+                    phonePackagebinaryFile = binaryFileService.Get( ( int ) publishSite.ConfigurationMobilePhoneFileId );
+                    phoneUpdate = true;
+                }
+                else
+                {
+                    // Otherwise create new
+                    phonePackagebinaryFile = new BinaryFile();
+                }
+
+                // Phone Binary File  
+                phonePackagebinaryFile.BinaryFileTypeId = binaryFileType.Id;
+                phonePackagebinaryFile.IsTemporary = false;
+                phonePackagebinaryFile.MimeType = "application/json";
+                phonePackagebinaryFile.FileSize = phonePackageBytes.Length;
+                phonePackagebinaryFile.ContentStream = new MemoryStream( phonePackageBytes );
+                phonePackagebinaryFile.FileName = "ConfigurationMobilePhone";
+                if ( !phoneUpdate )
+                {
+                    binaryFileService.Add( phonePackagebinaryFile );
+                }
+
+                // Tablet Binary File
+                if ( publishSite.ConfigurationMobileTabletFileId.HasValue )
+                {
+                    tabletPackagebinaryFile = binaryFileService.Get( ( int ) publishSite.ConfigurationMobileTabletFileId );
+                    tabletUpdate = true;
+                }
+                else
+                {
+                    tabletPackagebinaryFile = new BinaryFile();
+                }
+
+                tabletPackagebinaryFile.BinaryFileTypeId = binaryFileType.Id;
+                tabletPackagebinaryFile.IsTemporary = false;
+                tabletPackagebinaryFile.MimeType = "application/json";
+                tabletPackagebinaryFile.FileSize = phonePackageBytes.Length;
+                tabletPackagebinaryFile.ContentStream = new MemoryStream( tabletPackageBytes );
+                tabletPackagebinaryFile.FileName = "ConfigurationMobileTablet";
+                if ( !tabletUpdate )
+                {
+                    binaryFileService.Add( tabletPackagebinaryFile );
+
+                }
+                rockContext.SaveChanges();
+
+                // update Site latest Version date
+                publishSite.LatestVersionDateTime = latestVersionDate;
+                publishSite.ConfigurationMobilePhoneFileId = phonePackagebinaryFile.Id;
+                publishSite.ConfigurationMobileTabletFileId = tabletPackagebinaryFile.Id;
+
+                rockContext.SaveChanges();
+
+            } );
         }
     }
 
@@ -586,18 +790,20 @@ public partial class Blocks_Mobile_MobileApplicationDetail : RockBlock, IDetailB
     /// <param name="selectedLayoutId">The selected layout identifier.</param>
     private void LoadSelectedLayout( int? selectedLayoutId )
     {
-        if ( selectedLayoutId != null )
+        if ( selectedLayoutId == null )
         {
-            var layoutService = new LayoutService( new RockContext() );
-            var selectedLayout = layoutService.Get( ( int ) selectedLayoutId );
-            if ( selectedLayout != null )
-            {
-                this.tbLayoutName.Text = selectedLayout.Name;
-                this.tbLayoutDescription.Text = selectedLayout.Description;
-                this.cePhoneLayoutXaml.Text = selectedLayout.LayoutMobilePhone;
-                this.ceTabletLayoutXaml.Text = selectedLayout.LayoutMobileTablet;
-                this.hfLayoutId.Value = selectedLayout.Id.ToString();
-            }
+            return;
+        }
+
+        var layoutService = new LayoutService( new RockContext() );
+        var selectedLayout = layoutService.Get( ( int ) selectedLayoutId );
+        if ( selectedLayout != null )
+        {
+            this.tbLayoutName.Text = selectedLayout.Name;
+            this.tbLayoutDescription.Text = selectedLayout.Description;
+            this.cePhoneLayoutXaml.Text = selectedLayout.LayoutMobilePhone;
+            this.ceTabletLayoutXaml.Text = selectedLayout.LayoutMobileTablet;
+            this.hfLayoutId.Value = selectedLayout.Id.ToString();
         }
     }
 
@@ -610,10 +816,13 @@ public partial class Blocks_Mobile_MobileApplicationDetail : RockBlock, IDetailB
     {
         pnlApplicationDetails.Visible = false;
         pnlApplicationEditDetails.Visible = true;
-        if ( hfSiteId.Value.AsIntegerOrNull() != null && hfSiteId.Value.AsInteger() > 0 )
+
+        if ( hfSiteId.Value.AsIntegerOrNull() == null && hfSiteId.Value.AsInteger() == 0 )
         {
-            EnableLayoutTab( true );
+            return;
         }
+
+        EnableLayoutTab( true );
     }
 
     /// <summary>
@@ -632,9 +841,10 @@ public partial class Blocks_Mobile_MobileApplicationDetail : RockBlock, IDetailB
             SiteService siteService = new SiteService( rockContext );
             SiteDomainService siteDomainService = new SiteDomainService( rockContext );
 
-            bool newApplication = false;
+            var newApplication = false;
 
-            int siteId = hfSiteId.Value.AsInteger();
+            var siteId = hfSiteId.Value.AsInteger();
+
             if ( siteId == 0 )
             {
                 newApplication = true;
@@ -757,100 +967,137 @@ public partial class Blocks_Mobile_MobileApplicationDetail : RockBlock, IDetailB
     /// <param name="e">The <see cref="EventArgs"/> instance containing the event data.</param>
     protected void btnPublish_Click( object sender, EventArgs e )
     {
-        var siteId = hfSiteId.Value.AsIntegerOrNull();
-        if ( siteId == null && siteId == 0 )
+        mdConfirmPublish.Show();
+    }
+
+    /// <summary>
+    /// Builds the list of pages and depth.
+    /// Since a layout assigned may only refer to child pages
+    /// We need a list of all pages from the root to get full depth
+    /// </summary>
+    /// <param name="allPages">All pages.</param>
+    private void BuildListOfPagesAndDepth( IOrderedQueryable<Rock.Model.Page> allPages )
+    {
+        var rootpages = allPages.Where( p => p.ParentPageId == null ).ToList();
+        foreach ( var rootPage in rootpages )
         {
-            return;
-        }
-
-        List<Rock.Model.Layout> mobilePackageLayoutInfo = new List<Rock.Model.Layout>();
-        List<Rock.Model.Layout> tabletPackageLayoutInfo = new List<Rock.Model.Layout>();
-
-        var rockContext = new RockContext();
-        var siteToPublish = new SiteService( rockContext ).Get( ( int ) siteId );
-        if ( siteToPublish != null )
-        {
-            var existingLayouts = new LayoutService( rockContext ).GetBySiteId( ( int ) siteId ).ToList();
-            this.ExistingLayouts = existingLayouts;
-
-
-            foreach ( var layout in existingLayouts )
-            {
-                if ( layout.LayoutMobilePhone.IsNotNullOrWhiteSpace() )
-                {
-                    mobilePackageLayoutInfo.Add( layout );
-                }
-                if ( layout.LayoutMobileTablet.IsNotNullOrWhiteSpace() )
-                {
-                    tabletPackageLayoutInfo.Add( layout );
-                }
-            }
-        }
-
-        var mobilePhonePackage = new UpdatePackage();
-        var mobileTabletPackage = new UpdatePackage();
-
-        var pages = new PageService( rockContext ).GetBySiteId( siteId ).Select( p => new PageInfo { Page = p, Block = p.Blocks } ).ToList();
-        var rootPages = pages.Where( p => p.Page.ParentPageId == null ).Select( p => p ).ToList();
-
-        foreach ( var rootPage in rootPages )
-        {
-            _depth = 0;
-            rootPage.Depth = _depth;
-            _pageWithDepth.Add( rootPage );
-            AssignPageDepth( rootPage.Page,0);
-        }
-
-        var latestVersionDate = RockDateTime.Now;
-        // Unix time stamp UTC - epoc-time of 1970-01-01.
-        Int32 unixTimestamp = ( Int32 ) ( latestVersionDate.ToUniversalTime().Subtract( new DateTime( 1970, 1, 1 ) ) ).TotalSeconds;
-        siteToPublish.LatestVersionDateTime = latestVersionDate;
-
-        var appSetting = this.GetAdditionalSettingFromSite( siteToPublish.AdditionalSettings );
-
-        mobilePhonePackage.ApplicationVersionId = unixTimestamp;
-        if ( appSetting != null )
-        {
-            mobilePhonePackage.ApplicationType = ( ShellType ) appSetting.ShellType;
-            mobileTabletPackage.ApplicationVersionId = unixTimestamp;
-
-            if ( appSetting.CssStyle.IsNotNullOrWhiteSpace() )
-            {
-                mobilePhonePackage.CssStyles = appSetting.CssStyle;
-            }
-
-            if ( appSetting.ShellType == ShellType.Tabbed )
-            {
-                mobilePhonePackage.TabsOnBottomOnAndroid = appSetting.TabLocation == TabLocation.Bottom;
-            }
-        }
-
-        foreach ( var mobilePackageInfo in mobilePackageLayoutInfo )
-        {
-            var mobileLayout = new Rock.Mobile.Common.Layout { LayoutGuid = mobilePackageInfo.Guid, LayoutXaml = mobilePackageInfo.LayoutMobilePhone, Name = mobilePackageInfo.Name };
-            mobilePhonePackage.Layouts.Add( mobileLayout );
-        }
-
-        foreach ( var tabletPackageInfo in tabletPackageLayoutInfo )
-        {
-            var tabletLayout = new Rock.Mobile.Common.Layout { LayoutGuid = tabletPackageInfo.Guid, LayoutXaml = tabletPackageInfo.LayoutMobilePhone, Name = tabletPackageInfo.Name };
-            mobilePhonePackage.Layouts.Add( tabletLayout );
+            _pageWithDepth.Add( new PageInfo { Page = rootPage, Depth = 0 } );
+            AssignPageDepth( rootPage, 0 );
         }
     }
 
-    private void AssignPageDepth(Rock.Model.Page currentPage,int currentLevel)
+    private void AddLayoutAndPagesToPackage( UpdatePackage package, PackageSourceInfo mobilePackageSource, PackageType packageType )
     {
-        foreach ( var child in currentPage.Pages)
+        var layout = mobilePackageSource.Layout;
+
+        if ( packageType == PackageType.Phone )
         {
-            currentLevel += 1;
-            _pageWithDepth.Add( new PageInfo { Page = child,Depth = currentLevel} );
-            if ( child.Pages.Count > 0)
+            if ( layout.LayoutMobilePhone.IsNotNullOrWhiteSpace() )
             {
-                AssignPageDepth( child, currentLevel);
+                package.Layouts.Add( new Rock.Mobile.Common.Layout { LayoutGuid = layout.Guid, LayoutXaml = layout.LayoutMobilePhone, Name = layout.Name } );
+            }
+        }
+        if ( packageType == PackageType.Tablet )
+        {
+            if ( layout.LayoutMobileTablet.IsNotNullOrWhiteSpace() )
+            {
+
+                package.Layouts.Add( new Rock.Mobile.Common.Layout { LayoutGuid = layout.Guid, LayoutXaml = layout.LayoutMobileTablet, Name = layout.Name } );
             }
         }
 
-        new PageInfo { Page = currentPage, Depth = currentLevel };
+        foreach ( var page in mobilePackageSource.LayoutPages )
+        {
+            AddPageAndBlocksToPackageSourceWithDepth( package, layout, page );
+        }
+    }
+
+    private void AddPageAndBlocksToPackageSourceWithDepth( UpdatePackage phonePackage, Rock.Model.Layout layout, Rock.Model.Page page )
+    {
+        if ( page.Pages.Count == 0 )
+        {
+            var depth = _pageWithDepth.Where( p => p.Page.Id == page.Id ).Select( d => d.Depth ).FirstOrDefault();
+            // TODO: Map Display In Nav, IConUrl
+            var existsInPackage = phonePackage.Pages.Where( p => p.PageGuid == page.Guid && p.LayoutGuid == layout.Guid ).Any();
+            if ( existsInPackage )
+            {
+                return;
+            }
+
+            phonePackage.Pages.Add( new Rock.Mobile.Common.Page
+            {
+                DepthLevel = depth,
+                PageGuid = page.Guid,
+                ParentPageGuid = page.ParentPage.Guid,
+                LayoutGuid = layout.Guid,
+                Order = page.Order,
+                Title = page.PageTitle
+            } );
+
+            foreach ( var block in page.Blocks )
+            {
+                phonePackage.Blocks.Add( new Rock.Mobile.Common.Block
+                {
+                    BlockGuid = block.Guid,
+                    BlockType = block.BlockType.ToString(),
+                    Order = block.Order,
+                    PageGuid = block.Page.Guid,
+                    Zone = block.Zone
+                } );
+            }
+
+            return;
+        }
+
+        foreach ( var childPage in page.Pages )
+        {
+            var childDepth = _pageWithDepth.Where( p => p.Page.Id == childPage.Id ).Select( d => d.Depth ).FirstOrDefault();
+            var childExistsInPackage = phonePackage.Pages.Where( p => p.PageGuid == childPage.Guid && p.LayoutGuid == layout.Guid ).Any();
+
+            if ( !childExistsInPackage )
+            {
+                phonePackage.Pages.Add( new Rock.Mobile.Common.Page
+                {
+                    DepthLevel = childDepth,
+                    PageGuid = childPage.Guid,
+                    ParentPageGuid = childPage.ParentPage.Guid,
+                    LayoutGuid = layout.Guid,
+                    Order = childPage.Order,
+                    Title = childPage.PageTitle,
+                } );
+
+                foreach ( var block in childPage.Blocks )
+                {
+                    phonePackage.Blocks.Add( new Rock.Mobile.Common.Block
+                    {
+                        BlockGuid = block.Guid,
+                        BlockType = block.BlockType.ToString(),
+                        Order = block.Order,
+                        PageGuid = block.Page.Guid,
+                        Zone = block.Zone
+                    } );
+                }
+            }
+
+            AddPageAndBlocksToPackageSourceWithDepth( phonePackage, layout, childPage );
+        }
+    }
+
+    private void AssignPageDepth( Rock.Model.Page currentPage, int currentLevel )
+    {
+        currentLevel += 1;
+        if ( currentPage.Pages == null )
+        {
+
+            _pageWithDepth.Add( new PageInfo { Page = currentPage, Depth = currentLevel } );
+            return;
+        }
+
+        foreach ( var child in currentPage.Pages )
+        {
+            _pageWithDepth.Add( new PageInfo { Page = child, Depth = currentLevel } );
+            AssignPageDepth( child, currentLevel );
+        }
     }
 
     /// <summary>
@@ -995,12 +1242,11 @@ public partial class Blocks_Mobile_MobileApplicationDetail : RockBlock, IDetailB
         }
     }
 
-    public class PageInfo
+    protected void mdConfirmPublish_SaveClick( object sender, EventArgs e )
     {
-        public Rock.Model.Page Page { get; set; }
-        public ICollection<Rock.Model.Block> Block { get; set; }
-        public int Depth { get; set; }
+        PublishPackages();
     }
 
     #endregion
+
 }
