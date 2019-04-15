@@ -38,7 +38,7 @@ namespace Rock.Migrations
             RockMigrationHelper.UpdatePersonAttribute( Rock.SystemGuid.FieldType.DECIMAL, "B08A3096-FCFA-4DA0-B95D-1F3F11CC9969", "EQ: Others Aware", "core_EQOthersAware", "", "", 0, "", SystemGuid.Attribute.PERSON_EQ_CONSTRUCTS_OTHERS_AWARE );
             AddSecurityToAttributes( Rock.SystemGuid.Attribute.PERSON_EQ_CONSTRUCTS_OTHERS_AWARE );
 
-            RockMigrationHelper.UpdatePersonAttribute( Rock.SystemGuid.FieldType.DECIMAL, "B08A3096-FCFA-4DA0-B95D-1F3F11CC9969", "EQ: Others Regulate", "core_EQOthersRegulate", "", "", 0, "", SystemGuid.Attribute.PERSON_EQ_CONSTRUCTS_OTHERS_AWARE );
+            RockMigrationHelper.UpdatePersonAttribute( Rock.SystemGuid.FieldType.DECIMAL, "B08A3096-FCFA-4DA0-B95D-1F3F11CC9969", "EQ: Others Regulate", "core_EQOthersRegulate", "", "", 0, "", SystemGuid.Attribute.PERSON_EQ_CONSTRUCTS_OTHERS_REGULATE );
             AddSecurityToAttributes( Rock.SystemGuid.Attribute.PERSON_EQ_CONSTRUCTS_OTHERS_REGULATE );
 
             RockMigrationHelper.UpdatePersonAttribute( Rock.SystemGuid.FieldType.DECIMAL, "B08A3096-FCFA-4DA0-B95D-1F3F11CC9969", "EQ: In Problem Solving", "core_EQProblemSolving", "", "", 0, "", SystemGuid.Attribute.PERSON_EQ_SCALES_IN_PROBLEM_SOLVING );
