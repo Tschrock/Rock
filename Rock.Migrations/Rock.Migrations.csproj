@@ -240,6 +240,10 @@
     <Compile Include="Migrations\201904081606092_AddAssessmentForExistingData.Designer.cs">
       <DependentUpon>201904081606092_AddAssessmentForExistingData.cs</DependentUpon>
     </Compile>
+    <Compile Include="Migrations\201904120937530_AddEmotionalIntelligence.cs" />
+    <Compile Include="Migrations\201904120937530_AddEmotionalIntelligence.Designer.cs">
+      <DependentUpon>201904120937530_AddEmotionalIntelligence.cs</DependentUpon>
+    </Compile>
     <Compile Include="Migrations\CreateDatabase\201311251734059_CreateDatabase.cs" />
     <Compile Include="Migrations\CreateDatabase\201311251734059_CreateDatabase.Designer.cs">
       <DependentUpon>201311251734059_CreateDatabase.cs</DependentUpon>
@@ -660,6 +664,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Migrations\201904081606092_AddAssessmentForExistingData.resx">
       <DependentUpon>201904081606092_AddAssessmentForExistingData.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201904120937530_AddEmotionalIntelligence.resx">
+      <DependentUpon>201904120937530_AddEmotionalIntelligence.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Migrations\CreateDatabase\201311251734059_CreateDatabase.resx">
       <DependentUpon>201311251734059_CreateDatabase.cs</DependentUpon>

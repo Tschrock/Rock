@@ -155,6 +155,36 @@ namespace Rock.SystemGuid
         /// </summary>
         public const string PERSON_CONFLICT_ENGAGEMENT_SOLVING = "33235605-D8BB-4C1E-B231-6F085970A14F";
 
+        /// <summary>
+        /// The person attribute for the EQ self aware
+        /// </summary>
+        public const string PERSON_EQ_CONSTRUCTS_SELF_AWARE = "A5EFCE3E-EA41-4FEC-99F6-DD748A7D5BB5";
+
+        /// <summary>
+        /// The person attribute for the EQ self regulate
+        /// </summary>
+        public const string PERSON_EQ_CONSTRUCTS_SELF_REGULATE = "149CD0CD-3CD6-44B6-8D84-A17A477A8978";
+
+        /// <summary>
+        /// The person attribute for the EQ others aware
+        /// </summary>
+        public const string PERSON_EQ_CONSTRUCTS_OTHERS_AWARE = "A6AF0BE5-E93A-49EB-AFEA-3520B7C41C78";
+
+        /// <summary>
+        /// The person attribute for the EQ others regulate
+        /// </summary>
+        public const string PERSON_EQ_CONSTRUCTS_OTHERS_REGULATE = "129C108E-CE61-4DFB-A9A8-1EBC3462022E";
+
+        /// <summary>
+        /// The person attribute for the EQ in problem solving
+        /// </summary>
+        public const string PERSON_EQ_SCALES_IN_PROBLEM_SOLVING = "B598BF9C-7A0C-467E-B467-13B40DAC9F8D";
+
+        /// <summary>
+        /// The person attribute for the EQ under stress
+        /// </summary>
+        public const string PERSON_EQ_SCALES_UNDER_STRESS = "C3CB8FB5-34A2-48C8-B1FC-7CEBA670C1ED";
+
         #endregion
 
         /// <summary>
