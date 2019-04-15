@@ -14,6 +14,7 @@
 // limitations under the License.
 // </copyright>
 //
+using System.Collections.Generic;
 using System.Linq;
 
 namespace Rock.Model
@@ -66,6 +67,17 @@ namespace Rock.Model
             return Queryable()
                 .Where( t => t.GroupId == groupId )
                 .OrderBy( t => t.Order );
+        }
+
+        /// <summary>
+        /// Gets the by a list of entity ids.
+        /// </summary>
+        /// <param name="pageIds">The page ids.</param>
+        /// <returns>IQuerable<aut></aut></returns>
+        public IQueryable<Auth> GetByEntityIds(int entityTypeId, List<int> enitityIds)
+        {
+            return Queryable()
+                .Where( a => a.EntityTypeId == entityTypeId && enitityIds.Contains((int) a.EntityId ) );
         }
     }
 }

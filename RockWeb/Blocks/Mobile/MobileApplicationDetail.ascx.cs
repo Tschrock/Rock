@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Data.Entity;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -30,6 +31,10 @@ public partial class Blocks_Mobile_MobileApplicationDetail : RockBlock, IDetailB
     #endregion
 
     private List<PageInfo> _pageWithDepth = new List<PageInfo>();
+
+    // Need blocks and Pages added to packages for auth rules
+    private List<SourceBlockInfo> _blocksAddedToPackages = new List<SourceBlockInfo>();
+    private List<SourePageInfo> _pagesAddedToPackages = new List<SourePageInfo>();
 
     protected override void OnInit( EventArgs e )
     {
@@ -107,7 +112,7 @@ public partial class Blocks_Mobile_MobileApplicationDetail : RockBlock, IDetailB
     /// <summary>
     /// Local Enum to determine package type
     /// </summary>
-    private enum PackageType
+    public enum PackageType
     {
         Phone = 0,
         Tablet = 1
@@ -618,15 +623,26 @@ public partial class Blocks_Mobile_MobileApplicationDetail : RockBlock, IDetailB
                 }
             }
 
+            // Package Phone
             foreach ( var mobilePackageSource in phonePackageSourceInfos )
             {
                 AddLayoutAndPagesToPackage( phonePackage, mobilePackageSource, PackageType.Phone );
             }
 
+            var pageGuids = phonePackage.Pages.Select( p => p.PageGuid ).ToList();
+            var sourcePages = allPages.Where( p => pageGuids.Contains( p.Guid ) ).Select( p => p ).ToList();
+
+            // Apply Auth rules for Phone
+            AddAuthForPagesAndBlocks( phonePackage, PackageType.Phone );
+
+            //Package Tablet
             foreach ( var tabletPackageSource in tabletPackageSourceInfos )
             {
                 AddLayoutAndPagesToPackage( tabletPackage, tabletPackageSource, PackageType.Tablet );
             }
+
+            // Apply Auth rules for Tablet
+            AddAuthForPagesAndBlocks( tabletPackage, PackageType.Tablet );
 
             var binaryFileType = new BinaryFileTypeService( rockContext ).Get( Rock.SystemGuid.BinaryFiletype.DEFAULT.AsGuid() );
 
@@ -701,6 +717,78 @@ public partial class Blocks_Mobile_MobileApplicationDetail : RockBlock, IDetailB
                 rockContext.SaveChanges();
 
             } );
+        }
+    }
+
+    /// <summary>
+    /// Adds the authentication for pages and blocks.
+    /// </summary>
+    /// <param name="package">The package.</param>
+    /// <param name="packageType">Type of the package.</param>
+    private void AddAuthForPagesAndBlocks( UpdatePackage package, PackageType packageType )
+    {
+        var pageEntityTypeId = EntityTypeCache.Get( Rock.SystemGuid.EntityType.PAGE.AsGuid() ).Id;
+        var blockEntityTypeId = EntityTypeCache.Get( Rock.SystemGuid.EntityType.BLOCK.AsGuid() ).Id;
+
+        // Auth rules for groups or special roles should be added
+        var rockContext = new RockContext();
+        var authService = new AuthService( rockContext );
+
+        var addedPageIds = _pagesAddedToPackages.Where( p => p.PackageType == packageType ).Select( p => p.Page.Id ).ToList();
+        var sourcePages = _pagesAddedToPackages.Where( p => p.PackageType == packageType ).Select( p => p.Page ).ToList();
+
+        // Page Auths
+        var pageAuths = authService.GetByEntityIds( pageEntityTypeId, addedPageIds )
+            .Where( a => a.GroupId != null || a.SpecialRole != SpecialRole.None ).AsNoTracking();
+
+        foreach ( var auth in pageAuths )
+        {
+            var mobilePageAuth = new Rock.Mobile.Common.Auth
+            {
+                Action = auth.Action,
+                AllowOrDeny = auth.AllowOrDeny,
+                AuthGuid = auth.Guid,
+                EntityGuid = sourcePages.Where( p => p.Id == auth.EntityId ).Select( p => p.Guid ).FirstOrDefault(),
+                EntityTypeId = auth.EntityTypeId,
+                Order = auth.Order,
+                SpecialRole = auth.SpecialRole.ConvertToInt(),
+            };
+
+            if ( auth.Group != null )
+            {
+                mobilePageAuth.GroupGuid = auth.Group.Guid;
+            }
+
+            package.AuthenticationRules.Add( mobilePageAuth );
+
+        }
+
+        //Blocks 
+        var addedBlockIds = _blocksAddedToPackages.Select( b => b.Block.Id ).ToList();
+        var blockAuths = authService.GetByEntityIds( blockEntityTypeId, addedBlockIds )
+          .Where( a => a.GroupId != null || a.SpecialRole != SpecialRole.None ).AsNoTracking();
+
+        var blocksAddToPackage = _blocksAddedToPackages.Where( b => b.PackageType == packageType ).Select( b => b.Block).ToList();
+
+        foreach ( var blockAuth in blockAuths )
+        {
+            var mobileBlockAuth = new Rock.Mobile.Common.Auth
+            {
+                Action = blockAuth.Action,
+                AllowOrDeny = blockAuth.AllowOrDeny,
+                AuthGuid = blockAuth.Guid,
+                EntityGuid = blocksAddToPackage.Where( b => b.Id == blockAuth.EntityId ).Select( b => b.Guid ).FirstOrDefault(),
+                EntityTypeId = blockEntityTypeId,
+                Order = blockAuth.Order,
+                SpecialRole = blockAuth.SpecialRole.ConvertToInt()
+            };
+
+            if ( blockAuth.Group != null )
+            {
+                mobileBlockAuth.GroupGuid = blockAuth.Group.Guid;
+            }
+
+            package.AuthenticationRules.Add( mobileBlockAuth );
         }
     }
 
@@ -1008,11 +1096,11 @@ public partial class Blocks_Mobile_MobileApplicationDetail : RockBlock, IDetailB
 
         foreach ( var page in mobilePackageSource.LayoutPages )
         {
-            AddPageAndBlocksToPackageSourceWithDepth( package, layout, page );
+            AddPageAndBlocksToPackageSourceWithDepth( package, layout, page, packageType );
         }
     }
 
-    private void AddPageAndBlocksToPackageSourceWithDepth( UpdatePackage phonePackage, Rock.Model.Layout layout, Rock.Model.Page page )
+    private void AddPageAndBlocksToPackageSourceWithDepth( UpdatePackage phonePackage, Rock.Model.Layout layout, Rock.Model.Page page, PackageType packageType )
     {
         if ( page.Pages.Count == 0 )
         {
@@ -1023,6 +1111,8 @@ public partial class Blocks_Mobile_MobileApplicationDetail : RockBlock, IDetailB
             {
                 return;
             }
+
+            _pagesAddedToPackages.Add( new SourePageInfo { PackageType = packageType, Page = page } );
 
             phonePackage.Pages.Add( new Rock.Mobile.Common.Page
             {
@@ -1036,6 +1126,8 @@ public partial class Blocks_Mobile_MobileApplicationDetail : RockBlock, IDetailB
 
             foreach ( var block in page.Blocks )
             {
+                _blocksAddedToPackages.Add( new SourceBlockInfo { PackageType = packageType, Block = block } );
+
                 phonePackage.Blocks.Add( new Rock.Mobile.Common.Block
                 {
                     BlockGuid = block.Guid,
@@ -1054,6 +1146,7 @@ public partial class Blocks_Mobile_MobileApplicationDetail : RockBlock, IDetailB
             var childDepth = _pageWithDepth.Where( p => p.Page.Id == childPage.Id ).Select( d => d.Depth ).FirstOrDefault();
             var childExistsInPackage = phonePackage.Pages.Where( p => p.PageGuid == childPage.Guid && p.LayoutGuid == layout.Guid ).Any();
 
+            _pagesAddedToPackages.Add( new SourePageInfo { PackageType = packageType, Page = childPage } );
             if ( !childExistsInPackage )
             {
                 phonePackage.Pages.Add( new Rock.Mobile.Common.Page
@@ -1068,6 +1161,7 @@ public partial class Blocks_Mobile_MobileApplicationDetail : RockBlock, IDetailB
 
                 foreach ( var block in childPage.Blocks )
                 {
+                    _blocksAddedToPackages.Add( new SourceBlockInfo { PackageType = packageType, Block = block } );
                     phonePackage.Blocks.Add( new Rock.Mobile.Common.Block
                     {
                         BlockGuid = block.Guid,
@@ -1079,7 +1173,7 @@ public partial class Blocks_Mobile_MobileApplicationDetail : RockBlock, IDetailB
                 }
             }
 
-            AddPageAndBlocksToPackageSourceWithDepth( phonePackage, layout, childPage );
+            AddPageAndBlocksToPackageSourceWithDepth( phonePackage, layout, childPage, packageType );
         }
     }
 
@@ -1245,6 +1339,18 @@ public partial class Blocks_Mobile_MobileApplicationDetail : RockBlock, IDetailB
     protected void mdConfirmPublish_SaveClick( object sender, EventArgs e )
     {
         PublishPackages();
+    }
+
+    public class SourceBlockInfo
+    {
+        public PackageType PackageType { get; set; }
+        public Rock.Model.Block Block { get; set; }
+    }
+
+    public class SourePageInfo
+    {
+        public PackageType PackageType { get; set; }
+        public Rock.Model.Page Page { get; set; }
     }
 
     #endregion
