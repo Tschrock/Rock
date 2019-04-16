@@ -70,7 +70,7 @@ namespace Rock.Model
         }
 
         /// <summary>
-        /// Gets the by a list of entity ids.
+        /// Gets by a list of entity ids.
         /// </summary>
         /// <param name="pageIds">The page ids.</param>
         /// <returns>IQuerable<aut></aut></returns>

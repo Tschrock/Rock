@@ -9,6 +9,7 @@ using System.Web.UI.HtmlControls;
 using System.Web.UI.WebControls;
 using Newtonsoft.Json;
 using Rock;
+using Rock.Constants;
 using Rock.Data;
 using Rock.Mobile.Common;
 using Rock.Mobile.Common.Enums;
@@ -35,7 +36,6 @@ public partial class Blocks_Mobile_MobileApplicationDetail : RockBlock, IDetailB
     // Need blocks and Pages added to packages for auth rules
     private List<SourceBlockInfo> _blocksAddedToPackages = new List<SourceBlockInfo>();
     private List<SourePageInfo> _pagesAddedToPackages = new List<SourePageInfo>();
-
     protected override void OnInit( EventArgs e )
     {
         base.OnInit( e );
@@ -83,6 +83,7 @@ public partial class Blocks_Mobile_MobileApplicationDetail : RockBlock, IDetailB
             hfTabSelected.Value = value.ToString();
         }
     }
+    private bool CancelEdit = false;
     private List<Rock.Model.Layout> ExistingLayouts { get; set; }
 
     #endregion
@@ -173,6 +174,7 @@ public partial class Blocks_Mobile_MobileApplicationDetail : RockBlock, IDetailB
         UpdateExistingLayouts( site.Id );
         BuildLayoutMenue();
         BuildLayoutDisplay();
+        LoadLayoutDropDown();
     }
 
     /// <summary>
@@ -199,6 +201,21 @@ public partial class Blocks_Mobile_MobileApplicationDetail : RockBlock, IDetailB
         }
 
         this.liLayout.Attributes.Remove( "class" );
+    }
+
+    /// <summary>
+    /// Enables the page tab.
+    /// </summary>
+    /// <param name="enabled">if set to <c>true</c> [enabled].</param>
+    private void EnablePageTab( bool enabled )
+    {
+        if ( !enabled )
+        {
+            this.liPages.Attributes.Add( "class", "disabled" );
+            this.tabPages.Attributes.Add( "class", "disabled" );
+            return;
+        }
+        this.liPages.Attributes.Remove( "class" );
     }
 
     /// <summary>
@@ -302,6 +319,30 @@ public partial class Blocks_Mobile_MobileApplicationDetail : RockBlock, IDetailB
         pnlLayout.Visible = false;
         pnlApplicationDetails.Visible = false;
         pnlApplicationEditDetails.Visible = false;
+        BuildPageMenu();
+        EnablePageTab( true );
+    }
+
+    private void BuildPageMenu()
+    {
+        var pageService = new PageService( new RockContext() );
+        var sitePages = pageService.GetBySiteId( hfSiteId.ValueAsInt() );
+
+    }
+
+    private void LoadLayoutDropDown()
+    {
+        if ( this.ExistingLayouts == null )
+        {
+            return;
+        }
+        ddlPageLayout.Items.Clear();
+        ddlPageLayout.Items.Add( new ListItem( string.Empty, None.IdValue ) );
+
+        foreach ( var layout in this.ExistingLayouts )
+        {
+            ddlPageLayout.Items.Add( new ListItem( layout.Name, layout.Id.ToString() ) );
+        }
     }
 
     /// <summary>
@@ -408,13 +449,13 @@ public partial class Blocks_Mobile_MobileApplicationDetail : RockBlock, IDetailB
     /// <summary>
     /// Displays the application tab.
     /// </summary>
-    private void DisplayApplicationTab()
+    private void DisplayApplicationTab( bool showDetail )
     {
-        pnlApplicationDetails.Visible = true;
-        pnlApplicationEditDetails.Visible = false;
+        pnlApplicationDetails.Visible = showDetail;
+        pnlApplicationEditDetails.Visible = !showDetail;
         pnlLayout.Visible = false;
         pnlPages.Visible = false;
-        EnableLayoutTab( false );
+        EnableLayoutTab( true );
     }
 
     /// <summary>
@@ -428,8 +469,8 @@ public partial class Blocks_Mobile_MobileApplicationDetail : RockBlock, IDetailB
         var liLayout = this.FindControl( "liLayout" ) as HtmlGenericControl;
         liLayout.Attributes.Remove( "class" );
 
-        //var liPages = this.FindControl( "liPages" ) as HtmlGenericControl;
-        //liPages.Attributes.Remove( "class" );
+        var liPages = this.FindControl( "liPages" ) as HtmlGenericControl;
+        liPages.Attributes.Remove( "class" );
     }
 
     /// <summary>
@@ -730,14 +771,14 @@ public partial class Blocks_Mobile_MobileApplicationDetail : RockBlock, IDetailB
         var pageEntityTypeId = EntityTypeCache.Get( Rock.SystemGuid.EntityType.PAGE.AsGuid() ).Id;
         var blockEntityTypeId = EntityTypeCache.Get( Rock.SystemGuid.EntityType.BLOCK.AsGuid() ).Id;
 
-        // Auth rules for groups or special roles should be added
+        // Auth 
         var rockContext = new RockContext();
         var authService = new AuthService( rockContext );
 
         var addedPageIds = _pagesAddedToPackages.Where( p => p.PackageType == packageType ).Select( p => p.Page.Id ).ToList();
         var sourcePages = _pagesAddedToPackages.Where( p => p.PackageType == packageType ).Select( p => p.Page ).ToList();
 
-        // Page Auths
+        // Page Auths rules for groups or special roles should be added
         var pageAuths = authService.GetByEntityIds( pageEntityTypeId, addedPageIds )
             .Where( a => a.GroupId != null || a.SpecialRole != SpecialRole.None ).AsNoTracking();
 
@@ -760,15 +801,14 @@ public partial class Blocks_Mobile_MobileApplicationDetail : RockBlock, IDetailB
             }
 
             package.AuthenticationRules.Add( mobilePageAuth );
-
         }
 
-        //Blocks 
+        //Blocks rules for groups or special roles should be added
         var addedBlockIds = _blocksAddedToPackages.Select( b => b.Block.Id ).ToList();
         var blockAuths = authService.GetByEntityIds( blockEntityTypeId, addedBlockIds )
           .Where( a => a.GroupId != null || a.SpecialRole != SpecialRole.None ).AsNoTracking();
 
-        var blocksAddToPackage = _blocksAddedToPackages.Where( b => b.PackageType == packageType ).Select( b => b.Block).ToList();
+        var blocksAddToPackage = _blocksAddedToPackages.Where( b => b.PackageType == packageType ).Select( b => b.Block ).ToList();
 
         foreach ( var blockAuth in blockAuths )
         {
@@ -821,16 +861,18 @@ public partial class Blocks_Mobile_MobileApplicationDetail : RockBlock, IDetailB
     /// <param name="e">The <see cref="EventArgs"/> instance containing the event data.</param>
     protected void Tab_SelectedClick( object sender, EventArgs e )
     {
+        var isEdit = ViewState["IsEdit"].ToString().AsBoolean();
+
         var tab = sender as HtmlAnchor;
         var tabSelected = tab.InnerText;
         switch ( tabSelected )
         {
             case "Application":
                 ClearActiveTabs();
-                DisplayApplicationTab();
+                DisplayApplicationTab(!isEdit);
                 break;
             case "Layout":
-                if ( !this.pnlApplicationEditDetails.Visible )
+                if ( !isEdit )
                 {
                     return;
                 }
@@ -838,7 +880,7 @@ public partial class Blocks_Mobile_MobileApplicationDetail : RockBlock, IDetailB
                 DisplayLayoutTab( hfLayoutId.Value.AsIntegerOrNull(), hfSiteId.Value.AsInteger() );
                 break;
             case "Pages":
-                if ( !this.pnlApplicationEditDetails.Visible )
+                if ( !isEdit)
                 {
                     return;
                 }
@@ -902,6 +944,9 @@ public partial class Blocks_Mobile_MobileApplicationDetail : RockBlock, IDetailB
     /// <param name="e">The <see cref="EventArgs"/> instance containing the event data.</param>
     protected void btnEdit_Click( object sender, EventArgs e )
     {
+        
+        ViewState["IsEdit"] = true;
+
         pnlApplicationDetails.Visible = false;
         pnlApplicationEditDetails.Visible = true;
 
@@ -911,6 +956,7 @@ public partial class Blocks_Mobile_MobileApplicationDetail : RockBlock, IDetailB
         }
 
         EnableLayoutTab( true );
+        EnablePageTab( true );
     }
 
     /// <summary>
@@ -1007,6 +1053,7 @@ public partial class Blocks_Mobile_MobileApplicationDetail : RockBlock, IDetailB
             DisplayDeleteAndPublishButton( true );
         }
 
+        ViewState["IsEdit"] = false;
         SetApplicationTabActive();
     }
 
@@ -1242,7 +1289,7 @@ public partial class Blocks_Mobile_MobileApplicationDetail : RockBlock, IDetailB
             UpdateExistingLayouts( layout.SiteId );
             BuildLayoutMenue();
             BuildLayoutDisplay();
-            DisplayApplicationTab();
+            DisplayApplicationTab(false);
         }
     }
 
@@ -1253,6 +1300,7 @@ public partial class Blocks_Mobile_MobileApplicationDetail : RockBlock, IDetailB
     /// <param name="e">The <see cref="EventArgs"/> instance containing the event data.</param>
     protected void btnCancel_Clicked( object sender, EventArgs e )
     {
+        ViewState["IsEdit"] = false;
         if ( hfSiteId.Value.AsIntegerOrNull() != null )
         {
             UpdateExistingLayouts( hfSiteId.Value.AsInteger() );
@@ -1341,6 +1389,27 @@ public partial class Blocks_Mobile_MobileApplicationDetail : RockBlock, IDetailB
         PublishPackages();
     }
 
+    protected void PageLink_DataBinding( object sender, EventArgs e )
+    {
+
+    }
+    protected void btnSavePage_Click( object sender, EventArgs e )
+    {
+
+    }
+
+    protected void btnPageCancel_Click( object sender, EventArgs e )
+    {
+
+    }
+
+    protected void PageMenu_Click( object sender, EventArgs e )
+    {
+
+    }
+
+    #endregion
+
     public class SourceBlockInfo
     {
         public PackageType PackageType { get; set; }
@@ -1353,6 +1422,5 @@ public partial class Blocks_Mobile_MobileApplicationDetail : RockBlock, IDetailB
         public Rock.Model.Page Page { get; set; }
     }
 
-    #endregion
 
 }

@@ -166,9 +166,46 @@
             </asp:Panel>
             <!-- Page Tab View -->
             <asp:Panel ID="pnlPages" runat="server" Visible="false">
-                <div class="row">
-                    <div class="col-md-6">
-                        <div>Pages</div>
+                <div class="panel-body">
+                    <div class="col-md-1">
+                        <asp:Repeater ID="rptPageMenue" runat="server">
+                            <HeaderTemplate>
+                                <ul>
+                            </HeaderTemplate>
+                            <ItemTemplate>
+                                <li runat="server">
+                                    <asp:LinkButton runat="server"
+                                        OnDataBinding="PageLink_DataBinding"
+                                        OnClick="PageMenu_Click"
+                                        CausesValidation="false" />
+                                </li>
+                            </ItemTemplate>
+                            <FooterTemplate>
+                                </ul>
+                            </FooterTemplate>
+                        </asp:Repeater>
+                        <div>
+                            <a href="#" id="a1" title="Add Page" runat="server" class="fa fa-plus-square-o" onserverclick="btnAddLayout_Click" visible="false" />
+                        </div>
+                    </div>
+                    <div class="col-md-11">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <Rock:DataTextBox ID="tbPageName" runat="server" Label="Name" SourceTypeName="Rock.Model.Page,Rock" PropertyName="PageTitle" />
+                            </div>
+                            <div class="col-md-6">
+                                <Rock:RockCheckBox ID="cbDisplayInNavigation" Label="Display In Navigation" runat="server" CssClass="js-isactivegroup" />
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <Rock:RockDropDownList ID="ddlPageLayout" runat="server" Label="Layout" />
+                            </div>
+                        </div>
+                        <div class="actions">
+                            <Rock:BootstrapButton ID="btnSavePage" runat="server" CssClass="btn btn-primary" Text="Save" CausesValidation="true" OnClick="btnSavePage_Click" DataLoadingText="Saving..." />
+                            <asp:LinkButton ID="btnPageCancel" runat="server" CssClass="btn btn-default btn-cancel" Text="Cancel" CausesValidation="false" OnClick="btnPageCancel_Click" />
+                        </div>
                     </div>
                 </div>
             </asp:Panel>
