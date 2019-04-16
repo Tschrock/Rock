@@ -14,9 +14,12 @@
                 <asp:HiddenField ID="hfTabSelected" runat="server" Value="false" />
                 <div class="panel-body">
                     <ul class="nav nav-tabs">
-                        <li runat="server" id="liApplication"><a href="#" id="tabApplication" runat="server" onserverclick="Tab_SelectedClick">Application</a></li>
-                        <li runat="server" id="liLayout" class="disabled"><a href="#" id="tabLayout" runat="server" onserverclick="Tab_SelectedClick">Layout</a></li>
-                        <li runat="server" id="liPages" class="disabled"><a href="#" id="tabPages" runat="server" onserverclick="Tab_SelectedClick">Pages</a></li>
+                        <li runat="server" id="liApplication">
+                            <asp:LinkButton ID="lbTabApplication" runat="server" OnClick="lbTab_SelectedClick">Application</asp:LinkButton></li>
+                        <li runat="server" id="liLayout">
+                            <asp:LinkButton ID="lbTabLayout" runat="server" OnClick="lbTab_SelectedClick">Layout</asp:LinkButton></li>
+                        <li runat="server" id="liPages">
+                            <asp:LinkButton ID="lbTabPages" runat="server" OnClick="lbTab_SelectedClick">Pages</asp:LinkButton></li>
                     </ul>
                 </div>
             </asp:Panel>
@@ -45,9 +48,9 @@
                             </div>
                         </div>
                         <asp:Panel ID="pnlReadOnlyModeActions" runat="server" CssClass="actions">
-                            <asp:LinkButton ID="btnEdit" runat="server" AccessKey="m" ToolTip="Alt+m" Text="Edit" CssClass="btn btn-primary" OnClick="btnEdit_Click" />
-                            <asp:LinkButton ID="btnApplicationDelete" runat="server" Text="Delete" OnClick="btnApplicationDelete_Click" CssClass="btn btn-link" CausesValidation="false" />
-                            <asp:LinkButton ID="btnPublish" Visible="false" runat="server" Text="Publish" CssClass="btn btn-secondary" OnClick="btnPublish_Click" />
+                            <asp:LinkButton ID="btnEdit" runat="server" AccessKey="m" ToolTip="Alt+m" Text="Edit" CssClass="btn btn-primary" OnClick="lbtnEdit_Click" />
+                            <asp:LinkButton ID="btnApplicationDelete" runat="server" Text="Delete" OnClick="lbtnApplicationDelete_Click" CssClass="btn btn-link" CausesValidation="false" />
+                            <asp:LinkButton ID="btnPublish" Visible="false" runat="server" Text="Publish" CssClass="btn btn-secondary" OnClick="lbtnPublish_Click" />
                         </asp:Panel>
                     </div>
                 </fieldset>
@@ -107,8 +110,8 @@
                         </div>
                     </div>
                     <div class="actions">
-                        <Rock:BootstrapButton ID="btnSaveMobileDetails" runat="server" CssClass="btn btn-primary" Text="Save" CausesValidation="true" OnClick="btnSaveMobileDetails_Click" DataLoadingText="Saving..." />
-                        <asp:LinkButton ID="btnCancelMobileDetails" runat="server" CssClass="btn btn-default btn-cancel" Text="Cancel" CausesValidation="false" OnClick="btnCancel_Clicked" />
+                        <Rock:BootstrapButton ID="btnSaveMobileDetails" runat="server" CssClass="btn btn-primary" Text="Save" CausesValidation="true" OnClick="lbtnSaveMobileDetails_Click" DataLoadingText="Saving..." />
+                        <asp:LinkButton ID="lbtnCancelMobileDetails" runat="server" CssClass="btn btn-default btn-cancel" Text="Cancel" CausesValidation="false" OnClick="lbtnCancel_Clicked" />
                     </div>
                 </div>
             </asp:Panel>
@@ -133,7 +136,9 @@
                                 </ul>  
                             </FooterTemplate>
                         </asp:Repeater>
-                        <div><a href="#" id="aAddLayout" title="Add layout" runat="server" class="fa fa-plus-square-o" onserverclick="btnAddLayout_Click" visible="false" /></div>
+                        <div>
+                            <asp:LinkButton ID="lbtnAddLayout" title="Add layout" runat="server" class="fa fa-plus-square-o" OnClick="lbtnAddLayout_Click" Visible="false" />
+                        </div>
                     </div>
                     <div class="col-md-11">
                         <div class="row">
@@ -158,13 +163,13 @@
                         </div>
                     </div>
                     <div class="actions">
-                        <Rock:BootstrapButton ID="btnSaveLayout" runat="server" CssClass="btn btn-primary" Text="Save" CausesValidation="true" OnClick="btnSaveLayout_Click" DataLoadingText="Saving..." />
-                        <asp:LinkButton ID="btnLayoutCancel" runat="server" CssClass="btn btn-default btn-cancel" Text="Cancel" CausesValidation="false" OnClick="btnCancel_Clicked" />
-                        <asp:LinkButton ID="btnDeleteCurrentLayout" runat="server" Text="Delete" OnClick="btnDeleteLayout_Click" CssClass="btn btn-link" CausesValidation="false" Visible="false" />
+                        <Rock:BootstrapButton ID="lbtnSaveLayout" runat="server" CssClass="btn btn-primary" Text="Save" CausesValidation="true" OnClick="lbtnSaveLayout_Click" DataLoadingText="Saving..." />
+                        <asp:LinkButton ID="lbtnDeleteCurrentLayout" runat="server" Text="Delete" OnClick="lbtnDeleteLayout_Click" CssClass="btn btn-link" CausesValidation="false" Visible="false" />
                     </div>
                 </div>
             </asp:Panel>
             <!-- Page Tab View -->
+            <asp:HiddenField ID="hfPageId" runat="server" />
             <asp:Panel ID="pnlPages" runat="server" Visible="false">
                 <div class="panel-body">
                     <div class="col-md-1">
@@ -185,16 +190,22 @@
                             </FooterTemplate>
                         </asp:Repeater>
                         <div>
-                            <a href="#" id="a1" title="Add Page" runat="server" class="fa fa-plus-square-o" onserverclick="btnAddLayout_Click" visible="false" />
+                            <div>
+                                <asp:LinkButton ID="lbtnAddPage" title="Add page" runat="server" class="fa fa-plus-square-o" OnClick="lbtnAddPage_Click" Visible="false" />
+                            </div>
                         </div>
                     </div>
                     <div class="col-md-11">
+                        <div class="row">
+                                  <Rock:ModalAlert ID="mdDeleteWarning" runat="server" />
+                            <Rock:NotificationBox ID="nbPageLayoutRequired" runat="server" NotificationBoxType="Info" Title="Note" Visible="false" Text="A layout has not been selected." />
+                        </div>
                         <div class="row">
                             <div class="col-md-6">
                                 <Rock:DataTextBox ID="tbPageName" runat="server" Label="Name" SourceTypeName="Rock.Model.Page,Rock" PropertyName="PageTitle" />
                             </div>
                             <div class="col-md-6">
-                                <Rock:RockCheckBox ID="cbDisplayInNavigation" Label="Display In Navigation" runat="server" CssClass="js-isactivegroup" />
+                                <Rock:RockCheckBox ID="cbDisplayInNavigation" Label="Display In Navigation" runat="server" Checked="false" CssClass="js-isactivegroup" />
                             </div>
                         </div>
                         <div class="row">
@@ -203,8 +214,8 @@
                             </div>
                         </div>
                         <div class="actions">
-                            <Rock:BootstrapButton ID="btnSavePage" runat="server" CssClass="btn btn-primary" Text="Save" CausesValidation="true" OnClick="btnSavePage_Click" DataLoadingText="Saving..." />
-                            <asp:LinkButton ID="btnPageCancel" runat="server" CssClass="btn btn-default btn-cancel" Text="Cancel" CausesValidation="false" OnClick="btnPageCancel_Click" />
+                            <Rock:BootstrapButton ID="btnSavePage" runat="server" CssClass="btn btn-primary" Text="Save" CausesValidation="true" OnClick="lbtnSavePage_Click" DataLoadingText="Saving..." />
+                            <asp:LinkButton ID="lbtnDeleteCurrentPage" runat="server" Text="Delete" OnClick="lbtnDeleteCurrentPage_Click" CssClass="btn btn-link" CausesValidation="false" />
                         </div>
                     </div>
                 </div>

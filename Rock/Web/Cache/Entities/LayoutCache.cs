@@ -80,6 +80,22 @@ namespace Rock.Web.Cache
         public string Description { get; private set; }
 
         /// <summary>
+        /// Gets the layout mobile phone.
+        /// </summary>
+        /// <value>
+        /// The layout mobile phone.
+        /// </value>
+        public string LayoutMobilePhone { get; private set; }
+
+        /// <summary>
+        /// Gets the layout mobile tablet.
+        /// </summary>
+        /// <value>
+        /// The layout mobile tablet.
+        /// </value>
+        public string LayoutMobileTablet { get; private set; }
+
+        /// <summary>
         /// Gets the site.
         /// </summary>
         /// <value>
@@ -115,6 +131,9 @@ namespace Rock.Web.Cache
             FileName = layout.FileName;
             Name = layout.Name;
             Description = layout.Description;
+            LayoutMobilePhone = layout.LayoutMobilePhone;
+            LayoutMobileTablet = layout.LayoutMobileTablet;
+            
         }
 
         /// <summary>

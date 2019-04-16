@@ -48,6 +48,10 @@ public partial class Blocks_Mobile_MobileApplicationDetail : RockBlock, IDetailB
     /// <param name="e">The <see cref="T:System.EventArgs" /> object that contains the event data.</param>
     protected override void OnLoad( EventArgs e )
     {
+        bool isEdit = ViewState["IsEdit"] == null ? false : ViewState["IsEdit"].ToString().AsBoolean();
+        this.lbTabLayout.Enabled = isEdit;
+        this.lbTabPages.Enabled = isEdit;
+
         base.OnLoad( e );
         if ( !IsPostBack )
         {
@@ -85,10 +89,32 @@ public partial class Blocks_Mobile_MobileApplicationDetail : RockBlock, IDetailB
     }
     private bool CancelEdit = false;
     private List<Rock.Model.Layout> ExistingLayouts { get; set; }
+    private List<Rock.Model.Page> ExistingPages { get; set; }
 
     #endregion
 
     #region Data Structures
+
+    /// <summary>
+    /// Used to keeping a list of Blocks added
+    /// in support adding Auth
+    /// </summary>
+    public class SourceBlockInfo
+    {
+        public PackageType PackageType { get; set; }
+        public Rock.Model.Block Block { get; set; }
+    }
+
+    /// <summary>
+    /// Used to keep a list of Pages that were added
+    /// in support of adding Auth
+    /// </summary>
+    public class SourePageInfo
+    {
+        public PackageType PackageType { get; set; }
+        public Rock.Model.Page Page { get; set; }
+    }
+
     /// <summary>
     /// Used Set Page and associated Depth
     /// In support of Publish Process
@@ -122,6 +148,21 @@ public partial class Blocks_Mobile_MobileApplicationDetail : RockBlock, IDetailB
     #endregion
 
     #region Methods
+    /// <summary>
+    /// Binds the title bar.
+    /// </summary>
+    /// <param name="site">The site.</param>
+    private void BindTitleBar( Site site )
+    {
+        this.lReadOnlyTitle.Text = site.Name;
+        var latetestVersion = site.LatestVersionDateTime;
+        if ( latetestVersion != null )
+        {
+            this.ltVersion.Text = string.Format( "<span class='label label-info'>Latest Version{0}</span>", ( ( DateTime ) site.LatestVersionDateTime ).ToString( @"MM/dd/yyyy hh:mm tt" ) );
+        }
+    }
+
+    #region Application Tab Methods
 
     /// <summary>
     /// Shows the detail.
@@ -175,6 +216,7 @@ public partial class Blocks_Mobile_MobileApplicationDetail : RockBlock, IDetailB
         BuildLayoutMenue();
         BuildLayoutDisplay();
         LoadLayoutDropDown();
+        BuildPageMenu();
     }
 
     /// <summary>
@@ -188,34 +230,12 @@ public partial class Blocks_Mobile_MobileApplicationDetail : RockBlock, IDetailB
     }
 
     /// <summary>
-    /// Enables the layout tab.
-    /// </summary>
-    /// <param name="enabled">if set to <c>true</c> [enabled].</param>
-    private void EnableLayoutTab( bool enabled )
-    {
-        if ( !enabled )
-        {
-            this.liLayout.Attributes.Add( "class", "disabled" );
-            this.tabLayout.Attributes.Add( "class", "disabled" );
-            return;
-        }
-
-        this.liLayout.Attributes.Remove( "class" );
-    }
-
-    /// <summary>
     /// Enables the page tab.
     /// </summary>
     /// <param name="enabled">if set to <c>true</c> [enabled].</param>
     private void EnablePageTab( bool enabled )
     {
-        if ( !enabled )
-        {
-            this.liPages.Attributes.Add( "class", "disabled" );
-            this.tabPages.Attributes.Add( "class", "disabled" );
-            return;
-        }
-        this.liPages.Attributes.Remove( "class" );
+        this.lbTabPages.Enabled = enabled;
     }
 
     /// <summary>
@@ -252,46 +272,6 @@ public partial class Blocks_Mobile_MobileApplicationDetail : RockBlock, IDetailB
     }
 
     /// <summary>
-    /// Builds the layout display.
-    /// </summary>
-    private void BuildLayoutDisplay()
-    {
-        if ( this.ExistingLayouts != null && this.ExistingLayouts.Count > 0 )
-        {
-            StringBuilder sb = new StringBuilder();
-            sb.AppendLine( "<ul id='ulLayouts'>" );
-            foreach ( var layout in this.ExistingLayouts )
-            {
-                sb.AppendLine( string.Format( "<li id='li_{0}' ><label class='control-label'>{1}</label></li>", layout.Id, layout.Name ) );
-            }
-
-            sb.AppendLine( "</ul>" );
-
-            this.ltLayouts.Text = sb.ToString();
-            btnPublish.Visible = true;
-        }
-        else
-        {
-            this.ltLayouts.Text = string.Empty;
-            btnPublish.Visible = false;
-        }
-    }
-
-    /// <summary>
-    /// Binds the title bar.
-    /// </summary>
-    /// <param name="site">The site.</param>
-    private void BindTitleBar( Site site )
-    {
-        this.lReadOnlyTitle.Text = site.Name;
-        var latetestVersion = site.LatestVersionDateTime;
-        if ( latetestVersion != null )
-        {
-            this.ltVersion.Text = string.Format( "<span class='label label-info'>Latest Version{0}</span>", ( ( DateTime ) site.LatestVersionDateTime ).ToString( @"MM/dd/yyyy hh:mm tt" ) );
-        }
-    }
-
-    /// <summary>
     /// Initializes the RadioButton lists.
     /// </summary>
     private void InitializeRadioButtonLists()
@@ -309,168 +289,42 @@ public partial class Blocks_Mobile_MobileApplicationDetail : RockBlock, IDetailB
             rblAndroidTabLocation.Items.Add( new ListItem { Text = tabLocationType.ToString(), Selected = false } );
         }
     }
-
     /// <summary>
-    /// Displays the pages tab.
+    /// Updates the additional settings.
     /// </summary>
-    private void DisplayPagesTab()
+    /// <param name="site">The site.</param>
+    private void UpdateAdditionalSettings( Site site )
     {
-        pnlPages.Visible = true;
-        pnlLayout.Visible = false;
-        pnlApplicationDetails.Visible = false;
-        pnlApplicationEditDetails.Visible = false;
-        BuildPageMenu();
-        EnablePageTab( true );
-    }
+        bool hasAdditionalSetting = false;
+        var selecteShellType = rblApplicationType.SelectedValueAsEnumOrNull<ShellType>();
+        var selectedTab = rblAndroidTabLocation.SelectedValueAsEnumOrNull<TabLocation>();
 
-    private void BuildPageMenu()
-    {
-        var pageService = new PageService( new RockContext() );
-        var sitePages = pageService.GetBySiteId( hfSiteId.ValueAsInt() );
+        var additionalSettings = new AdditionalSettings();
 
-    }
-
-    private void LoadLayoutDropDown()
-    {
-        if ( this.ExistingLayouts == null )
+        if ( selecteShellType != null )
         {
-            return;
-        }
-        ddlPageLayout.Items.Clear();
-        ddlPageLayout.Items.Add( new ListItem( string.Empty, None.IdValue ) );
-
-        foreach ( var layout in this.ExistingLayouts )
-        {
-            ddlPageLayout.Items.Add( new ListItem( layout.Name, layout.Id.ToString() ) );
-        }
-    }
-
-    /// <summary>
-    /// Updates the existing layouts.
-    /// </summary>
-    /// <param name="siteId">The site identifier.</param>
-    private void UpdateExistingLayouts( int siteId )
-    {
-        var layoutService = new LayoutService( new RockContext() );
-        this.ExistingLayouts = layoutService.GetBySiteId( ( int ) siteId ).Select( l => l ).ToList();
-    }
-    /// <summary>
-    /// Displays the layout tab.
-    /// </summary>
-    private void DisplayLayoutTab( int? layoutId, int? siteId )
-    {
-        var layoutService = new LayoutService( new RockContext() );
-
-        if ( !siteId.HasValue )
-        {
-            siteId = hfSiteId.Value.AsInteger();
+            additionalSettings.ShellType = ( ShellType ) selecteShellType;
+            hasAdditionalSetting = true;
         }
 
-        UpdateExistingLayouts( ( int ) siteId );
-
-        Rock.Model.Layout layout = null;
-
-        if ( layoutId != null && !layoutId.Equals( 0 ) )
+        // We only show Tab Android Tab location when Shell Type is Tabb
+        if ( selectedTab != null && additionalSettings.ShellType == ShellType.Tabbed )
         {
-            layout = layoutService.Get( ( int ) layoutId );
+            additionalSettings.TabLocation = ( TabLocation ) selectedTab;
+            hasAdditionalSetting = true;
         }
 
-        if ( layout == null && siteId.HasValue )
+        if ( ceCssPreHtml.Text.IsNotNullOrWhiteSpace() )
         {
-            var site = SiteCache.Get( siteId.Value );
-
-            if ( site != null )
-            {
-                layout = new Rock.Model.Layout { Id = 0 };
-                layout.SiteId = siteId.Value;
-            }
+            additionalSettings.CssStyle = ceCssPreHtml.Text;
+            hasAdditionalSetting = true;
         }
 
-        if ( layout != null )
+        if ( hasAdditionalSetting )
         {
-            hfSiteId.Value = layout.SiteId.ToString();
-            hfLayoutId.Value = layout.Id.ToString();
+            var serializedAdditionalSetting = JsonConvert.SerializeObject( additionalSettings ).ToString();
+            site.AdditionalSettings = serializedAdditionalSetting;
         }
-
-        LoadSelectedLayout( layoutId );
-        pnlLayout.Visible = true;
-        pnlApplicationDetails.Visible = false;
-        pnlApplicationEditDetails.Visible = false;
-        pnlPages.Visible = false;
-    }
-
-    /// <summary>
-    /// Builds the layout menue.
-    /// </summary>
-    private void BuildLayoutMenue()
-    {
-        rptLayoutMenu.DataSource = this.ExistingLayouts;
-        rptLayoutMenu.DataBind();
-
-        if ( rptLayoutMenu.Items.Count > 0 )
-        {
-            var layoutId = this.ExistingLayouts.First().Id;
-            var selectedLayout = rptLayoutMenu.Items[0].FindControl( string.Format( "layoutItem_{0}", layoutId ) ) as LinkButton;
-            if ( selectedLayout != null )
-            {
-                selectedLayout.Focus();
-            }
-
-            LoadSelectedLayout( ( int ) layoutId );
-
-            // If we have at least one show add button
-            DisplayLayoutAddButton( true );
-            btnDeleteCurrentLayout.Visible = true;
-            btnPublish.Visible = true;
-        }
-        else
-        {
-            // This is either the first one or all have been deleted
-            DisplayLayoutAddButton( false );
-            btnDeleteCurrentLayout.Visible = false;
-            btnPublish.Visible = false;
-        }
-    }
-
-    /// <summary>
-    /// Displays the layout add button.
-    /// </summary>
-    /// <param name="isVisible">if set to <c>true</c> [is visible].</param>
-    private void DisplayLayoutAddButton( bool isVisible )
-    {
-        // Display Add button if we at least have one
-        var btnAddLayout = this.FindControl( "aAddLayout" );
-        if ( btnAddLayout != null )
-        {
-            btnAddLayout.Visible = isVisible;
-        }
-    }
-
-    /// <summary>
-    /// Displays the application tab.
-    /// </summary>
-    private void DisplayApplicationTab( bool showDetail )
-    {
-        pnlApplicationDetails.Visible = showDetail;
-        pnlApplicationEditDetails.Visible = !showDetail;
-        pnlLayout.Visible = false;
-        pnlPages.Visible = false;
-        EnableLayoutTab( true );
-    }
-
-    /// <summary>
-    /// Clears the active tabs.
-    /// </summary>
-    private void ClearActiveTabs()
-    {
-        var liApplication = this.FindControl( "liApplication" ) as HtmlGenericControl;
-        liApplication.Attributes.Remove( "class" );
-
-        var liLayout = this.FindControl( "liLayout" ) as HtmlGenericControl;
-        liLayout.Attributes.Remove( "class" );
-
-        var liPages = this.FindControl( "liPages" ) as HtmlGenericControl;
-        liPages.Attributes.Remove( "class" );
     }
 
     /// <summary>
@@ -531,6 +385,57 @@ public partial class Blocks_Mobile_MobileApplicationDetail : RockBlock, IDetailB
         return null;
     }
 
+    #endregion
+
+    #region Layout Tab Methods
+
+    /// <summary>
+    /// Enables the layout tab.
+    /// </summary>
+    /// <param name="enabled">if set to <c>true</c> [enabled].</param>
+    private void EnableLayoutTab( bool enabled )
+    {
+        this.lbTabLayout.Enabled = enabled;
+    }
+
+    /// <summary>
+    /// Builds the layout display.
+    /// </summary>
+    private void BuildLayoutDisplay()
+    {
+        if ( this.ExistingLayouts != null && this.ExistingLayouts.Count > 0 )
+        {
+            StringBuilder sb = new StringBuilder();
+            sb.AppendLine( "<ul id='ulLayouts'>" );
+            foreach ( var layout in this.ExistingLayouts )
+            {
+                sb.AppendLine( string.Format( "<li id='li_{0}' ><label class='control-label'>{1}</label></li>", layout.Id, layout.Name ) );
+            }
+
+            sb.AppendLine( "</ul>" );
+
+            this.ltLayouts.Text = sb.ToString();
+            btnPublish.Visible = true;
+        }
+        else
+        {
+            this.ltLayouts.Text = string.Empty;
+            btnPublish.Visible = false;
+        }
+    }
+
+    /// <summary>
+    /// Displays the pages tab.
+    /// </summary>
+    private void DisplayPagesTab()
+    {
+        pnlPages.Visible = true;
+        pnlLayout.Visible = false;
+        pnlApplicationDetails.Visible = false;
+        pnlApplicationEditDetails.Visible = false;
+        EnablePageTab( true );
+    }
+
     /// <summary>
     /// Resets the layout for add.
     /// </summary>
@@ -578,9 +483,195 @@ public partial class Blocks_Mobile_MobileApplicationDetail : RockBlock, IDetailB
         }
 
         var firstLayout = this.ExistingLayouts.First();
-        LoadSelectedLayout( firstLayout.Id );
+        LoadSelectedLayout( firstLayout.Guid );
     }
 
+    private void UpdateExistingLayouts( int siteId )
+    {
+        var layoutService = new LayoutService( new RockContext() );
+        this.ExistingLayouts = layoutService.GetBySiteId( ( int ) siteId ).Select( l => l ).ToList();
+    }
+    /// <summary>
+    /// Displays the layout tab.
+    /// </summary>
+    private void DisplayLayoutTab( int? layoutId, int? siteId )
+    {
+        var layoutService = new LayoutService( new RockContext() );
+
+        if ( !siteId.HasValue )
+        {
+            siteId = hfSiteId.Value.AsInteger();
+        }
+
+        UpdateExistingLayouts( ( int ) siteId );
+
+        Rock.Model.Layout layout = null;
+
+        if ( layoutId != null && !layoutId.Equals( 0 ) )
+        {
+            layout = layoutService.Get( ( int ) layoutId );
+        }
+
+        if ( layout == null && siteId.HasValue )
+        {
+            var site = SiteCache.Get( siteId.Value );
+
+            if ( site != null )
+            {
+                layout = new Rock.Model.Layout { Id = 0 };
+                layout.SiteId = siteId.Value;
+            }
+        }
+
+        if ( layout != null )
+        {
+            hfSiteId.Value = layout.SiteId.ToString();
+            hfLayoutId.Value = layout.Id.ToString();
+        }
+
+        pnlLayout.Visible = true;
+        pnlApplicationDetails.Visible = false;
+        pnlApplicationEditDetails.Visible = false;
+        pnlPages.Visible = false;
+    }
+
+    /// <summary>
+    /// Builds the layout menue.
+    /// </summary>
+    private void BuildLayoutMenue()
+    {
+        rptLayoutMenu.DataSource = this.ExistingLayouts;
+        rptLayoutMenu.DataBind();
+
+        if ( rptLayoutMenu.Items.Count > 0 )
+        {
+            var layoutId = this.ExistingLayouts.First().Id;
+            var selectedLayout = rptLayoutMenu.Items[0].FindControl( string.Format( "layoutItem_{0}", layoutId ) ) as LinkButton;
+            if ( selectedLayout != null )
+            {
+                selectedLayout.Focus();
+            }
+            SetToFirstLayout();
+            // If we have at least one show add button
+            DisplayLayoutAddButton( true );
+            lbtnDeleteCurrentLayout.Visible = true;
+            btnPublish.Visible = true;
+        }
+        else
+        {
+            // This is either the first one or all have been deleted
+            DisplayLayoutAddButton( false );
+            lbtnDeleteCurrentLayout.Visible = false;
+            btnPublish.Visible = false;
+        }
+    }
+
+    /// <summary>
+    /// Displays the layout add button.
+    /// </summary>
+    /// <param name="isVisible">if set to <c>true</c> [is visible].</param>
+    private void DisplayLayoutAddButton( bool isVisible )
+    {
+        lbtnAddLayout.Visible = isVisible;
+    }
+
+    #endregion
+
+    #region Page Tab Methods
+
+    public void ResetPageTabForAdd()
+    {
+        tbPageName.Text = string.Empty;
+        cbDisplayInNavigation.Checked = false;
+        ddlPageLayout.SelectedIndex = 0;
+    }
+
+    /// <summary>
+    /// Loads the layout drop down.
+    /// </summary>
+    private void LoadLayoutDropDown()
+    {
+        if ( this.ExistingLayouts == null )
+        {
+            return;
+        }
+        ddlPageLayout.Items.Clear();
+        ddlPageLayout.Items.Add( new ListItem( string.Empty, None.IdValue ) );
+
+        foreach ( var layout in this.ExistingLayouts )
+        {
+            ddlPageLayout.Items.Add( new ListItem( layout.Name, layout.Id.ToString() ) );
+        }
+    }
+
+    /// <summary>
+    /// Builds the page menu.
+    /// </summary>
+    private void BuildPageMenu()
+    {
+        var pageService = new PageService( new RockContext() );
+        var sitePages = pageService.GetBySiteId( hfSiteId.ValueAsInt() ).ToList();
+        this.ExistingPages = sitePages;
+
+        lbtnAddPage.Visible = sitePages.Count > 0;
+        rptPageMenue.DataSource = sitePages;
+        rptPageMenue.DataBind();
+        SetSelectedFirstPage();
+    }
+
+    private void LoadSelectedPage( Guid pageGuid )
+    {
+        var page = PageCache.Get( pageGuid );
+        if ( page == null )
+        {
+            return;
+        }
+
+        this.tbPageName.Text = page.PageTitle;
+        this.cbDisplayInNavigation.Checked = page.DisplayInNavWhen == DisplayInNavWhen.WhenAllowed;
+        ddlPageLayout.SelectedValue = page.LayoutId.ToString();
+        hfPageId.Value = page.Id.ToString();
+    }
+
+    private void SetSelectedFirstPage()
+    {
+        if ( this.ExistingPages == null )
+        {
+            return;
+        }
+
+        var firstPage = this.ExistingPages.First();
+        LoadSelectedPage( firstPage.Guid );
+    }
+
+    #endregion
+
+    /// <summary>
+    /// Displays the application tab.
+    /// </summary>
+    private void DisplayApplicationTab( bool showDetail )
+    {
+        pnlApplicationDetails.Visible = showDetail;
+        pnlApplicationEditDetails.Visible = !showDetail;
+        pnlLayout.Visible = false;
+        pnlPages.Visible = false;
+    }
+
+    /// <summary>
+    /// Clears the active tabs.
+    /// </summary>
+    private void ClearActiveTabs()
+    {
+        var liApplication = this.FindControl( "liApplication" ) as HtmlGenericControl;
+        liApplication.Attributes.Remove( "class" );
+
+        var liLayout = this.FindControl( "liLayout" ) as HtmlGenericControl;
+        liLayout.Attributes.Remove( "class" );
+
+        var liPages = this.FindControl( "liPages" ) as HtmlGenericControl;
+        liPages.Attributes.Remove( "class" );
+
+    }
     /// <summary>
     /// Publishes the packages.
     /// </summary>
@@ -832,10 +923,266 @@ public partial class Blocks_Mobile_MobileApplicationDetail : RockBlock, IDetailB
         }
     }
 
+    /// <summary>
+    /// Sets the application tab active.
+    /// </summary>
+    private void SetApplicationTabActive()
+    {
+        lbTab_SelectedClick( this.lbTabApplication, null );
+    }
+    /// <summary>
+    /// Loads the selected layout.
+    /// </summary>
+    /// <param name="selectedLayoutId">The selected layout identifier.</param>
+    private void LoadSelectedLayout( Guid selectedLayoutGuid )
+    {
+        var selectedLayout = LayoutCache.Get( selectedLayoutGuid );
+        if ( selectedLayout != null )
+        {
+            this.tbLayoutName.Text = selectedLayout.Name;
+            this.tbLayoutDescription.Text = selectedLayout.Description;
+            this.cePhoneLayoutXaml.Text = selectedLayout.LayoutMobilePhone;
+            this.ceTabletLayoutXaml.Text = selectedLayout.LayoutMobileTablet;
+            this.hfLayoutId.Value = selectedLayout.Id.ToString();
+        }
+    }
+
+    /// <summary>
+    /// Builds the list of pages and depth.
+    /// Since a layout assigned may only refer to child pages
+    /// We need a list of all pages from the root to get full depth
+    /// </summary>
+    /// <param name="allPages">All pages.</param>
+    private void BuildListOfPagesAndDepth( IOrderedQueryable<Rock.Model.Page> allPages )
+    {
+        var rootpages = allPages.Where( p => p.ParentPageId == null ).ToList();
+        foreach ( var rootPage in rootpages )
+        {
+            _pageWithDepth.Add( new PageInfo { Page = rootPage, Depth = 0 } );
+            AssignPageDepth( rootPage, 0 );
+        }
+    }
+
+    /// <summary>
+    /// Adds the layout and pages to package.
+    /// </summary>
+    /// <param name="package">The package.</param>
+    /// <param name="mobilePackageSource">The mobile package source.</param>
+    /// <param name="packageType">Type of the package.</param>
+    private void AddLayoutAndPagesToPackage( UpdatePackage package, PackageSourceInfo mobilePackageSource, PackageType packageType )
+    {
+        var layout = mobilePackageSource.Layout;
+
+        if ( packageType == PackageType.Phone )
+        {
+            if ( layout.LayoutMobilePhone.IsNotNullOrWhiteSpace() )
+            {
+                package.Layouts.Add( new Rock.Mobile.Common.Layout { LayoutGuid = layout.Guid, LayoutXaml = layout.LayoutMobilePhone, Name = layout.Name } );
+            }
+        }
+        if ( packageType == PackageType.Tablet )
+        {
+            if ( layout.LayoutMobileTablet.IsNotNullOrWhiteSpace() )
+            {
+
+                package.Layouts.Add( new Rock.Mobile.Common.Layout { LayoutGuid = layout.Guid, LayoutXaml = layout.LayoutMobileTablet, Name = layout.Name } );
+            }
+        }
+
+        foreach ( var page in mobilePackageSource.LayoutPages )
+        {
+            AddPageAndBlocksToPackageSourceWithDepth( package, layout, page, packageType );
+        }
+    }
+
+    /// <summary>
+    /// Adds the page and blocks to package source with depth.
+    /// </summary>
+    /// <param name="phonePackage">The phone package.</param>
+    /// <param name="layout">The layout.</param>
+    /// <param name="page">The page.</param>
+    /// <param name="packageType">Type of the package.</param>
+    private void AddPageAndBlocksToPackageSourceWithDepth( UpdatePackage phonePackage, Rock.Model.Layout layout, Rock.Model.Page page, PackageType packageType )
+    {
+        if ( page.Pages.Count == 0 )
+        {
+            var depth = _pageWithDepth.Where( p => p.Page.Id == page.Id ).Select( d => d.Depth ).FirstOrDefault();
+            // TODO: Map Display In Nav, IConUrl
+            var existsInPackage = phonePackage.Pages.Where( p => p.PageGuid == page.Guid && p.LayoutGuid == layout.Guid ).Any();
+            if ( existsInPackage )
+            {
+                return;
+            }
+
+            _pagesAddedToPackages.Add( new SourePageInfo { PackageType = packageType, Page = page } );
+
+            phonePackage.Pages.Add( new Rock.Mobile.Common.Page
+            {
+                DepthLevel = depth,
+                PageGuid = page.Guid,
+                ParentPageGuid = page.ParentPage.Guid,
+                LayoutGuid = layout.Guid,
+                Order = page.Order,
+                Title = page.PageTitle
+            } );
+
+            foreach ( var block in page.Blocks )
+            {
+                _blocksAddedToPackages.Add( new SourceBlockInfo { PackageType = packageType, Block = block } );
+
+                phonePackage.Blocks.Add( new Rock.Mobile.Common.Block
+                {
+                    BlockGuid = block.Guid,
+                    BlockType = block.BlockType.ToString(),
+                    Order = block.Order,
+                    PageGuid = block.Page.Guid,
+                    Zone = block.Zone
+                } );
+            }
+
+            return;
+        }
+
+        foreach ( var childPage in page.Pages )
+        {
+            var childDepth = _pageWithDepth.Where( p => p.Page.Id == childPage.Id ).Select( d => d.Depth ).FirstOrDefault();
+            var childExistsInPackage = phonePackage.Pages.Where( p => p.PageGuid == childPage.Guid && p.LayoutGuid == layout.Guid ).Any();
+
+            _pagesAddedToPackages.Add( new SourePageInfo { PackageType = packageType, Page = childPage } );
+            if ( !childExistsInPackage )
+            {
+                phonePackage.Pages.Add( new Rock.Mobile.Common.Page
+                {
+                    DepthLevel = childDepth,
+                    PageGuid = childPage.Guid,
+                    ParentPageGuid = childPage.ParentPage.Guid,
+                    LayoutGuid = layout.Guid,
+                    Order = childPage.Order,
+                    Title = childPage.PageTitle,
+                } );
+
+                foreach ( var block in childPage.Blocks )
+                {
+                    _blocksAddedToPackages.Add( new SourceBlockInfo { PackageType = packageType, Block = block } );
+                    phonePackage.Blocks.Add( new Rock.Mobile.Common.Block
+                    {
+                        BlockGuid = block.Guid,
+                        BlockType = block.BlockType.ToString(),
+                        Order = block.Order,
+                        PageGuid = block.Page.Guid,
+                        Zone = block.Zone
+                    } );
+                }
+            }
+
+            AddPageAndBlocksToPackageSourceWithDepth( phonePackage, layout, childPage, packageType );
+        }
+    }
+
+    /// <summary>
+    /// Assigns the page depth.
+    /// </summary>
+    /// <param name="currentPage">The current page.</param>
+    /// <param name="currentLevel">The current level.</param>
+    private void AssignPageDepth( Rock.Model.Page currentPage, int currentLevel )
+    {
+        currentLevel += 1;
+        if ( currentPage.Pages == null )
+        {
+
+            _pageWithDepth.Add( new PageInfo { Page = currentPage, Depth = currentLevel } );
+            return;
+        }
+
+        foreach ( var child in currentPage.Pages )
+        {
+            _pageWithDepth.Add( new PageInfo { Page = child, Depth = currentLevel } );
+            AssignPageDepth( child, currentLevel );
+        }
+    }
+
     #endregion
 
     #region Events
 
+    #region Application Tab Events
+
+    /// <summary>
+    /// Handles the Click event of the btnApplicationDelete control.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The <see cref="EventArgs"/> instance containing the event data.</param>
+    protected void lbtnApplicationDelete_Click( object sender, EventArgs e )
+    {
+        bool canDelete = false;
+
+        var rockContext = new RockContext();
+        SiteService siteService = new SiteService( rockContext );
+        Site site = siteService.Get( hfSiteId.Value.AsInteger() );
+        LayoutService layoutService = new LayoutService( rockContext );
+        if ( site != null )
+        {
+            var layoutQry = layoutService.Queryable()
+                   .Where( l =>
+                       l.SiteId == site.Id );
+            layoutService.DeleteRange( layoutQry );
+            rockContext.SaveChanges( true );
+
+            string errorMessage;
+            canDelete = siteService.CanDelete( site, out errorMessage, includeSecondLvl: true );
+            if ( !canDelete )
+            {
+                // mdDeleteWarning.Show( errorMessage, ModalAlertType.Alert );
+                return;
+            }
+
+            siteService.Delete( site );
+            rockContext.SaveChanges();
+        }
+
+        NavigateToParentPage();
+    }
+
+    /// <summary>
+    /// Handles the SelectedClick event of the Tab control.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The <see cref="EventArgs"/> instance containing the event data.</param>
+    protected void lbTab_SelectedClick( object sender, EventArgs e )
+    {
+        var isEdit = ViewState["IsEdit"] == null ? false : ViewState["IsEdit"].ToString().AsBoolean();
+
+        var tab = sender as LinkButton;
+        var tabSelected = tab.Text;
+        switch ( tabSelected )
+        {
+            case "Application":
+                ClearActiveTabs();
+                DisplayApplicationTab( !isEdit );
+                break;
+            case "Layout":
+                if ( !isEdit )
+                {
+                    return;
+                }
+                ClearActiveTabs();
+                DisplayLayoutTab( hfLayoutId.Value.AsIntegerOrNull(), hfSiteId.Value.AsInteger() );
+                break;
+            case "Pages":
+                if ( !isEdit )
+                {
+                    return;
+                }
+                ClearActiveTabs();
+                DisplayPagesTab();
+                break;
+            default:
+                break;
+        }
+        var parent = tab.Parent as HtmlGenericControl;
+        parent.Attributes.Add( "class", "active" );
+        this.TabSelected = true;
+    }
     /// <summary>
     /// Handles the SelectedIndexChanged event of the rblApplicationType control.
     /// </summary>
@@ -855,96 +1202,12 @@ public partial class Blocks_Mobile_MobileApplicationDetail : RockBlock, IDetailB
     }
 
     /// <summary>
-    /// Handles the SelectedClick event of the Tab control.
-    /// </summary>
-    /// <param name="sender">The source of the event.</param>
-    /// <param name="e">The <see cref="EventArgs"/> instance containing the event data.</param>
-    protected void Tab_SelectedClick( object sender, EventArgs e )
-    {
-        var isEdit = ViewState["IsEdit"].ToString().AsBoolean();
-
-        var tab = sender as HtmlAnchor;
-        var tabSelected = tab.InnerText;
-        switch ( tabSelected )
-        {
-            case "Application":
-                ClearActiveTabs();
-                DisplayApplicationTab(!isEdit);
-                break;
-            case "Layout":
-                if ( !isEdit )
-                {
-                    return;
-                }
-                ClearActiveTabs();
-                DisplayLayoutTab( hfLayoutId.Value.AsIntegerOrNull(), hfSiteId.Value.AsInteger() );
-                break;
-            case "Pages":
-                if ( !isEdit)
-                {
-                    return;
-                }
-                ClearActiveTabs();
-                DisplayPagesTab();
-                break;
-            default:
-                break;
-        }
-        var parent = tab.Parent as HtmlGenericControl;
-        parent.Attributes.Add( "class", "active" );
-        this.TabSelected = true;
-    }
-
-    private void SetApplicationTabActive()
-    {
-        Tab_SelectedClick( this.tabApplication, null );
-    }
-
-    /// <summary>
-    /// Handles the SelectedClick event of the LayoutItem control.
-    /// </summary>
-    /// <param name="sender">The source of the event.</param>
-    /// <param name="e">The <see cref="EventArgs"/> instance containing the event data.</param>
-    protected void LayoutItem_SelectedClick( object sender, EventArgs e )
-    {
-        var selectedLayoutId = ( ( LinkButton ) sender ).CommandArgument.AsIntegerOrNull();
-        if ( selectedLayoutId.HasValue )
-        {
-            LoadSelectedLayout( selectedLayoutId );
-        }
-    }
-
-    /// <summary>
-    /// Loads the selected layout.
-    /// </summary>
-    /// <param name="selectedLayoutId">The selected layout identifier.</param>
-    private void LoadSelectedLayout( int? selectedLayoutId )
-    {
-        if ( selectedLayoutId == null )
-        {
-            return;
-        }
-
-        var layoutService = new LayoutService( new RockContext() );
-        var selectedLayout = layoutService.Get( ( int ) selectedLayoutId );
-        if ( selectedLayout != null )
-        {
-            this.tbLayoutName.Text = selectedLayout.Name;
-            this.tbLayoutDescription.Text = selectedLayout.Description;
-            this.cePhoneLayoutXaml.Text = selectedLayout.LayoutMobilePhone;
-            this.ceTabletLayoutXaml.Text = selectedLayout.LayoutMobileTablet;
-            this.hfLayoutId.Value = selectedLayout.Id.ToString();
-        }
-    }
-
-    /// <summary>
     /// Handles the Click event of the btnEdit control.
     /// </summary>
     /// <param name="sender">The source of the event.</param>
     /// <param name="e">The <see cref="EventArgs"/> instance containing the event data.</param>
-    protected void btnEdit_Click( object sender, EventArgs e )
+    protected void lbtnEdit_Click( object sender, EventArgs e )
     {
-        
         ViewState["IsEdit"] = true;
 
         pnlApplicationDetails.Visible = false;
@@ -964,7 +1227,7 @@ public partial class Blocks_Mobile_MobileApplicationDetail : RockBlock, IDetailB
     /// </summary>
     /// <param name="sender">The source of the event.</param>
     /// <param name="e">The <see cref="EventArgs"/> instance containing the event data.</param>
-    protected void btnSaveMobileDetails_Click( object sender, EventArgs e )
+    protected void lbtnSaveMobileDetails_Click( object sender, EventArgs e )
     {
         Site site;
 
@@ -1052,47 +1315,6 @@ public partial class Blocks_Mobile_MobileApplicationDetail : RockBlock, IDetailB
             BindTitleBar( site );
             DisplayDeleteAndPublishButton( true );
         }
-
-        ViewState["IsEdit"] = false;
-        SetApplicationTabActive();
-    }
-
-    /// <summary>
-    /// Updates the additional settings.
-    /// </summary>
-    /// <param name="site">The site.</param>
-    private void UpdateAdditionalSettings( Site site )
-    {
-        bool hasAdditionalSetting = false;
-        var selecteShellType = rblApplicationType.SelectedValueAsEnumOrNull<ShellType>();
-        var selectedTab = rblAndroidTabLocation.SelectedValueAsEnumOrNull<TabLocation>();
-
-        var additionalSettings = new AdditionalSettings();
-
-        if ( selecteShellType != null )
-        {
-            additionalSettings.ShellType = ( ShellType ) selecteShellType;
-            hasAdditionalSetting = true;
-        }
-
-        // We only show Tab Android Tab location when Shell Type is Tabb
-        if ( selectedTab != null && additionalSettings.ShellType == ShellType.Tabbed )
-        {
-            additionalSettings.TabLocation = ( TabLocation ) selectedTab;
-            hasAdditionalSetting = true;
-        }
-
-        if ( ceCssPreHtml.Text.IsNotNullOrWhiteSpace() )
-        {
-            additionalSettings.CssStyle = ceCssPreHtml.Text;
-            hasAdditionalSetting = true;
-        }
-
-        if ( hasAdditionalSetting )
-        {
-            var serializedAdditionalSetting = JsonConvert.SerializeObject( additionalSettings ).ToString();
-            site.AdditionalSettings = serializedAdditionalSetting;
-        }
     }
 
     /// <summary>
@@ -1100,145 +1322,9 @@ public partial class Blocks_Mobile_MobileApplicationDetail : RockBlock, IDetailB
     /// </summary>
     /// <param name="sender">The source of the event.</param>
     /// <param name="e">The <see cref="EventArgs"/> instance containing the event data.</param>
-    protected void btnPublish_Click( object sender, EventArgs e )
+    protected void lbtnPublish_Click( object sender, EventArgs e )
     {
         mdConfirmPublish.Show();
-    }
-
-    /// <summary>
-    /// Builds the list of pages and depth.
-    /// Since a layout assigned may only refer to child pages
-    /// We need a list of all pages from the root to get full depth
-    /// </summary>
-    /// <param name="allPages">All pages.</param>
-    private void BuildListOfPagesAndDepth( IOrderedQueryable<Rock.Model.Page> allPages )
-    {
-        var rootpages = allPages.Where( p => p.ParentPageId == null ).ToList();
-        foreach ( var rootPage in rootpages )
-        {
-            _pageWithDepth.Add( new PageInfo { Page = rootPage, Depth = 0 } );
-            AssignPageDepth( rootPage, 0 );
-        }
-    }
-
-    private void AddLayoutAndPagesToPackage( UpdatePackage package, PackageSourceInfo mobilePackageSource, PackageType packageType )
-    {
-        var layout = mobilePackageSource.Layout;
-
-        if ( packageType == PackageType.Phone )
-        {
-            if ( layout.LayoutMobilePhone.IsNotNullOrWhiteSpace() )
-            {
-                package.Layouts.Add( new Rock.Mobile.Common.Layout { LayoutGuid = layout.Guid, LayoutXaml = layout.LayoutMobilePhone, Name = layout.Name } );
-            }
-        }
-        if ( packageType == PackageType.Tablet )
-        {
-            if ( layout.LayoutMobileTablet.IsNotNullOrWhiteSpace() )
-            {
-
-                package.Layouts.Add( new Rock.Mobile.Common.Layout { LayoutGuid = layout.Guid, LayoutXaml = layout.LayoutMobileTablet, Name = layout.Name } );
-            }
-        }
-
-        foreach ( var page in mobilePackageSource.LayoutPages )
-        {
-            AddPageAndBlocksToPackageSourceWithDepth( package, layout, page, packageType );
-        }
-    }
-
-    private void AddPageAndBlocksToPackageSourceWithDepth( UpdatePackage phonePackage, Rock.Model.Layout layout, Rock.Model.Page page, PackageType packageType )
-    {
-        if ( page.Pages.Count == 0 )
-        {
-            var depth = _pageWithDepth.Where( p => p.Page.Id == page.Id ).Select( d => d.Depth ).FirstOrDefault();
-            // TODO: Map Display In Nav, IConUrl
-            var existsInPackage = phonePackage.Pages.Where( p => p.PageGuid == page.Guid && p.LayoutGuid == layout.Guid ).Any();
-            if ( existsInPackage )
-            {
-                return;
-            }
-
-            _pagesAddedToPackages.Add( new SourePageInfo { PackageType = packageType, Page = page } );
-
-            phonePackage.Pages.Add( new Rock.Mobile.Common.Page
-            {
-                DepthLevel = depth,
-                PageGuid = page.Guid,
-                ParentPageGuid = page.ParentPage.Guid,
-                LayoutGuid = layout.Guid,
-                Order = page.Order,
-                Title = page.PageTitle
-            } );
-
-            foreach ( var block in page.Blocks )
-            {
-                _blocksAddedToPackages.Add( new SourceBlockInfo { PackageType = packageType, Block = block } );
-
-                phonePackage.Blocks.Add( new Rock.Mobile.Common.Block
-                {
-                    BlockGuid = block.Guid,
-                    BlockType = block.BlockType.ToString(),
-                    Order = block.Order,
-                    PageGuid = block.Page.Guid,
-                    Zone = block.Zone
-                } );
-            }
-
-            return;
-        }
-
-        foreach ( var childPage in page.Pages )
-        {
-            var childDepth = _pageWithDepth.Where( p => p.Page.Id == childPage.Id ).Select( d => d.Depth ).FirstOrDefault();
-            var childExistsInPackage = phonePackage.Pages.Where( p => p.PageGuid == childPage.Guid && p.LayoutGuid == layout.Guid ).Any();
-
-            _pagesAddedToPackages.Add( new SourePageInfo { PackageType = packageType, Page = childPage } );
-            if ( !childExistsInPackage )
-            {
-                phonePackage.Pages.Add( new Rock.Mobile.Common.Page
-                {
-                    DepthLevel = childDepth,
-                    PageGuid = childPage.Guid,
-                    ParentPageGuid = childPage.ParentPage.Guid,
-                    LayoutGuid = layout.Guid,
-                    Order = childPage.Order,
-                    Title = childPage.PageTitle,
-                } );
-
-                foreach ( var block in childPage.Blocks )
-                {
-                    _blocksAddedToPackages.Add( new SourceBlockInfo { PackageType = packageType, Block = block } );
-                    phonePackage.Blocks.Add( new Rock.Mobile.Common.Block
-                    {
-                        BlockGuid = block.Guid,
-                        BlockType = block.BlockType.ToString(),
-                        Order = block.Order,
-                        PageGuid = block.Page.Guid,
-                        Zone = block.Zone
-                    } );
-                }
-            }
-
-            AddPageAndBlocksToPackageSourceWithDepth( phonePackage, layout, childPage, packageType );
-        }
-    }
-
-    private void AssignPageDepth( Rock.Model.Page currentPage, int currentLevel )
-    {
-        currentLevel += 1;
-        if ( currentPage.Pages == null )
-        {
-
-            _pageWithDepth.Add( new PageInfo { Page = currentPage, Depth = currentLevel } );
-            return;
-        }
-
-        foreach ( var child in currentPage.Pages )
-        {
-            _pageWithDepth.Add( new PageInfo { Page = child, Depth = currentLevel } );
-            AssignPageDepth( child, currentLevel );
-        }
     }
 
     /// <summary>
@@ -1246,7 +1332,7 @@ public partial class Blocks_Mobile_MobileApplicationDetail : RockBlock, IDetailB
     /// </summary>
     /// <param name="sender">The source of the event.</param>
     /// <param name="e">The <see cref="EventArgs"/> instance containing the event data.</param>
-    protected void btnSaveLayout_Click( object sender, EventArgs e )
+    protected void lbtnSaveLayout_Click( object sender, EventArgs e )
     {
         if ( Page.IsValid )
         {
@@ -1289,7 +1375,7 @@ public partial class Blocks_Mobile_MobileApplicationDetail : RockBlock, IDetailB
             UpdateExistingLayouts( layout.SiteId );
             BuildLayoutMenue();
             BuildLayoutDisplay();
-            DisplayApplicationTab(false);
+            DisplayApplicationTab( false );
         }
     }
 
@@ -1298,61 +1384,51 @@ public partial class Blocks_Mobile_MobileApplicationDetail : RockBlock, IDetailB
     /// </summary>
     /// <param name="sender">The source of the event.</param>
     /// <param name="e">The <see cref="EventArgs"/> instance containing the event data.</param>
-    protected void btnCancel_Clicked( object sender, EventArgs e )
+    protected void lbtnCancel_Clicked( object sender, EventArgs e )
     {
         ViewState["IsEdit"] = false;
         if ( hfSiteId.Value.AsIntegerOrNull() != null )
         {
             UpdateExistingLayouts( hfSiteId.Value.AsInteger() );
         }
-
         BuildLayoutMenue();
         BuildLayoutDisplay();
+        ClearActiveTabs();
         SetApplicationTabActive();
+        lbTabLayout.Enabled = false;
+        lbTabPages.Enabled = false;
     }
 
     /// <summary>
-    /// Handles the Click event of the btnApplicationDelete control.
+    /// Handles the SaveClick event of the mdConfirmPublish control.
     /// </summary>
     /// <param name="sender">The source of the event.</param>
     /// <param name="e">The <see cref="EventArgs"/> instance containing the event data.</param>
-    protected void btnApplicationDelete_Click( object sender, EventArgs e )
+    protected void mdConfirmPublish_SaveClick( object sender, EventArgs e )
     {
-        bool canDelete = false;
-
-        var rockContext = new RockContext();
-        SiteService siteService = new SiteService( rockContext );
-        Site site = siteService.Get( hfSiteId.Value.AsInteger() );
-        LayoutService layoutService = new LayoutService( rockContext );
-        if ( site != null )
-        {
-            var layoutQry = layoutService.Queryable()
-                   .Where( l =>
-                       l.SiteId == site.Id );
-            layoutService.DeleteRange( layoutQry );
-            rockContext.SaveChanges( true );
-
-            string errorMessage;
-            canDelete = siteService.CanDelete( site, out errorMessage, includeSecondLvl: true );
-            if ( !canDelete )
-            {
-                // mdDeleteWarning.Show( errorMessage, ModalAlertType.Alert );
-                return;
-            }
-
-            siteService.Delete( site );
-            rockContext.SaveChanges();
-        }
-
-        NavigateToParentPage();
+        PublishPackages();
     }
 
+    #endregion
+
+    #region Layout Tab Events
+
+    /// <summary>
+    /// Handles the SelectedClick event of the LayoutItem control.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The <see cref="EventArgs"/> instance containing the event data.</param>
+    protected void LayoutItem_SelectedClick( object sender, EventArgs e )
+    {
+        var selectedLayoutId = ( ( LinkButton ) sender ).CommandArgument.AsGuid();
+        LoadSelectedLayout( selectedLayoutId );
+    }
     /// <summary>
     /// Handles the Click event of the btnAddLayout control.
     /// </summary>
     /// <param name="sender">The source of the event.</param>
     /// <param name="e">The <see cref="EventArgs"/> instance containing the event data.</param>
-    protected void btnAddLayout_Click( object sender, EventArgs e )
+    protected void lbtnAddLayout_Click( object sender, EventArgs e )
     {
         ResetLayoutForAdd();
     }
@@ -1362,7 +1438,7 @@ public partial class Blocks_Mobile_MobileApplicationDetail : RockBlock, IDetailB
     /// </summary>
     /// <param name="sender">The source of the event.</param>
     /// <param name="e">The <see cref="EventArgs"/> instance containing the event data.</param>
-    protected void btnDeleteLayout_Click( object sender, EventArgs e )
+    protected void lbtnDeleteLayout_Click( object sender, EventArgs e )
     {
         DeleteCurrentLayout();
     }
@@ -1380,47 +1456,170 @@ public partial class Blocks_Mobile_MobileApplicationDetail : RockBlock, IDetailB
             var layoutItem = ( ( RepeaterItem ) linkButton.DataItemContainer ).DataItem as Rock.Model.Layout;
             linkButton.ID = string.Format( "layoutItem_{0}", layoutItem.Id );
             linkButton.Text = layoutItem.ToString();
-            linkButton.CommandArgument = layoutItem.Id.ToString();
+            linkButton.CommandArgument = layoutItem.Guid.ToString();
         }
     }
 
-    protected void mdConfirmPublish_SaveClick( object sender, EventArgs e )
-    {
-        PublishPackages();
-    }
+    #endregion
 
+    #region Page Tab Events
+
+    /// <summary>
+    /// Handles the DataBinding event of the PageLink control.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The <see cref="EventArgs"/> instance containing the event data.</param>
     protected void PageLink_DataBinding( object sender, EventArgs e )
     {
-
+        var linkButton = sender as LinkButton;
+        if ( linkButton != null )
+        {
+            var pageItem = ( ( RepeaterItem ) linkButton.DataItemContainer ).DataItem as Rock.Model.Page;
+            linkButton.ID = string.Format( "pageItem+{0}", pageItem.Id );
+            linkButton.Text = pageItem.PageTitle;
+            linkButton.CommandArgument = pageItem.Guid.ToString();
+        }
     }
-    protected void btnSavePage_Click( object sender, EventArgs e )
+
+    /// <summary>
+    /// Handles the Click event of the lbtnAddPage control.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The <see cref="EventArgs"/> instance containing the event data.</param>
+    protected void lbtnAddPage_Click( object sender, EventArgs e )
     {
-
+        hfPageId.Value = "0";
+        ResetPageTabForAdd();
     }
 
+    /// <summary>
+    /// Handles the Click event of the lbtnSavePage control.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The <see cref="EventArgs"/> instance containing the event data.</param>
+    protected void lbtnSavePage_Click( object sender, EventArgs e )
+    {
+        nbPageLayoutRequired.Visible = false;
+
+        var selectedlayout = ddlPageLayout.SelectedValue.AsInteger();
+        if ( selectedlayout == 0 )
+        {
+            nbPageLayoutRequired.Visible = true;
+            return;
+        }
+
+        if ( Page.IsValid )
+        {
+            Rock.Model.Page page;
+            var rockContext = new RockContext();
+            var pageService = new PageService( rockContext );
+            int pageId = hfPageId.Value.AsInteger();
+
+            if ( pageId == 0 )
+            {
+                page = new Rock.Model.Page();
+                page.ParentPageId = null;
+
+                var lastPage = this.ExistingPages != null ? this.ExistingPages.Last() : null;
+                if ( lastPage == null )
+                {
+                    page.Order = 0;
+                }
+                else
+                {
+                    page.Order = lastPage.Order + 1;
+                }
+                pageService.Add( page );
+            }
+            else
+            {
+                page = pageService.Get( pageId );
+            }
+
+            page.LayoutId = selectedlayout;
+            page.PageTitle = tbPageName.Text;
+            page.BrowserTitle = page.PageTitle;
+            if ( cbDisplayInNavigation.Checked )
+            {
+                page.DisplayInNavWhen = DisplayInNavWhen.WhenAllowed;
+            }
+            else
+            {
+                page.DisplayInNavWhen =  DisplayInNavWhen.Never;
+            }
+            
+            page.InternalName = tbPageName.Text;
+            page.LayoutId = selectedlayout;
+
+            if ( page.IsValid )
+            {
+                rockContext.SaveChanges();
+                hfPageId.Value = page.Id.ToString();
+            }
+
+            BuildPageMenu();
+            ResetPageTabForAdd();
+            SetSelectedFirstPage();
+
+        }
+    }
+
+    /// <summary>
+    /// Handles the Click event of the lbtnDeleteCurrentPage control.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The <see cref="EventArgs"/> instance containing the event data.</param>
+    protected void lbtnDeleteCurrentPage_Click( object sender, EventArgs e )
+    {
+        var pageId = hfPageId.Value.AsIntegerOrNull();
+        if ( pageId.HasValue == false )
+        {
+            return;
+        }
+
+        var rockContext = new RockContext();
+        var pageSerivce = new PageService( rockContext );
+        var page = pageSerivce.Get((int) pageId );
+        if ( page == null )
+        {
+            return;
+        }
+
+        string errorMessage = string.Empty;
+        if ( !pageSerivce.CanDelete(page,out errorMessage) )
+        {
+            mdDeleteWarning.Show( errorMessage, ModalAlertType.Alert );
+           return;
+        }
+
+        pageSerivce.Delete( page );
+        rockContext.SaveChanges();
+        BuildPageMenu();
+     }
+
+    /// <summary>
+    /// Handles the Click event of the btnPageCancel control.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The <see cref="EventArgs"/> instance containing the event data.</param>
     protected void btnPageCancel_Click( object sender, EventArgs e )
     {
 
     }
 
+    /// <summary>
+    /// Handles the Click event of the PageMenu control.
+    /// </summary>
+    /// <param name="sender">The source of the event.</param>
+    /// <param name="e">The <see cref="EventArgs"/> instance containing the event data.</param>
     protected void PageMenu_Click( object sender, EventArgs e )
     {
-
+        var pageGuid = ( ( LinkButton ) sender ).CommandArgument.AsGuid();
+        LoadSelectedPage( pageGuid );
     }
 
     #endregion
 
-    public class SourceBlockInfo
-    {
-        public PackageType PackageType { get; set; }
-        public Rock.Model.Block Block { get; set; }
-    }
-
-    public class SourePageInfo
-    {
-        public PackageType PackageType { get; set; }
-        public Rock.Model.Page Page { get; set; }
-    }
-
+    #endregion
 
 }
