@@ -55,9 +55,7 @@ namespace Rock.Model
         /// A <see cref="System.String"/> for the Decsription.
         /// </value>
         [Required]
-        [StringLength( 100, MinimumLength = 3 )]
-        [MaxLength]
-        [DataMember( IsRequired = true )]
+        [MaxLength( 100 )]
         public string Description { get; set; }
 
         /// <summary>
