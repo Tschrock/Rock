@@ -42,31 +42,69 @@ namespace Rockweb.Blocks.Crm
 
     [BooleanField(
         "Only Show Requested",
-        "If enabled, limits the list to show only assessments that have been requested or completed.",
-        true,
-        order: 0 )]
+        Key = AttributeKey.OnlyShowRequested,
+        Description = "If enabled, limits the list to show only assessments that have been requested or completed.",
+        DefaultValue = "True",
+        Order = 0 )]
 
     [BooleanField(
         "Hide If No Active Requests",
-        "If enabled, nothing will be shown if there are not pending (waiting to be taken) assessment requests.",
-        false,
-        order: 1 )]
+        Key = AttributeKey.HideIfNoActiveRequests,
+        Description = "If enabled, nothing will be shown if there are not pending (waiting to be taken) assessment requests.",
+        DefaultValue = "False",
+        Order = 1 )]
 
     [BooleanField(
         "Hide If No Requests",
-        "If enabled, nothing will be shown where there are no requests (pending or completed).",
-        false,
-        order: 2 )]
+        Key =AttributeKey.HideIfNoRequests,
+        Description = "If enabled, nothing will be shown where there are no requests (pending or completed).",
+        DefaultValue = "False",
+        Order = 2 )]
 
     [CodeEditorField(
         "Lava Template",
-        "The lava template to use to format the entire block.  <span class='tip tip-lava'></span> <span class='tip tip-html'></span>",
-        CodeEditorMode.Html,
-        CodeEditorTheme.Rock,
-        400,
-        true,
-        @"<div class='panel-heading panel-default rollover-container clearfix'>
-    <div class='panel-heading'>Assessments</div>
+        Key =AttributeKey.LavaTemplate,
+        Description = "The lava template to use to format the entire block.  <span class='tip tip-lava'></span> <span class='tip tip-html'></span>",
+        EditorMode = CodeEditorMode.Html,
+        EditorTheme = CodeEditorTheme.Rock,
+        EditorHeight = 400,
+        IsRequired = true,
+        DefaultValue = lavaTemplateDefaultValue )]
+
+    #endregion Block Attributes
+
+    public partial class AssessmentList : Rock.Web.UI.RockBlock
+    {
+        #region Atrribute Keys
+        protected static class AttributeKey
+        {
+
+            /// <summary>
+            /// Attribute value if only requested assessments should be shown.
+            /// </summary>
+            public const string OnlyShowRequested = "OnlyShowRequested";
+
+            /// <summary>
+            /// Attribute value if the block should be hidden if there are no active requests.
+            /// </summary>
+            public const string HideIfNoActiveRequests = "HideIfNoActiveRequests";
+
+            /// <summary>
+            /// Attribute value if the block should be hidden if there are no requests (active or not)
+            /// </summary>
+            public const string HideIfNoRequests = "HideIfNoRequests";
+
+            /// <summary>
+            /// The block lava template to display the assessments
+            /// </summary>
+            public const string LavaTemplate = "LavaTemplate";
+        }
+        #endregion Atrribute Keys
+
+        #region Fields
+
+        protected const string lavaTemplateDefaultValue = @"<div class='panel-heading panel-default rollover-container clearfix'>
+     <div class='panel-heading'>Assessments</div>
     <div class='panel-body'>
             {% for assessmenttype in AssessmentTypes %}
                 {% if assessmenttype.LastRequestObject %}
@@ -95,17 +133,7 @@ namespace Rockweb.Blocks.Crm
                 {% endif %}
             {% endfor %}
     </div>
-</div>" )]
-
-#endregion
-
-    public partial class AssessmentList : Rock.Web.UI.RockBlock
-    {
-        #region Fields
-
-        private bool _onlyShowRequestedOrCompleted = true;
-        private bool _hideIfNoActiveRequests = false;
-        private bool _hideIfNoRequests = false;
+</div>";
 
         #endregion
 
@@ -117,18 +145,8 @@ namespace Rockweb.Blocks.Crm
         /// <param name="e"></param>
         protected override void OnInit( EventArgs e )
         {
-            // show hide requested
-            _onlyShowRequestedOrCompleted = GetAttributeValue( "OnlyShowRequested" ).AsBoolean();
-
-            // hide if no active requests
-            _hideIfNoActiveRequests = GetAttributeValue( "HideIfNoActiveRequests" ).AsBoolean();
-
-            // hide if no requests
-            _hideIfNoRequests = GetAttributeValue( "HideIfNoRequests" ).AsBoolean();
-
-            this.BlockUpdated += Block_BlockUpdated;
-
             base.OnInit( e );
+            this.BlockUpdated += Block_BlockUpdated;
         }
 
         /// <summary>
@@ -214,18 +232,19 @@ namespace Rockweb.Blocks.Crm
                 }
             }
             
-            var mergeFields = Rock.Lava.LavaHelper.GetCommonMergeFields( this.RockPage, CurrentPerson );
-
             // Decide if anything is going to display
-            if ( ( _hideIfNoActiveRequests && !areThereAnyPendingRequests ) ||
-                 ( _hideIfNoRequests && !areThereAnyRequests ) )
+            bool hideIfNoActiveRequests = GetAttributeValue( AttributeKey.HideIfNoActiveRequests ).AsBoolean();
+            bool hidIfNoRequests = GetAttributeValue( AttributeKey.HideIfNoRequests ).AsBoolean();
+            if ( ( hideIfNoActiveRequests && !areThereAnyPendingRequests ) || ( hidIfNoRequests && !areThereAnyRequests ) )
             {
                 lAssessments.Visible = false;
             }
             else
             {
+                var mergeFields = Rock.Lava.LavaHelper.GetCommonMergeFields( this.RockPage, CurrentPerson );
+
                 // Show only the tests requested or completed?...
-                if ( _onlyShowRequestedOrCompleted )
+                if ( GetAttributeValue( AttributeKey.OnlyShowRequested ).AsBoolean() )
                 {
                     var onlyRequestedOrCompleted = allAssessmentsOfEachType
                         .Where( x => x.LastRequestObject != null && x.LastRequestObject.Requester != null &&
@@ -245,7 +264,7 @@ namespace Rockweb.Blocks.Crm
                     mergeFields.Add( "AssessmentTypes", onlyAllowedRequestedOrCompleted );
                 }
 
-                lAssessments.Text = GetAttributeValue( "LavaTemplate" ).ResolveMergeFields( mergeFields, GetAttributeValue( "EnabledLavaCommands" ) );
+                lAssessments.Text = GetAttributeValue( AttributeKey.LavaTemplate ).ResolveMergeFields( mergeFields, GetAttributeValue( "EnabledLavaCommands" ) );
             }
         }
 
