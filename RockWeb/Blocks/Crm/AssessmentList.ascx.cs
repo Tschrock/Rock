@@ -56,14 +56,14 @@ namespace Rockweb.Blocks.Crm
 
     [BooleanField(
         "Hide If No Requests",
-        Key =AttributeKey.HideIfNoRequests,
+        Key = AttributeKey.HideIfNoRequests,
         Description = "If enabled, nothing will be shown where there are no requests (pending or completed).",
         DefaultValue = "False",
         Order = 2 )]
 
     [CodeEditorField(
         "Lava Template",
-        Key =AttributeKey.LavaTemplate,
+        Key = AttributeKey.LavaTemplate,
         Description = "The lava template to use to format the entire block.  <span class='tip tip-lava'></span> <span class='tip tip-html'></span>",
         EditorMode = CodeEditorMode.Html,
         EditorTheme = CodeEditorTheme.Rock,

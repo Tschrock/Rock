@@ -25,22 +25,34 @@ namespace Rock.Attribute
     public class AssessmentTypesFieldAttribute : SelectFieldAttribute
     {
         private const string INCLUDE_INACTIVE_KEY = "includeInactive";
-        
+
         /// <summary>
-        /// Initializes a new instance of the <see cref="AssessmentTypesFieldAttribute" /> class.
+        /// Initializes a new instance of the <see cref="AssessmentTypesFieldAttribute"/> class.
+        /// Set values using object initializers.
         /// </summary>
         /// <param name="name">The name.</param>
-        /// <param name="description">The description.</param>
-        /// <param name="required">if set to <c>true</c> [required].</param>
-        /// <param name="defaultAssessmentGuids">The default Assessment guids.</param>
-        /// <param name="includeInactive">if set to <c>true</c> [include inactive].</param>
-        /// <param name="category">The category.</param>
-        /// <param name="order">The order.</param>
-        /// <param name="key">The key.</param>
-        public AssessmentTypesFieldAttribute( string name = "Assessment", string description = "", bool required = true, string defaultAssessmentGuids = "", bool includeInactive = false, string category = "", int order = 0, string key = null )
-            : base( name, description, required, defaultAssessmentGuids, category, order, key, typeof( Rock.Field.Types.AssessmentTypesFieldType ).FullName )
+        public AssessmentTypesFieldAttribute( string name )
+            : base( name, description: "", required: true, defaultValue: "", category: "", order: 0, key: null, fieldTypeClass: typeof( Rock.Field.Types.AssessmentTypesFieldType ).FullName )
         {
-            FieldConfigurationValues.Add( INCLUDE_INACTIVE_KEY, new Field.ConfigurationValue( includeInactive.ToString() ) );
+            FieldConfigurationValues.Add( INCLUDE_INACTIVE_KEY, new Field.ConfigurationValue( false.ToTrueFalse() ) );
+        }
+
+        /// <summary>
+        /// Gets or sets a value indicating whether [include inactive].
+        /// The constructor sets a default of false.
+        /// </summary>
+        /// <value>
+        ///   <c>true</c> if [include inactive]; otherwise, <c>false</c>.
+        /// </value>
+        public bool IncludeInactive {
+            get
+            {
+                return FieldConfigurationValues.GetValueOrNull( INCLUDE_INACTIVE_KEY ).AsBoolean();
+            }
+            set
+            {
+                FieldConfigurationValues.AddOrReplace( INCLUDE_INACTIVE_KEY , new Field.ConfigurationValue( value.ToTrueFalse() ) );
+            }
         }
     }
 }
