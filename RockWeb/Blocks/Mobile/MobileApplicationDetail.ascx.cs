@@ -97,6 +97,12 @@ public partial class Blocks_Mobile_MobileApplicationDetail : RockBlock, IDetailB
 
     #region Data Structures
 
+
+    public class DropZone
+    {
+        public string Name { get; set; }
+    }
+
     /// <summary>
     /// Used to keeping a list of Blocks added
     /// in support adding Auth
@@ -1647,11 +1653,13 @@ public partial class Blocks_Mobile_MobileApplicationDetail : RockBlock, IDetailB
 
         lblPageLayout.Text = layout.Name;
         lblDisplayInNavigationCheck.Visible = (page.DisplayInNavWhen == DisplayInNavWhen.WhenAllowed);
-        DisplayBlocks(layout);
+        DisplayZonesForBlocks(layout);
     }
 
-    private void DisplayBlocks( LayoutCache layout )
+    private void DisplayZonesForBlocks( LayoutCache layout )
     {
+        List<DropZone> dropZones = new List<DropZone>();
+
         var xamlString = layout.LayoutMobilePhone;
         XElement xaml = XElement.Parse( xamlString );
 
@@ -1662,9 +1670,12 @@ public partial class Blocks_Mobile_MobileApplicationDetail : RockBlock, IDetailB
 
         foreach ( var element in zones)
         {
-
+            var zoneName = element.FirstAttribute.Value;
+            dropZones.Add( new DropZone { Name = zoneName } );
         }
 
+        rptZones.DataSource = dropZones;
+        rptZones.DataBind();
     }
 
     protected void lbZoneEditPages_Click( object sender, EventArgs e )

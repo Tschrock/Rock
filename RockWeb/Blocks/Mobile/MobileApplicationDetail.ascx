@@ -268,7 +268,6 @@
                     </div>
                 </div>
             </asp:Panel>
-
         </div>
     </ContentTemplate>
 </asp:UpdatePanel>
