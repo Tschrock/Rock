@@ -26,8 +26,8 @@
             <!-- Application Tab Read Only View -->
             <asp:Panel ID="pnlApplicationDetails" runat="server" Visible="false">
                 <asp:HiddenField ID="hfSiteId" runat="server" />
-                <fieldset id="fieldsetApplicationViewDetails" runat="server">
-                    <div class="panel-body">
+                <div class="panel-body">
+                    <fieldset id="fieldsetApplicationViewDetails" runat="server">
                         <div class="row">
                             <div class="col-md-8">
                                 <label class="control-label">Application Type</label>
@@ -47,13 +47,14 @@
                                 </div>
                             </div>
                         </div>
-                        <asp:Panel ID="pnlReadOnlyModeActions" runat="server" CssClass="actions">
-                            <asp:LinkButton ID="btnEdit" runat="server" AccessKey="m" ToolTip="Alt+m" Text="Edit" CssClass="btn btn-primary" OnClick="lbtnEdit_Click" />
-                            <asp:LinkButton ID="btnApplicationDelete" runat="server" Text="Delete" OnClick="lbtnApplicationDelete_Click" CssClass="btn btn-link" CausesValidation="false" />
-                            <asp:LinkButton ID="btnPublish" Visible="false" runat="server" Text="Publish" CssClass="btn btn-secondary" OnClick="lbtnPublish_Click" />
-                        </asp:Panel>
-                    </div>
-                </fieldset>
+                    </fieldset>
+                    <asp:Panel ID="pnlReadOnlyModeActions" runat="server" CssClass="actions">
+                        <asp:LinkButton ID="btnEdit" runat="server" AccessKey="m" ToolTip="Alt+m" Text="Edit" CssClass="btn btn-primary" OnClick="lbtnEdit_Click" />
+                        <asp:LinkButton ID="btnApplicationDelete" runat="server" Text="Delete" OnClick="lbtnApplicationDelete_Click" CssClass="btn btn-link" CausesValidation="false" />
+                        <asp:LinkButton ID="btnPublish" Visible="false" runat="server" Text="Publish" CssClass="btn btn-secondary" OnClick="lbtnPublish_Click" />
+                    </asp:Panel>
+                </div>
+
                 <Rock:ModalDialog ID="mdConfirmPublish" runat="server" Title="Please Confirm" SaveButtonText="Yes" OnSaveClick="mdConfirmPublish_SaveClick">
                     <Content>
                         "Are you wish to create a new version of the application."
@@ -119,7 +120,7 @@
             <asp:Panel ID="pnlLayout" runat="server" Visible="false">
                 <div class="panel-body">
                     <asp:HiddenField ID="hfLayoutId" runat="server" />
-                    <div class="col-md-1">
+                    <div class="col-md-2">
                         <asp:Repeater ID="rptLayoutMenu" runat="server">
                             <HeaderTemplate>
                                 <ul>
@@ -140,7 +141,7 @@
                             <asp:LinkButton ID="lbtnAddLayout" title="Add layout" runat="server" class="fa fa-plus-square-o" OnClick="lbtnAddLayout_Click" Visible="false" />
                         </div>
                     </div>
-                    <div class="col-md-11">
+                    <div class="col-md-10">
                         <div class="row">
                             <div class="col-md-6">
                                 <Rock:DataTextBox ID="tbLayoutName" runat="server" Label="Name" SourceTypeName="Rock.Model.Site, Rock" PropertyName="Name" />
@@ -172,7 +173,7 @@
             <asp:HiddenField ID="hfPageId" runat="server" />
             <asp:Panel ID="pnlPages" runat="server" Visible="false">
                 <div class="panel-body">
-                    <div class="col-md-1">
+                    <div class="col-md-2">
                         <asp:Repeater ID="rptPageMenue" runat="server">
                             <HeaderTemplate>
                                 <ul>
@@ -195,31 +196,79 @@
                             </div>
                         </div>
                     </div>
-                    <div class="col-md-11">
-                        <div class="row">
-                                  <Rock:ModalAlert ID="mdDeleteWarning" runat="server" />
-                            <Rock:NotificationBox ID="nbPageLayoutRequired" runat="server" NotificationBoxType="Info" Title="Note" Visible="false" Text="A layout has not been selected." />
-                        </div>
-                        <div class="row">
-                            <div class="col-md-6">
-                                <Rock:DataTextBox ID="tbPageName" runat="server" Label="Name" SourceTypeName="Rock.Model.Page,Rock" PropertyName="PageTitle" />
+                    <div class="col-md-10">
+                        <asp:Panel runat="server" ID="pnlPageEdit" Visible="false">
+                            <div class="panel-body">
+                                <div class="row">
+                                    <Rock:ModalAlert ID="mdDeleteWarning" runat="server" />
+                                    <Rock:NotificationBox ID="nbPageLayoutRequired" runat="server" NotificationBoxType="Info" Title="Note" Visible="false" Text="A layout has not been selected." />
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <Rock:DataTextBox ID="tbPageName" runat="server" Label="Name" SourceTypeName="Rock.Model.Page,Rock" PropertyName="PageTitle" />
+                                    </div>
+                                    <div class="col-md-6">
+                                        <Rock:RockCheckBox ID="cbDisplayInNavigation" Label="Display In Navigation" runat="server" Checked="false" CssClass="js-isactivegroup" />
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <Rock:RockDropDownList ID="ddlPageLayout" runat="server" Label="Layout" />
+                                    </div>
+                                </div>
+                                <div class="actions">
+                                    <Rock:BootstrapButton ID="btnSavePage" runat="server" CssClass="btn btn-primary" Text="Save" CausesValidation="true" OnClick="lbtnSavePage_Click" DataLoadingText="Saving..." />
+                                    <asp:LinkButton ID="lbEditZones" runat="server" CssClass="btn btn-default" Text="Edit Zone" CausesValidation="false" OnClick="lbEditZones_Click" />
+                                    <asp:LinkButton ID="lbtnDeleteCurrentPage" runat="server" Text="Delete" OnClick="lbtnDeleteCurrentPage_Click" CssClass="btn btn-link" CausesValidation="false" />
+                                </div>
                             </div>
-                            <div class="col-md-6">
-                                <Rock:RockCheckBox ID="cbDisplayInNavigation" Label="Display In Navigation" runat="server" Checked="false" CssClass="js-isactivegroup" />
+                        </asp:Panel>
+                        <asp:Panel runat="server" ID="pnlZoneEdit" Visible="false">
+                            <div class="pnlBody">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <asp:Label runat="server" ID="lblPageTitle" class="control-label" />
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label>Display In Navigation</label>
+                                        <br />
+                                        <label id="lblDisplayInNavigationCheck" runat="server" class="fa fa-check" visible="false" />
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <fieldset>
+                                            <span>Layout</span>
+                                            </br>
+                                            <asp:Label runat="server" ID="lblPageLayout" />
+                                        </fieldset>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-10">
+                                     <asp:Repeater ID="rptZones" runat="server">
+                                         <ItemTemplate>
+                                             <asp:Panel runat="server">
+                                                 <div class="panel-body">
+                                                  <div>Test</div>
+                                                 </div>
+                                             </asp:Panel>
+                                         </ItemTemplate>
+                                     </asp:Repeater>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <br />
+                                        <asp:LinkButton ID="lbZoneEditPages" CssClass="btn btn-primary" Text="Edit" runat="server" OnClick="lbZoneEditPages_Click" />
+                                    </div>
+                                </div>
                             </div>
-                        </div>
-                        <div class="row">
-                            <div class="col-md-6">
-                                <Rock:RockDropDownList ID="ddlPageLayout" runat="server" Label="Layout" />
-                            </div>
-                        </div>
-                        <div class="actions">
-                            <Rock:BootstrapButton ID="btnSavePage" runat="server" CssClass="btn btn-primary" Text="Save" CausesValidation="true" OnClick="lbtnSavePage_Click" DataLoadingText="Saving..." />
-                            <asp:LinkButton ID="lbtnDeleteCurrentPage" runat="server" Text="Delete" OnClick="lbtnDeleteCurrentPage_Click" CssClass="btn btn-link" CausesValidation="false" />
-                        </div>
+                        </asp:Panel>
                     </div>
                 </div>
             </asp:Panel>
+
         </div>
     </ContentTemplate>
 </asp:UpdatePanel>

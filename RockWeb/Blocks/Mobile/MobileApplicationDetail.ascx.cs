@@ -7,6 +7,8 @@ using System.Linq;
 using System.Text;
 using System.Web.UI.HtmlControls;
 using System.Web.UI.WebControls;
+using System.Xml;
+using System.Xml.Linq;
 using Newtonsoft.Json;
 using Rock;
 using Rock.Constants;
@@ -148,6 +150,7 @@ public partial class Blocks_Mobile_MobileApplicationDetail : RockBlock, IDetailB
     #endregion
 
     #region Methods
+
     /// <summary>
     /// Binds the title bar.
     /// </summary>
@@ -430,6 +433,7 @@ public partial class Blocks_Mobile_MobileApplicationDetail : RockBlock, IDetailB
     private void DisplayPagesTab()
     {
         pnlPages.Visible = true;
+        pnlPageEdit.Visible = true;
         pnlLayout.Visible = false;
         pnlApplicationDetails.Visible = false;
         pnlApplicationEditDetails.Visible = false;
@@ -1475,7 +1479,7 @@ public partial class Blocks_Mobile_MobileApplicationDetail : RockBlock, IDetailB
         if ( linkButton != null )
         {
             var pageItem = ( ( RepeaterItem ) linkButton.DataItemContainer ).DataItem as Rock.Model.Page;
-            linkButton.ID = string.Format( "pageItem+{0}", pageItem.Id );
+            linkButton.ID = string.Format( "pageItem_{0}", pageItem.Id );
             linkButton.Text = pageItem.PageTitle;
             linkButton.CommandArgument = pageItem.Guid.ToString();
         }
@@ -1545,9 +1549,9 @@ public partial class Blocks_Mobile_MobileApplicationDetail : RockBlock, IDetailB
             }
             else
             {
-                page.DisplayInNavWhen =  DisplayInNavWhen.Never;
+                page.DisplayInNavWhen = DisplayInNavWhen.Never;
             }
-            
+
             page.InternalName = tbPageName.Text;
             page.LayoutId = selectedlayout;
 
@@ -1579,23 +1583,23 @@ public partial class Blocks_Mobile_MobileApplicationDetail : RockBlock, IDetailB
 
         var rockContext = new RockContext();
         var pageSerivce = new PageService( rockContext );
-        var page = pageSerivce.Get((int) pageId );
+        var page = pageSerivce.Get( ( int ) pageId );
         if ( page == null )
         {
             return;
         }
 
         string errorMessage = string.Empty;
-        if ( !pageSerivce.CanDelete(page,out errorMessage) )
+        if ( !pageSerivce.CanDelete( page, out errorMessage ) )
         {
             mdDeleteWarning.Show( errorMessage, ModalAlertType.Alert );
-           return;
+            return;
         }
 
         pageSerivce.Delete( page );
         rockContext.SaveChanges();
         BuildPageMenu();
-     }
+    }
 
     /// <summary>
     /// Handles the Click event of the btnPageCancel control.
@@ -1616,6 +1620,58 @@ public partial class Blocks_Mobile_MobileApplicationDetail : RockBlock, IDetailB
     {
         var pageGuid = ( ( LinkButton ) sender ).CommandArgument.AsGuid();
         LoadSelectedPage( pageGuid );
+    }
+
+    protected void lbEditZones_Click( object sender, EventArgs e )
+    {
+        this.pnlPageEdit.Visible = false;
+        this.pnlZoneEdit.Visible = true;
+        LoadPageForZoneEdit();
+    }
+
+    private void LoadPageForZoneEdit()
+    {
+        var pageId = hfPageId.Value.AsIntegerOrNull();
+        if ( pageId == null )
+        {
+            return;
+        }
+
+        var page = PageCache.Get( ( int ) pageId );
+        lblPageTitle.Text = PageCache.PageTitle;
+        var layout = page.Layout;
+        if ( layout == null )
+        {
+            return;
+        }
+
+        lblPageLayout.Text = layout.Name;
+        lblDisplayInNavigationCheck.Visible = (page.DisplayInNavWhen == DisplayInNavWhen.WhenAllowed);
+        DisplayBlocks(layout);
+    }
+
+    private void DisplayBlocks( LayoutCache layout )
+    {
+        var xamlString = layout.LayoutMobilePhone;
+        XElement xaml = XElement.Parse( xamlString );
+
+        IEnumerable<XElement> elements = xaml.Descendants();
+        var zones = from e in elements
+                   where e.Attribute( "ZoneName" ) != null
+                   select e;
+
+        foreach ( var element in zones)
+        {
+
+        }
+
+    }
+
+    protected void lbZoneEditPages_Click( object sender, EventArgs e )
+    {
+        pnlZoneEdit.Visible = false;
+        pnlPageEdit.Visible = true;
+
     }
 
     #endregion
