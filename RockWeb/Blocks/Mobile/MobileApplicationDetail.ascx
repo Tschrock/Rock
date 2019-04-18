@@ -2,7 +2,7 @@
 <asp:UpdatePanel ID="upnlMobileApplicationDetail" runat="server">
     <ContentTemplate>
         <div class="panel panel-block">
-            <div class="panel-heading panel-follow clearfix">
+            <div class="panel-heading">
                 <h1 class="panel-title"><i class="fa fa-desktop"></i>
                     <asp:Literal ID="lReadOnlyTitle" runat="server" /></h1>
                 <div class="panel-labels">
@@ -164,7 +164,7 @@
                         </div>
                     </div>
                     <div class="actions">
-                        <Rock:BootstrapButton ID="lbtnSaveLayout" runat="server" CssClass="btn btn-primary" Text="Save" CausesValidation="true" OnClick="lbtnSaveLayout_Click" DataLoadingText="Saving..." />
+                        <Rock:BootstrapButton ID="lbtnSaveLayout" runat="server" CssClass="btn btn-primary" Text="Save" OnClick="lbtnSaveLayout_Click" DataLoadingText="Saving..." />
                         <asp:LinkButton ID="lbtnDeleteCurrentLayout" runat="server" Text="Delete" OnClick="lbtnDeleteLayout_Click" CssClass="btn btn-link" CausesValidation="false" Visible="false" />
                     </div>
                 </div>
@@ -218,8 +218,8 @@
                                     </div>
                                 </div>
                                 <div class="actions">
-                                    <Rock:BootstrapButton ID="btnSavePage" runat="server" CssClass="btn btn-primary" Text="Save" CausesValidation="true" OnClick="lbtnSavePage_Click" DataLoadingText="Saving..." />
-                                    <asp:LinkButton ID="lbEditZones" runat="server" CssClass="btn btn-default" Text="Edit Zone" CausesValidation="false" OnClick="lbEditZones_Click" />
+                                    <Rock:BootstrapButton ID="btnSavePage" runat="server" CssClass="btn btn-primary" Text="Save"  OnClick="lbtnSavePage_Click" DataLoadingText="Saving..." />
+                                    <asp:LinkButton ID="lbCancelPageEdit" runat="server" CssClass="btn btn-default btn-cancel" Text="Cancel" CausesValidation="false" OnClick="lbCancelPageEdit_Click" />
                                     <asp:LinkButton ID="lbtnDeleteCurrentPage" runat="server" Text="Delete" OnClick="lbtnDeleteCurrentPage_Click" CssClass="btn btn-link" CausesValidation="false" />
                                 </div>
                             </div>
@@ -292,5 +292,15 @@
                 </div>
             </asp:Panel>
         </div>
+        <script>
+            Sys.Application.add_load(function () {
+                debugger;
+                 Rock.controls.groupScheduler.initialize({
+                    id: 1,
+
+
+            });
+
+        </script>
     </ContentTemplate>
 </asp:UpdatePanel>

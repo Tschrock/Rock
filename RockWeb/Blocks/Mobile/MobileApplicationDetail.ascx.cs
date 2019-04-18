@@ -481,11 +481,14 @@ public partial class Blocks_Mobile_MobileApplicationDetail : RockBlock, IDetailB
     private void DisplayPagesTab()
     {
         pnlPages.Visible = true;
-        pnlPageEdit.Visible = true;
+        pnlPageEdit.Visible = false;
+        pnlZoneEdit.Visible = true;
         pnlLayout.Visible = false;
         pnlApplicationDetails.Visible = false;
         pnlApplicationEditDetails.Visible = false;
         EnablePageTab( true );
+        LoadMobileBlocks();
+        LoadPageForZoneEdit();
     }
 
     /// <summary>
@@ -682,7 +685,7 @@ public partial class Blocks_Mobile_MobileApplicationDetail : RockBlock, IDetailB
         var sitePages = pageService.GetBySiteId( hfSiteId.ValueAsInt() ).ToList();
         this.ExistingPages = sitePages;
 
-        lbtnAddPage.Visible = sitePages.Count > 0;
+        lbtnAddPage.Visible = sitePages.Count > 0 && pnlPageEdit.Visible == true;
         rptPageMenue.DataSource = sitePages;
         rptPageMenue.DataBind();
         SetSelectedFirstPage();
@@ -1437,7 +1440,6 @@ public partial class Blocks_Mobile_MobileApplicationDetail : RockBlock, IDetailB
             UpdateExistingLayouts( layout.SiteId );
             BuildLayoutMenue();
             BuildLayoutDisplay();
-            DisplayApplicationTab( false );
         }
     }
 
@@ -1681,16 +1683,9 @@ public partial class Blocks_Mobile_MobileApplicationDetail : RockBlock, IDetailB
         LoadPageForZoneEdit();
     }
 
-    protected void lbEditZones_Click( object sender, EventArgs e )
-    {
-        this.pnlPageEdit.Visible = false;
-        this.pnlZoneEdit.Visible = true;
-        LoadMobileBlocks();
-        LoadPageForZoneEdit();
-    }
-
     private void LoadPageForZoneEdit()
     {
+        lbtnAddPage.Visible = false;
         var pageId = hfPageId.Value.AsIntegerOrNull();
         if ( pageId == null )
         {
@@ -1741,7 +1736,10 @@ public partial class Blocks_Mobile_MobileApplicationDetail : RockBlock, IDetailB
     {
         pnlZoneEdit.Visible = false;
         pnlPageEdit.Visible = true;
-
+        if ( this.rptPageMenue.Items.Count > 0 )
+        {
+            lbtnAddPage.Visible = true;
+        }    
     }
 
     protected void ltZoneName_DataBinding( object sender, EventArgs e )
@@ -1770,6 +1768,13 @@ public partial class Blocks_Mobile_MobileApplicationDetail : RockBlock, IDetailB
         label.CssClass = "fa fa-cube";
         label.ToolTip = data.Name;
         label.ID = string.Format("mobileBlockTypeItem_{0}",repeaterItem.ItemIndex);
+    }
+
+    protected void lbCancelPageEdit_Click( object sender, EventArgs e )
+    {
+        pnlPageEdit.Visible = false;
+        pnlZoneEdit.Visible = true;
+        lbtnAddPage.Visible = false;
     }
 
     #endregion
