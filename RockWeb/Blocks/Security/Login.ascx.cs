@@ -63,7 +63,7 @@ Thank you for logging in, however, we need to confirm the email associated with 
     [LinkedPage( "Redirect Page", "Page to redirect user to upon successful login. The 'returnurl' query string will always override this setting for database authenticated logins. Redirect Page Setting will override third-party authentication 'returnurl'.", false, "", "", 14 )]
 
     [CodeEditorField( "Invalid PersonToken Text", "The text to show when a person is logged out due to an invalid persontoken. <span class='tip tip-lava'></span>.", CodeEditorMode.Html, CodeEditorTheme.Rock, 100, false, @"<div class='alert alert-warning'>The login token you provided is no longer valid. Please login below.</div>", "", 15 )]
-    public partial class Login : Rock.Web.UI.RockBlock
+    public partial class Login : Rock.Web.UI.RockBlock,IMobileBlock
     {
         #region Base Control Methods
 

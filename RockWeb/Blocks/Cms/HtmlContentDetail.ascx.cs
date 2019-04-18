@@ -61,7 +61,7 @@ namespace RockWeb.Blocks.Cms
 
     [BooleanField( "Is Secondary Block", "Flag indicating whether this block is considered secondary and should be hidden when other secondary blocks are hidden.", false, "", 11 )]
     [ContextAware]
-    public partial class HtmlContentDetail : RockBlockCustomSettings, ISecondaryBlock
+    public partial class HtmlContentDetail : RockBlockCustomSettings, IMobileBlock, ISecondaryBlock
     {
 
         #region Properties

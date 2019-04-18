@@ -73,7 +73,7 @@ namespace RockWeb.Blocks.Cms
     [TextField( "Twitter Description Attribute", required: false, category: "CustomSetting" )]
     [TextField( "Twitter Image Attribute", required: false, category: "CustomSetting" )]
     [TextField( "Twitter Card", required: false, defaultValue: "none", category: "CustomSetting" )]
-    public partial class ContentChannelItemView : RockBlockCustomSettings
+    public partial class ContentChannelItemView : RockBlockCustomSettings,IMobileBlock
     {
         #region Block Property Constants
         private const string CONTENT_CHANNEL_QUERY_PARAMETER_DESCRIPTION = @"

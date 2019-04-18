@@ -7,7 +7,6 @@ using System.Linq;
 using System.Text;
 using System.Web.UI.HtmlControls;
 using System.Web.UI.WebControls;
-using System.Xml;
 using System.Xml.Linq;
 using Newtonsoft.Json;
 using Rock;
@@ -34,10 +33,9 @@ public partial class Blocks_Mobile_MobileApplicationDetail : RockBlock, IDetailB
     #endregion
 
     private List<PageInfo> _pageWithDepth = new List<PageInfo>();
-
-    // Need blocks and Pages added to packages for auth rules
     private List<SourceBlockInfo> _blocksAddedToPackages = new List<SourceBlockInfo>();
     private List<SourePageInfo> _pagesAddedToPackages = new List<SourePageInfo>();
+
     protected override void OnInit( EventArgs e )
     {
         base.OnInit( e );
@@ -97,10 +95,20 @@ public partial class Blocks_Mobile_MobileApplicationDetail : RockBlock, IDetailB
 
     #region Data Structures
 
+    public class BlockTypeInfo
+    {
+        public Guid BlockGuid { get; set; }
+        public string TypeFullName { get; set; }
+        public string Name { get; set; }
+        public string Category { get; set; }
+        public string Description { get; internal set; }
+    }
 
     public class DropZone
     {
         public string Name { get; set; }
+        public int CurrentIndex { get; set; }
+        public int Order { get; set; }
     }
 
     /// <summary>
@@ -157,6 +165,8 @@ public partial class Blocks_Mobile_MobileApplicationDetail : RockBlock, IDetailB
 
     #region Methods
 
+    #region Application Tab Methods
+
     /// <summary>
     /// Binds the title bar.
     /// </summary>
@@ -171,7 +181,21 @@ public partial class Blocks_Mobile_MobileApplicationDetail : RockBlock, IDetailB
         }
     }
 
-    #region Application Tab Methods
+    /// <summary>
+    /// Clears the active tabs.
+    /// </summary>
+    private void ClearActiveTabs()
+    {
+        var liApplication = this.FindControl( "liApplication" ) as HtmlGenericControl;
+        liApplication.Attributes.Remove( "class" );
+
+        var liLayout = this.FindControl( "liLayout" ) as HtmlGenericControl;
+        liLayout.Attributes.Remove( "class" );
+
+        var liPages = this.FindControl( "liPages" ) as HtmlGenericControl;
+        liPages.Attributes.Remove( "class" );
+
+    }
 
     /// <summary>
     /// Shows the detail.
@@ -393,6 +417,24 @@ public partial class Blocks_Mobile_MobileApplicationDetail : RockBlock, IDetailB
         }
         return null;
     }
+    /// <summary>
+    /// Displays the application tab.
+    /// </summary>
+    private void DisplayApplicationTab( bool showDetail )
+    {
+        pnlApplicationDetails.Visible = showDetail;
+        pnlApplicationEditDetails.Visible = !showDetail;
+        pnlLayout.Visible = false;
+        HidePageTabPanels();
+    }
+
+    /// <summary>
+    /// Sets the application tab active.
+    /// </summary>
+    private void SetApplicationTabActive()
+    {
+        lbTab_SelectedClick( this.lbTabApplication, null );
+    }
 
     #endregion
 
@@ -542,7 +584,7 @@ public partial class Blocks_Mobile_MobileApplicationDetail : RockBlock, IDetailB
         pnlLayout.Visible = true;
         pnlApplicationDetails.Visible = false;
         pnlApplicationEditDetails.Visible = false;
-        pnlPages.Visible = false;
+        HidePageTabPanels();
     }
 
     /// <summary>
@@ -583,6 +625,23 @@ public partial class Blocks_Mobile_MobileApplicationDetail : RockBlock, IDetailB
     private void DisplayLayoutAddButton( bool isVisible )
     {
         lbtnAddLayout.Visible = isVisible;
+    }
+
+    /// <summary>
+    /// Loads the selected layout.
+    /// </summary>
+    /// <param name="selectedLayoutId">The selected layout identifier.</param>
+    private void LoadSelectedLayout( Guid selectedLayoutGuid )
+    {
+        var selectedLayout = LayoutCache.Get( selectedLayoutGuid );
+        if ( selectedLayout != null )
+        {
+            this.tbLayoutName.Text = selectedLayout.Name;
+            this.tbLayoutDescription.Text = selectedLayout.Description;
+            this.cePhoneLayoutXaml.Text = selectedLayout.LayoutMobilePhone;
+            this.ceTabletLayoutXaml.Text = selectedLayout.LayoutMobileTablet;
+            this.hfLayoutId.Value = selectedLayout.Id.ToString();
+        }
     }
 
     #endregion
@@ -627,6 +686,7 @@ public partial class Blocks_Mobile_MobileApplicationDetail : RockBlock, IDetailB
         rptPageMenue.DataSource = sitePages;
         rptPageMenue.DataBind();
         SetSelectedFirstPage();
+
     }
 
     private void LoadSelectedPage( Guid pageGuid )
@@ -654,34 +714,49 @@ public partial class Blocks_Mobile_MobileApplicationDetail : RockBlock, IDetailB
         LoadSelectedPage( firstPage.Guid );
     }
 
+    /// <summary>
+    /// Hides the page tab panels.
+    /// </summary>
+    private void HidePageTabPanels()
+    {
+        pnlPages.Visible = false;
+        pnlPageEdit.Visible = false;
+        pnlZoneEdit.Visible = false;
+    }
+
+    public void LoadMobileBlocks()
+    {
+        List<BlockTypeInfo> mobileBlockTypeNames = new List<BlockTypeInfo>();
+
+        var blockTypeService = new BlockTypeService( new RockContext() );
+        var blockTypeIds = blockTypeService.Queryable().Select( b => b.Id );
+
+        foreach ( var blockTypeId in blockTypeIds )
+        {
+            using ( var rockContext = new RockContext() )
+            {
+                var blockType = blockTypeService.Get( blockTypeId );
+                var blockCompiledType = System.Web.Compilation.BuildManager.GetCompiledType( blockType.Path );
+                if ( blockCompiledType.GetInterfaces().Contains( typeof( IMobileBlock ) ) )
+                {
+                    mobileBlockTypeNames.Add( new BlockTypeInfo
+                    {
+                        BlockGuid = blockType.Guid,
+                        TypeFullName = blockCompiledType.FullName,
+                        Name = blockType.Name,
+                        Category = blockType.Category,
+                        Description = blockType.Description,
+                    } );
+                }
+            }
+        }
+
+        rptBlockSource.DataSource = mobileBlockTypeNames;
+        rptBlockSource.DataBind();
+    }
     #endregion
 
-    /// <summary>
-    /// Displays the application tab.
-    /// </summary>
-    private void DisplayApplicationTab( bool showDetail )
-    {
-        pnlApplicationDetails.Visible = showDetail;
-        pnlApplicationEditDetails.Visible = !showDetail;
-        pnlLayout.Visible = false;
-        pnlPages.Visible = false;
-    }
-
-    /// <summary>
-    /// Clears the active tabs.
-    /// </summary>
-    private void ClearActiveTabs()
-    {
-        var liApplication = this.FindControl( "liApplication" ) as HtmlGenericControl;
-        liApplication.Attributes.Remove( "class" );
-
-        var liLayout = this.FindControl( "liLayout" ) as HtmlGenericControl;
-        liLayout.Attributes.Remove( "class" );
-
-        var liPages = this.FindControl( "liPages" ) as HtmlGenericControl;
-        liPages.Attributes.Remove( "class" );
-
-    }
+    #region Publish Package
     /// <summary>
     /// Publishes the packages.
     /// </summary>
@@ -934,30 +1009,6 @@ public partial class Blocks_Mobile_MobileApplicationDetail : RockBlock, IDetailB
     }
 
     /// <summary>
-    /// Sets the application tab active.
-    /// </summary>
-    private void SetApplicationTabActive()
-    {
-        lbTab_SelectedClick( this.lbTabApplication, null );
-    }
-    /// <summary>
-    /// Loads the selected layout.
-    /// </summary>
-    /// <param name="selectedLayoutId">The selected layout identifier.</param>
-    private void LoadSelectedLayout( Guid selectedLayoutGuid )
-    {
-        var selectedLayout = LayoutCache.Get( selectedLayoutGuid );
-        if ( selectedLayout != null )
-        {
-            this.tbLayoutName.Text = selectedLayout.Name;
-            this.tbLayoutDescription.Text = selectedLayout.Description;
-            this.cePhoneLayoutXaml.Text = selectedLayout.LayoutMobilePhone;
-            this.ceTabletLayoutXaml.Text = selectedLayout.LayoutMobileTablet;
-            this.hfLayoutId.Value = selectedLayout.Id.ToString();
-        }
-    }
-
-    /// <summary>
     /// Builds the list of pages and depth.
     /// Since a layout assigned may only refer to child pages
     /// We need a list of all pages from the root to get full depth
@@ -1110,6 +1161,7 @@ public partial class Blocks_Mobile_MobileApplicationDetail : RockBlock, IDetailB
             AssignPageDepth( child, currentLevel );
         }
     }
+    #endregion
 
     #endregion
 
@@ -1626,12 +1678,14 @@ public partial class Blocks_Mobile_MobileApplicationDetail : RockBlock, IDetailB
     {
         var pageGuid = ( ( LinkButton ) sender ).CommandArgument.AsGuid();
         LoadSelectedPage( pageGuid );
+        LoadPageForZoneEdit();
     }
 
     protected void lbEditZones_Click( object sender, EventArgs e )
     {
         this.pnlPageEdit.Visible = false;
         this.pnlZoneEdit.Visible = true;
+        LoadMobileBlocks();
         LoadPageForZoneEdit();
     }
 
@@ -1644,7 +1698,7 @@ public partial class Blocks_Mobile_MobileApplicationDetail : RockBlock, IDetailB
         }
 
         var page = PageCache.Get( ( int ) pageId );
-        lblPageTitle.Text = PageCache.PageTitle;
+        lblPageTitle.Text = page.PageTitle;
         var layout = page.Layout;
         if ( layout == null )
         {
@@ -1652,8 +1706,8 @@ public partial class Blocks_Mobile_MobileApplicationDetail : RockBlock, IDetailB
         }
 
         lblPageLayout.Text = layout.Name;
-        lblDisplayInNavigationCheck.Visible = (page.DisplayInNavWhen == DisplayInNavWhen.WhenAllowed);
-        DisplayZonesForBlocks(layout);
+        lblDisplayInNavigationCheck.Visible = ( page.DisplayInNavWhen == DisplayInNavWhen.WhenAllowed );
+        DisplayZonesForBlocks( layout );
     }
 
     private void DisplayZonesForBlocks( LayoutCache layout )
@@ -1661,17 +1715,22 @@ public partial class Blocks_Mobile_MobileApplicationDetail : RockBlock, IDetailB
         List<DropZone> dropZones = new List<DropZone>();
 
         var xamlString = layout.LayoutMobilePhone;
-        XElement xaml = XElement.Parse( xamlString );
-
-        IEnumerable<XElement> elements = xaml.Descendants();
-        var zones = from e in elements
-                   where e.Attribute( "ZoneName" ) != null
-                   select e;
-
-        foreach ( var element in zones)
+        if ( !xamlString.IsNullOrWhiteSpace() )
         {
-            var zoneName = element.FirstAttribute.Value;
-            dropZones.Add( new DropZone { Name = zoneName } );
+            XElement xaml = XElement.Parse( xamlString );
+
+            IEnumerable<XElement> elements = xaml.Descendants();
+            var zones = from e in elements
+                        where e.Attribute( "ZoneName" ) != null
+                        select e;
+
+            int index = 0;
+            foreach ( var element in zones )
+            {
+                index += 1;
+                var zoneName = element.FirstAttribute.Value;
+                dropZones.Add( new DropZone { Name = zoneName, CurrentIndex = index, Order = index } );
+            }
         }
 
         rptZones.DataSource = dropZones;
@@ -1683,6 +1742,34 @@ public partial class Blocks_Mobile_MobileApplicationDetail : RockBlock, IDetailB
         pnlZoneEdit.Visible = false;
         pnlPageEdit.Visible = true;
 
+    }
+
+    protected void ltZoneName_DataBinding( object sender, EventArgs e )
+    {
+        var literal = sender as Literal;
+        if ( literal == null )
+        {
+            return;
+        }
+
+        var dropZone = ( ( RepeaterItem ) literal.DataItemContainer ).DataItem as DropZone;
+        literal.ID = string.Format( "zoneItem_{0}", dropZone.CurrentIndex );
+        literal.Text = dropZone.Name;
+    }
+
+    protected void rptMobileItem_DataBinding( object sender, EventArgs e )
+    {
+        var label = sender as Label;
+        if ( label == null )
+        {
+            return;
+        }
+
+        var repeaterItem = ( ( RepeaterItem ) label.DataItemContainer );
+        var data = repeaterItem.DataItem as BlockTypeInfo;
+        label.CssClass = "fa fa-cube";
+        label.ToolTip = data.Name;
+        label.ID = string.Format("mobileBlockTypeItem_{0}",repeaterItem.ItemIndex);
     }
 
     #endregion

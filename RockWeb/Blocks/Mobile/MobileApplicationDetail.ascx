@@ -196,6 +196,7 @@
                             </div>
                         </div>
                     </div>
+
                     <div class="col-md-10">
                         <asp:Panel runat="server" ID="pnlPageEdit" Visible="false">
                             <div class="panel-body">
@@ -225,42 +226,64 @@
                         </asp:Panel>
                         <asp:Panel runat="server" ID="pnlZoneEdit" Visible="false">
                             <div class="pnlBody">
-                                <div class="row">
-                                    <div class="col-md-6">
-                                        <asp:Label runat="server" ID="lblPageTitle" class="control-label" />
-                                    </div>
-                                    <div class="col-md-6">
-                                        <label>Display In Navigation</label>
-                                        <br />
-                                        <label id="lblDisplayInNavigationCheck" runat="server" class="fa fa-check" visible="false" />
-                                    </div>
+                                <div class="col-md-2">
+                                    <section class="panel">
+                                        <asp:Repeater ID="rptBlockSource" runat="server">
+                                            <HeaderTemplate>
+                                                <div class="js-mobile-blocktype-source-container dropzone">
+                                            </HeaderTemplate>
+                                            <ItemTemplate>
+                                               <div><asp:Label runat="server" OnDataBinding="rptMobileItem_DataBinding" /></div>
+                                            </ItemTemplate>
+                                            <FooterTemplate>
+                                                </div>
+                                            </FooterTemplate>
+                                        </asp:Repeater>
+                                    </section>
                                 </div>
-                                <div class="row">
-                                    <div class="col-md-6">
-                                        <fieldset>
-                                            <span>Layout</span>
-                                            </br>
+                                <div class="col-md-10">
+                                    <div class="row">
+                                        <div class="col-md-5">
+                                            <asp:Label runat="server" ID="lblPageTitle" class="control-label" />
+                                        </div>
+                                        <div class="col-md-5">
+                                            <label>Display In Navigation</label>
+                                            <br />
+                                            <label id="lblDisplayInNavigationCheck" runat="server" class="fa fa-check" visible="false" />
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-5">
+                                            <fieldset>
+                                                <span>Layout</span>
+                                                </br>
                                             <asp:Label runat="server" ID="lblPageLayout" />
-                                        </fieldset>
+                                            </fieldset>
+                                        </div>
                                     </div>
-                                </div>
-                                <div class="row">
-                                    <div class="col-md-10">
-                                     <asp:Repeater ID="rptZones" runat="server">
-                                         <ItemTemplate>
-                                             <asp:Panel runat="server">
-                                                 <div class="panel-body">
-                                                  <div>Test</div>
-                                                 </div>
-                                             </asp:Panel>
-                                         </ItemTemplate>
-                                     </asp:Repeater>
+                                    <div class="row">
+                                        <div class="col-md-10">
+                                            <asp:Repeater ID="rptZones" runat="server">
+                                                <ItemTemplate>
+                                                    <section class="panel panel-dropzone">
+                                                        <div class="panel-heading">
+                                                            <h3 class="panel-title pull-left">
+                                                                <asp:Literal OnDataBinding="ltZoneName_DataBinding" runat="server" />
+                                                            </h3>
+                                                        </div>
+                                                        <div class="panel-body">
+                                                            <div class="js-mobile-blocktype-target-container dropzone">drop Zone goes here.</div>
+                                                        </div>
+                                                    </section>
+                                                </ItemTemplate>
+                                            </asp:Repeater>
+                                        </div>
                                     </div>
-                                </div>
-                                <div class="row">
-                                    <div class="col-md-6">
-                                        <br />
-                                        <asp:LinkButton ID="lbZoneEditPages" CssClass="btn btn-primary" Text="Edit" runat="server" OnClick="lbZoneEditPages_Click" />
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <br />
+                                            <asp:LinkButton ID="lbZoneEditPages" CssClass="btn btn-primary" Text="Edit" runat="server" OnClick="lbZoneEditPages_Click" />
+                                        </div>
                                     </div>
                                 </div>
                             </div>
