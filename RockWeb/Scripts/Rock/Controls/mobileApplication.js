@@ -24,7 +24,7 @@
 
                 // initialize dragula
                 var containers = [];
-
+                debugger;
                 // add the resource list as a dragular container
                 containers.push($control.find('.js-mobile-blocktype-source-container')[0]);
 
@@ -112,8 +112,6 @@
 
                 this.trimSourceContainer();
                 this.initializeEventHandlers();
-
-                self.populateSchedulerResources(self.$resourceList);
 
                 var occurrenceEls = $(".js-mobile-blocktype-zone", $control).toArray();
                 $.each(occurrenceEls, function (i) {

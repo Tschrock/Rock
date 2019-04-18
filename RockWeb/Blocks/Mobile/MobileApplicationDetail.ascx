@@ -294,11 +294,10 @@
         </div>
         <script>
             Sys.Application.add_load(function () {
-                debugger;
-                 Rock.controls.groupScheduler.initialize({
-                    id: 1,
-
-
+                 var blockTypeContainerId = '<%=pnlZoneEdit.ClientID%>';
+                Rock.controls.mobileApplication.initialize({
+                    id: blockTypeContainerId,
+                });
             });
 
         </script>

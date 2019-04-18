@@ -39,7 +39,11 @@ public partial class Blocks_Mobile_MobileApplicationDetail : RockBlock, IDetailB
     protected override void OnInit( EventArgs e )
     {
         base.OnInit( e );
+        RockPage.AddScriptLink( "~/Scripts/dragula.min.js", true );
+
         btnApplicationDelete.Attributes["onclick"] = string.Format( "javascript: return Rock.dialogs.confirmDelete(event, 'Application');" );
+        lbtnDeleteCurrentLayout.Attributes["onclick"] = string.Format( "javascript: return Rock.dialogs.confirmDelete(event, 'Application');" );
+        lbtnDeleteCurrentPage.Attributes["onclick"] = string.Format( "javascript: return Rock.dialogs.confirmDelete(event, 'Application');" );
     }
 
     /// <summary>
