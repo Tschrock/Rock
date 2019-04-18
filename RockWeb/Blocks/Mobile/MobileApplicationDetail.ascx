@@ -230,10 +230,10 @@
                                     <section class="panel">
                                         <asp:Repeater ID="rptBlockSource" runat="server">
                                             <HeaderTemplate>
-                                                <div class="js-mobile-blocktype-source-container dropzone">
+                                                <div class="js-mobile-blocktype-source-container">
                                             </HeaderTemplate>
                                             <ItemTemplate>
-                                               <div><asp:Label runat="server" OnDataBinding="rptMobileItem_DataBinding" /></div>
+                                               <div class="component"><asp:Label runat="server" OnDataBinding="rptMobileItem_DataBinding" /></div>
                                             </ItemTemplate>
                                             <FooterTemplate>
                                                 </div>
@@ -272,7 +272,7 @@
                                                             </h3>
                                                         </div>
                                                         <div class="panel-body">
-                                                            <div class="js-mobile-blocktype-target-container dropzone">drop Zone goes here.</div>
+                                                            <div class="js-mobile-blocktype-target-container">drop Zone goes here.</div>
                                                         </div>
                                                     </section>
                                                 </ItemTemplate>
@@ -294,11 +294,61 @@
         </div>
         <script>
             Sys.Application.add_load(function () {
-                 var blockTypeContainerId = '<%=pnlZoneEdit.ClientID%>';
-                Rock.controls.mobileApplication.initialize({
-                    id: blockTypeContainerId,
-                });
-            });
+
+                debugger;
+        //
+        // Setup dragula to allow dragging from components to actions.
+        //
+        var componentDrake = dragula([$('.js-mobile-blocktype-source-container'), $('.js-mobile-blocktype-target-container')], {
+            moves: function (el, source, handle, sibling) {
+                return $(el).hasClass('component');
+            },
+
+            accepts: function (el, target, source, sibling) {
+                return $(target).hasClass('js-drag-container');
+            },
+            copy: true,
+            revertOnSpill: true
+        });
+
+        componentDrake.on('drop', function (el, target, source, sibling) {
+
+        });
+
+        // Setup dragula to allow re-ordering within the actions.
+        ////
+        //var reorderOldIndex = -1;
+        //var reorderDrake = dragula([$('.js-sms-actions .js-drag-container').get(0), $('.js-sms-actions .js-drag-container').get(0)], {
+        //    moves: function (el, source, handle, sibling) {
+        //        reorderOldIndex = $(source).children().index(el);
+        //        return $(handle).hasClass('js-reorder');
+        //    },
+        //    revertOnSpill: true
+        //});
+
+        //reorderDrake.on('drop', function (el, target, source, sibling) {
+     
+        //});
+
+        ////
+        //// Bit of a cheat, probably a safer way to do this.
+        ////
+        //$('.sms-action').on('click', function (e) {
+        //    e.preventDefault();
+        //    window.location = $(this).find('.js-edit-button').attr('href');
+
+        //});
+        ////
+        //// Turn on tooltips.
+        ////
+        //$('.sms-action-components [data-toggle="tooltip"]').tooltip({
+        //    delay: {
+
+        //        show: 800,
+
+        //        hide: 100
+        //});
+    });
 
         </script>
     </ContentTemplate>
