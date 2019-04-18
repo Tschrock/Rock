@@ -393,12 +393,14 @@
     <Compile Include="Field\Types\AssessmentTypesFieldType.cs" />
     <Compile Include="Jobs\PostV90DataMigrationsForDISC.cs" />
     <Compile Include="Financial\IWebhookGatewayComponent.cs" />
+    <Compile Include="Jobs\SendAssessmentReminders.cs" />
     <Compile Include="Lava\Shortcodes\ScheduledContent.cs" />
     <Compile Include="Financial\AutomatedPaymentProcessor.cs" />
     <Compile Include="Financial\AutomatedPaymentArgs.cs" />
     <Compile Include="Financial\IAutomatedGatewayComponent.cs" />
     <Compile Include="Financial\IThreeStepGatewayComponent.cs" />
     <Compile Include="Model\Assessment.cs" />
+    <Compile Include="Model\AssessmentService.Partial.cs" />
     <Compile Include="Model\AssessmentType.cs" />
     <Compile Include="Model\CodeGenerated\AssessmentService.cs" />
     <Compile Include="Model\CodeGenerated\AssessmentTypeService.cs" />
