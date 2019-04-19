@@ -45,8 +45,22 @@ namespace Rock.Attribute
         {
             if ( fieldTypeClassNames != null && fieldTypeClassNames.Length > 0 )
             {
-                var workflowTypeConfigValue = new Field.ConfigurationValue( fieldTypeClassNames.ToList().AsDelimited( "|" ) );
-                FieldConfigurationValues.Add( ATTRIBUTE_FIELD_TYPES_KEY, workflowTypeConfigValue );
+                //var workflowTypeConfigValue = new Field.ConfigurationValue( fieldTypeClassNames.ToList().AsDelimited( "|" ) );
+                //FieldConfigurationValues.Add( ATTRIBUTE_FIELD_TYPES_KEY, workflowTypeConfigValue );
+                FieldTypeClassNames = fieldTypeClassNames;
+            }
+        }
+
+        public string[] FieldTypeClassNames
+        {
+            get
+            {
+                return FieldConfigurationValues.GetValueOrNull( ATTRIBUTE_FIELD_TYPES_KEY ).Split( '|' );
+            }
+            set
+            {
+                var flattenedClassNames = FieldTypeClassNames.ToList().AsDelimited( "|" );
+                FieldConfigurationValues.Add( ATTRIBUTE_FIELD_TYPES_KEY, new Field.ConfigurationValue( flattenedClassNames ) );
             }
         }
     }

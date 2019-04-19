@@ -34,7 +34,7 @@ namespace Rock.Attribute
         public AssessmentTypesFieldAttribute( string name )
             : base( name, description: "", required: true, defaultValue: "", category: "", order: 0, key: null, fieldTypeClass: typeof( Rock.Field.Types.AssessmentTypesFieldType ).FullName )
         {
-            FieldConfigurationValues.Add( INCLUDE_INACTIVE_KEY, new Field.ConfigurationValue( false.ToTrueFalse() ) );
+            IncludeInactive = false;
         }
 
         /// <summary>

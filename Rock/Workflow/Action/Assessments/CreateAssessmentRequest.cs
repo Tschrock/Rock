@@ -38,12 +38,30 @@ namespace Rock.Workflow.Action
 
     #region Block Atttributes
 
-    [WorkflowAttribute( "Person Attribute", "The Assessment attribute.", true, "", "", 0, null,
-        new string[] { "Rock.Field.Types.AssessmentsFieldType" } )]
-    [WorkflowAttribute( "Person Taking Assessment", "The attribute that contains the type of connection opportunity to create.", true, "", "", 1, null,
-        new string[] { "Rock.Field.Types.PersonFieldType" } )]
-    [WorkflowAttribute( "Person Requesting", "The attribute that contains the connection status to use for the new request.", false, "", "", 2, null,
-        new string[] { "Rock.Field.Types.DateTimeFieldType" } )]
+    [WorkflowAttribute( "Assessment Types",
+        Key = AttributeKey.AssessmentTypesKey,
+        Description = "The Assessment attribute.",
+        IsRequired = true,
+        Order = 0,
+        FieldTypeClassNames = new string[] { "Rock.Field.Types.AssessmentsFieldType" } )]
+
+    [WorkflowAttribute( "Person Taking Assessment",
+        Key = null,
+        Description = "The attribute that contains the type of connection opportunity to create.",
+        IsRequired = true,
+        DefaultValue = "",
+        Category = "",
+        Order = 1,
+        FieldTypeClassNames = new string[] { "Rock.Field.Types.PersonFieldType" } )]
+
+    [WorkflowAttribute( "Person Requesting",
+        Key = null,
+        Description = "The attribute that contains the connection status to use for the new request.",
+        IsRequired = false,
+        DefaultValue = "",
+        Category = "",
+        Order = 2,
+        FieldTypeClassNames = new string[] { "Rock.Field.Types.DateTimeFieldType" } )]
 
     #endregion
 
