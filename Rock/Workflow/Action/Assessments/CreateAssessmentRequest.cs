@@ -40,36 +40,37 @@ namespace Rock.Workflow.Action
 
     [WorkflowAttribute( "Assessment Types",
         Key = AttributeKey.AssessmentTypesKey,
-        Description = "The Assessment attribute.",
+        Description = "The attribute that contains the selected list of assessments being requested.",
         IsRequired = true,
         Order = 0,
-        FieldTypeClassNames = new string[] { "Rock.Field.Types.AssessmentsFieldType" } )]
+        FieldTypeClassNames = new string[] { "Rock.Field.Types.AssessmentTypesFieldType" } )]
 
-    [WorkflowAttribute( "Person Taking Assessment",
-        Key = null,
-        Description = "The attribute that contains the type of connection opportunity to create.",
+    [WorkflowAttribute( "Person",
+        Key = AttributeKey.Person,
+        Description = "The attribute containing the person being requested to take the assessment(s).",
         IsRequired = true,
-        DefaultValue = "",
-        Category = "",
         Order = 1,
         FieldTypeClassNames = new string[] { "Rock.Field.Types.PersonFieldType" } )]
 
-    [WorkflowAttribute( "Person Requesting",
-        Key = null,
-        Description = "The attribute that contains the connection status to use for the new request.",
+    [WorkflowAttribute( "Requested By",
+        Key = AttributeKey.RequestedBy,
+        Description = "The attribute containing the person requesting the test be taken.",
         IsRequired = false,
-        DefaultValue = "",
-        Category = "",
+        Order = 2,
+        FieldTypeClassNames = new string[] { "Rock.Field.Types.PersonFieldType" } )]
+
+    [WorkflowAttribute( "Due Date",
+        Key = AttributeKey.DueDate,
+        Description = "The attribute that contains the Due Date (if any) for the requests.",
+        IsRequired = false,
         Order = 2,
         FieldTypeClassNames = new string[] { "Rock.Field.Types.DateTimeFieldType" } )]
 
     #endregion
 
-
-
     public class CreateAssessmentRequest : ActionComponent
     {
-        #region Attribute Strings
+        #region Workflow Attributes
 
         /// <summary>
         /// Keys to use for Block Attributes
@@ -84,12 +85,12 @@ namespace Rock.Workflow.Action
             /// <summary>
             /// The person taking the assessment(s)
             /// </summary>
-            public const string PersonTakingAssessments = "PersonTakingAssessments";
+            public const string Person = "Person";
 
             /// <summary>
             /// The person requesting the assessment(s)
             /// </summary>
-            public const string PersonRequestingAssessments = "PersonRequestingAssessments";
+            public const string RequestedBy = "RequestedBy";
 
             /// <summary>
             /// The due date for the assessment(s)
@@ -97,7 +98,7 @@ namespace Rock.Workflow.Action
             public const string DueDate = "DueDate";
         }
 
-        #endregion
+        #endregion Workflow Attributes
 
         /// <summary>
         /// Executes the specified workflow.
@@ -109,101 +110,77 @@ namespace Rock.Workflow.Action
         /// <returns></returns>
         public override bool Execute( RockContext rockContext, WorkflowAction action, Object entity, out List<string> errorMessages )
         {
+            rockContext = rockContext ?? new RockContext();
+
             errorMessages = new List<string>();
 
-            // Get the person
-            PersonAlias personAlias = null;
-            Guid personAliasGuid = action.GetWorklowAttributeValue(GetAttributeValue( action, "PersonAttribute" ).AsGuid()).AsGuid();
-            personAlias = new PersonAliasService( rockContext ).Get( personAliasGuid );
+            // Get the attribute guids
+            var assessmentTypesAttributeGuid = GetAttributeValue( action, AttributeKey.AssessmentTypesKey, true ).AsGuidOrNull();
+            var personAliasAttributeGuid = GetAttributeValue( action, AttributeKey.Person, true ).AsGuidOrNull();
+            Guid? requestedByAliasAttributeGuid = GetAttributeValue( action, AttributeKey.RequestedBy, true ).AsGuidOrNull();
+            var dueDateAttributeGuid = GetAttributeValue( action, AttributeKey.DueDate, true ).AsGuidOrNull();
+
+            // Get the attribute values
+            var assessmentTypeGuids = action.GetWorklowAttributeValue( assessmentTypesAttributeGuid.Value, true, false ).Split( new char[] { ',' } );
+            var personAliasGuid = action.GetWorklowAttributeValue( personAliasAttributeGuid.Value ).AsGuidOrNull();
+            Guid? requestedByAliasGuid = requestedByAliasAttributeGuid == null ? null : action.GetWorklowAttributeValue( requestedByAliasAttributeGuid.Value ).AsGuidOrNull();
+            var dueDate = dueDateAttributeGuid == null ? null : action.GetWorklowAttributeValue( dueDateAttributeGuid.Value ).AsDateTime();
+
+            // Validate attribute data
+            if ( !assessmentTypeGuids.Any() )
+            {
+                errorMessages.Add( "No Assessments selected." );
+                return false;
+            }
+
+            if ( personAliasGuid == null )
+            {
+                errorMessages.Add( "Invalid Person Attribute or Value." );
+                return false;
+            }
+
+            var personAlias = new PersonAliasService( rockContext ).Get( personAliasGuid.Value );
             if ( personAlias == null )
             {
-                errorMessages.Add( "Invalid Person Attribute or Value!" );
+                errorMessages.Add( "Invalid Person Attribute or Value." );
                 return false;
             }
 
-            // Get the opportunity
-            ConnectionOpportunity opportunity = null;
-            Guid opportunityTypeGuid = action.GetWorklowAttributeValue( GetAttributeValue( action, "ConnectionOpportunityAttribute" ).AsGuid() ).AsGuid();
-            opportunity = new ConnectionOpportunityService( rockContext ).Get( opportunityTypeGuid );
-            if ( opportunity == null )
-            {
-                errorMessages.Add( "Invalid Connection Opportunity Attribute or Value!" );
-                return false;
-            }
+            var requestedByAlias = new PersonAliasService( rockContext ).Get( requestedByAliasGuid.Value );
 
-            // Get connection status
-            ConnectionStatus status = null;
-            Guid? connectionStatusGuid = null;
-            Guid? connectionStatusAttributeGuid = GetAttributeValue( action, "ConnectionStatusAttribute" ).AsGuidOrNull();
-            if ( connectionStatusAttributeGuid.HasValue )
+            foreach( string assessmentTypeGuid in assessmentTypeGuids )
             {
-                connectionStatusGuid = action.GetWorklowAttributeValue( connectionStatusAttributeGuid.Value ).AsGuidOrNull();
-                if ( connectionStatusGuid.HasValue )
-                {
-                    status = opportunity.ConnectionType.ConnectionStatuses
-                        .Where( s => s.Guid.Equals( connectionStatusGuid.Value ) )
-                        .FirstOrDefault();
-                }
-            }
-            if ( status == null )
-            {
-                connectionStatusGuid = GetAttributeValue( action, "ConnectionStatus" ).AsGuidOrNull();
-                if ( connectionStatusGuid.HasValue )
-                {
-                    status = opportunity.ConnectionType.ConnectionStatuses
-                        .Where( s => s.Guid.Equals( connectionStatusGuid.Value ) )
-                        .FirstOrDefault();
-                }
-            }
-            if ( status == null )
-            {
-                status = opportunity.ConnectionType.ConnectionStatuses
-                    .Where( s => s.IsDefault )
+                // Check for an existing record
+                var assessmentTypeService = new AssessmentTypeService( rockContext );
+                int? assessmentTypeId = assessmentTypeService.GetId( assessmentTypeGuid.AsGuid() );
+
+                var assessmentService = new AssessmentService( rockContext );
+                var assessment = assessmentService
+                    .Queryable()
+                    .Where( a => a.Id == personAlias.Id )
+                    .Where( a => a.AssessmentTypeId == assessmentTypeId )
+                    .Where( a => a.Status == AssessmentRequestStatus.Pending )
                     .FirstOrDefault();
-            }
 
-            // Get Campus
-            int? campusId = null;
-            Guid? campusAttributeGuid = GetAttributeValue( action, "CampusAttribute" ).AsGuidOrNull();
-            if ( campusAttributeGuid.HasValue )
-            {
-                Guid? campusGuid = action.GetWorklowAttributeValue( campusAttributeGuid.Value ).AsGuidOrNull();
-                if ( campusGuid.HasValue )
+                // Create the new assessment record or update the existing one
+                if ( assessment == null )
                 {
-                    var campus = CampusCache.Get( campusGuid.Value );
-                    if ( campus != null )
+                    assessment = new Assessment
                     {
-                        campusId = campus.Id;
-                    }
+                        PersonAliasId = personAlias.Id,
+                        AssessmentTypeId = assessmentTypeId.Value,
+                        RequesterPersonAliasId = requestedByAlias.Id,
+                        RequestedDateTime = RockDateTime.Now,
+                        RequestedDueDate = dueDate.Value,
+                        Status = AssessmentRequestStatus.Pending
+                    };
                 }
-            }
-
-            // Get the Comment
-            String comment = action.GetWorklowAttributeValue(GetAttributeValue(action, "ConnectionCommentAttribute").AsGuid());
-
-            var connectionRequestService = new ConnectionRequestService( rockContext );
-
-            var connectionRequest = new ConnectionRequest();
-            connectionRequest.PersonAliasId = personAlias.Id;
-            connectionRequest.ConnectionOpportunityId = opportunity.Id;
-            connectionRequest.ConnectionState = ConnectionState.Active;
-            connectionRequest.ConnectionStatusId = status.Id;
-            connectionRequest.CampusId = campusId;
-            connectionRequest.ConnectorPersonAliasId = opportunity.GetDefaultConnectorPersonAliasId( campusId );
-            connectionRequest.Comments = comment;
-
-            connectionRequestService.Add( connectionRequest );
-            rockContext.SaveChanges();
-
-            // If request attribute was specified, requery the request and set the attribute's value
-            Guid? connectionRequestAttributeGuid = GetAttributeValue( action, "ConnectionRequestAttribute" ).AsGuidOrNull();
-            if ( connectionRequestAttributeGuid.HasValue )
-            {
-                connectionRequest = connectionRequestService.Get( connectionRequest.Id );
-                if ( connectionRequest != null )
+                else
                 {
-                    SetWorkflowAttributeValue( action, connectionRequestAttributeGuid.Value, connectionRequest.Guid.ToString() );
+                    assessment.RequestedDateTime = RockDateTime.Now;
                 }
+
+                rockContext.SaveChanges();
             }
 
             return true;
