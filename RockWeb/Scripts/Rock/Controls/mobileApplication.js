@@ -24,23 +24,26 @@
 
                 // initialize dragula
                 var containers = [];
-                debugger;
+                var sourceClass = '.js-mobile-blocktype-source-container .js-drag-container';
+                var targetClass = '.js-mobile-blocktype-target-container .js-drag-container';
                 // add the resource list as a dragular container
-                containers.push($control.find('.js-mobile-blocktype-source-container')[0]);
+                containers.push($control.find(sourceClass)[0]);
 
                 // add all the occurrences (locations) as dragula containers
-                var targets = $control.find('.js-mobile-blocktype-target-container').toArray();
-
+                var targets = $control.find(targetClass).toArray();
                 $.each(targets, function (i) {
                     containers.push(targets[i]);
                 });
 
                 self.resourceListDrake = dragula(containers, {
+                    moves: function (el, source, handle, sibling) {
+                        return $(el).hasClass('component');
+                    },
                     isContainer: function (el) {
                         return false;
                     },
                     copy: function (el, source) {
-                        return false;
+                        return sourceClass;
                     },
                     accepts: function (el, target) {
                         return true;
@@ -55,7 +58,7 @@
                     .on('drag', function (el) {
                         if (self.resourceScroll) {
                             // disable the scroller while dragging so that the scroller doesn't move while we are dragging
-                            //self.resourceScroll.disable();
+                            self.resourceScroll.disable();
                         }
                         $('body').addClass('state-drag');
                     })
@@ -67,12 +70,13 @@
                         $('body').removeClass('state-drag');
                     })
                     .on('drop', function (el, target, source, sibling) {
-                        if (target.classList.contains('js-mobile-blocktype-source-container')) {
-                            // deal with the resource that was dragged back into the unassigned resources
-                            var $unassignedResource = $(el);
-                            $unassignedResource.attr('data-state', 'unassigned');
-
-                            var blocktypeId = $unassignedResource.attr('data-blocktype-id')
+                    
+                        if (target && target.classList.contains('js-drag-container')) {
+                          
+                            var $droppedElement = $(el.firstElementChild);
+                            var blocktypeId = $droppedElement.attr('data-blocktype-guid');
+                            var pageId = $droppedElement.attr('data-page-id');
+                            var zone = target.parentElement.firstElementChild.innerText;
 
                             //$.ajax({
                             //    method: "PUT",

@@ -1748,15 +1748,15 @@ public partial class Blocks_Mobile_MobileApplicationDetail : RockBlock, IDetailB
 
     protected void ltZoneName_DataBinding( object sender, EventArgs e )
     {
-        var literal = sender as Literal;
-        if ( literal == null )
+        var label = sender as Label;
+        if ( label == null )
         {
             return;
         }
 
-        var dropZone = ( ( RepeaterItem ) literal.DataItemContainer ).DataItem as DropZone;
-        literal.ID = string.Format( "zoneItem_{0}", dropZone.CurrentIndex );
-        literal.Text = dropZone.Name;
+        var dropZone = ( ( RepeaterItem ) label.DataItemContainer ).DataItem as DropZone;
+        label.ID = string.Format( "zoneItem_{0}", dropZone.CurrentIndex );
+        label.Text = dropZone.Name;
     }
 
     protected void rptMobileItem_DataBinding( object sender, EventArgs e )
@@ -1771,6 +1771,9 @@ public partial class Blocks_Mobile_MobileApplicationDetail : RockBlock, IDetailB
         var data = repeaterItem.DataItem as BlockTypeInfo;
         label.CssClass = "fa fa-cube";
         label.ToolTip = data.Name;
+        label.Attributes.Add( "data-blocktype-guid", data.BlockGuid.ToString() );
+        label.Attributes.Add( "data-page-id", hfPageId.Value );
+        label.Text = string.Format(" {0} ",data.Name);
         label.ID = string.Format("mobileBlockTypeItem_{0}",repeaterItem.ItemIndex);
     }
 
