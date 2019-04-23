@@ -64,7 +64,7 @@ namespace Rock.Workflow.Action
         Description = "The attribute that contains the Due Date (if any) for the requests.",
         IsRequired = false,
         Order = 2,
-        FieldTypeClassNames = new string[] { "Rock.Field.Types.DateTimeFieldType" } )]
+        FieldTypeClassNames = new string[] { "Rock.Field.Types.DateFieldType" } )]
 
     #endregion
 
@@ -114,17 +114,12 @@ namespace Rock.Workflow.Action
 
             errorMessages = new List<string>();
 
-            // Get the attribute guids
-            var assessmentTypesAttributeGuid = GetAttributeValue( action, AttributeKey.AssessmentTypesKey, true ).AsGuidOrNull();
-            var personAliasAttributeGuid = GetAttributeValue( action, AttributeKey.Person, true ).AsGuidOrNull();
-            Guid? requestedByAliasAttributeGuid = GetAttributeValue( action, AttributeKey.RequestedBy, true ).AsGuidOrNull();
-            var dueDateAttributeGuid = GetAttributeValue( action, AttributeKey.DueDate, true ).AsGuidOrNull();
-
-            // Get the attribute values
-            var assessmentTypeGuids = action.GetWorklowAttributeValue( assessmentTypesAttributeGuid.Value, true, false ).Split( new char[] { ',' } );
-            var personAliasGuid = action.GetWorklowAttributeValue( personAliasAttributeGuid.Value ).AsGuidOrNull();
-            Guid? requestedByAliasGuid = requestedByAliasAttributeGuid == null ? null : action.GetWorklowAttributeValue( requestedByAliasAttributeGuid.Value ).AsGuidOrNull();
-            var dueDate = dueDateAttributeGuid == null ? null : action.GetWorklowAttributeValue( dueDateAttributeGuid.Value ).AsDateTime();
+            var assessmentTypesGuidString = GetAttributeValue( action, AttributeKey.AssessmentTypesKey, true );
+            var assessmentTypeGuids = assessmentTypesGuidString.IsNullOrWhiteSpace() ? null : assessmentTypesGuidString.Split( new char[] { ',' } );
+            
+            var personAliasGuid = GetAttributeValue( action, AttributeKey.Person, true ).AsGuidOrNull();
+            Guid? requestedByAliasGuid = GetAttributeValue( action, AttributeKey.RequestedBy, true ).AsGuidOrNull();
+            var dueDate = GetAttributeValue( action, AttributeKey.DueDate, true ).AsDateTime();
 
             // Validate attribute data
             if ( !assessmentTypeGuids.Any() )
