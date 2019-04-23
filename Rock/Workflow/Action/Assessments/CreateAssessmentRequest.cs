@@ -150,31 +150,31 @@ namespace Rock.Workflow.Action
                 int? assessmentTypeId = assessmentTypeService.GetId( assessmentTypeGuid.AsGuid() );
 
                 var assessmentService = new AssessmentService( rockContext );
-                var assessment = assessmentService
+                var existingAssessment = assessmentService
                     .Queryable()
-                    .Where( a => a.Id == personAlias.Id )
+                    .Where( a => a.PersonAliasId == personAlias.Id )
                     .Where( a => a.AssessmentTypeId == assessmentTypeId )
                     .Where( a => a.Status == AssessmentRequestStatus.Pending )
                     .FirstOrDefault();
 
-                // Create the new assessment record or update the existing one
-                if ( assessment == null )
+                // If a pending record for this person/type is found mark it complete.
+                if ( existingAssessment != null )
                 {
-                    assessment = new Assessment
-                    {
-                        PersonAliasId = personAlias.Id,
-                        AssessmentTypeId = assessmentTypeId.Value,
-                        RequesterPersonAliasId = requestedByAlias.Id,
-                        RequestedDateTime = RockDateTime.Now,
-                        RequestedDueDate = dueDate.Value,
-                        Status = AssessmentRequestStatus.Pending
-                    };
-                }
-                else
-                {
-                    assessment.RequestedDateTime = RockDateTime.Now;
+                    existingAssessment.Status = AssessmentRequestStatus.Complete;
                 }
 
+                // Create a new assessment
+                var assessment = new Assessment
+                {
+                    PersonAliasId = personAlias.Id,
+                    AssessmentTypeId = assessmentTypeId.Value,
+                    RequesterPersonAliasId = requestedByAlias.Id,
+                    RequestedDateTime = RockDateTime.Now,
+                    RequestedDueDate = dueDate,
+                    Status = AssessmentRequestStatus.Pending
+                };
+
+                assessmentService.Add( assessment );
                 rockContext.SaveChanges();
             }
 
