@@ -282,6 +282,14 @@
                                             </asp:Repeater>
                                         </div>
                                     </div>
+                                    <div class="row" style="display: none">
+                                        <!-- resource template -->
+                                        <div class="js-unassigned-block-resource-template">
+                                            <div class="component">
+                                                <span id="0" title=""  class="fa fa-cube" data-blocktype-guid="" data-page-id="0" data-blockId="0" style="font-size: Small;">Login</span>
+                                            </div>
+                                        </div>
+                                    </div>
                                     <div class="row">
                                         <div class="col-md-6">
                                             <br />

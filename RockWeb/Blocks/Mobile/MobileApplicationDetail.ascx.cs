@@ -1773,7 +1773,8 @@ public partial class Blocks_Mobile_MobileApplicationDetail : RockBlock, IDetailB
         label.ToolTip = data.Name;
         label.Attributes.Add( "data-blocktype-guid", data.BlockGuid.ToString() );
         label.Attributes.Add( "data-page-id", hfPageId.Value );
-        label.Text = string.Format(" {0} ",data.Name);
+        label.Attributes.Add( "data-blockId", "0" );
+        label.Text = string.Format("{0} ",data.Name);
         label.ID = string.Format("mobileBlockTypeItem_{0}",repeaterItem.ItemIndex);
     }
 

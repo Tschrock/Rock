@@ -16,7 +16,7 @@
 //
 using System;
 using System.Linq;
-
+using Rock.Data;
 using Rock.Web.Cache;
 using Rock.Web.UI;
 
@@ -162,6 +162,35 @@ namespace Rock.Model
             }
 
             return null;
+        }
+
+        /// <summary>
+        /// Associates the block type to zone.
+        /// </summary>
+        /// <param name="pageId">The page identifier.</param>
+        /// <param name="blockTypeGuid">The block type unique identifier.</param>
+        /// <param name="zone">The zone.</param>
+        public Block AssociateBlockToZone(int blockId,string name, int pageId, int blockTypeId, string zone )
+        {
+            var rockContext = this.Context as RockContext;
+            var block = this.Queryable()
+                .FirstOrDefault( b => b.Id == blockId );
+
+
+            if ( block == null )
+            {
+                block = new Block { Name = name.Trim(), PageId = pageId, BlockTypeId = blockTypeId, Zone = zone };
+                this.Add( block );
+            }
+            else
+            {
+                block.Name = name;
+                block.PageId = pageId;
+                block.BlockTypeId = blockTypeId;
+                block.Zone = zone;
+            }
+
+            return block;         
         }
     }
 }

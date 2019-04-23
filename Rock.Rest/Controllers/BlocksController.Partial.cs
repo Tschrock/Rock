@@ -14,9 +14,11 @@
 // limitations under the License.
 // </copyright>
 //
+using System;
+using System.Collections.Generic;
 using System.Net;
 using System.Web.Http;
-
+using Rock.Data;
 using Rock.Model;
 using Rock.Rest.Filters;
 
@@ -92,6 +94,47 @@ namespace Rock.Rest.Controllers
             {
                 throw new HttpResponseException( HttpStatusCode.BadRequest );
             }
+        }
+
+        /// <summary>
+        /// Assingns the block to zone.
+        /// </summary>
+        /// <param name="blockId">The block identifier.</param>
+        /// <param name="name">The name.</param>
+        /// <param name="pageId">The page identifier.</param>
+        /// <param name="blockTypeGuid">The block type unique identifier.</param>
+        /// <param name="zone">The zone.</param>
+        /// <returns></returns>
+        [Authenticate, Secured]
+        [HttpPut]
+        [System.Web.Http.Route( "api/blocks/AssociateBlockToZone" )]
+        public Block AssociateBlockToZone(int blockId, string name,int pageId,Guid blockTypeGuid,string zone)
+        {
+            var rockContext = new RockContext();
+            var blockTypeService = new BlockTypeService( rockContext );
+            var blockService = new BlockService( rockContext );
+            var blockType = blockTypeService.Get( blockTypeGuid );
+            var block = blockService.AssociateBlockToZone(blockId,name ,pageId,blockType.Id, zone );
+            if ( block.IsValid )
+            {
+                rockContext.SaveChanges();
+            }
+
+            return block;
+        }
+        /// <summary>
+        /// Gets the associate block to zone.
+        /// </summary>
+        /// <param name="pageId">The page identifier.</param>
+        /// <returns></returns>
+        [Authenticate, Secured]
+        [HttpGet]
+        [System.Web.Http.Route( "api/blocks/GetBlocksToZones" )]
+        public IEnumerable<Block> GetBlocksToZones( int pageId)
+        {
+            var rockContext = new RockContext();
+            var blockService = new BlockService( rockContext );
+            return blockService.GetByPage( pageId );
         }
     }
 }
