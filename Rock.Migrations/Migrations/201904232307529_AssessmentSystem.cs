@@ -306,6 +306,25 @@ SELECT  CASE
 		" );
 
             #endregion
+
+            // Add to bio block list of workflow actions
+            Sql( @"
+                DECLARE @bioWFActionsAttributeValueId INT = 
+                (SELECT v.[Id]
+                FROM [dbo].[attribute] a
+                JOIN [AttributeValue] v ON a.id = v.AttributeId
+                WHERE a.[EntityTypeId] = 9
+                    AND a.[EntityTypeQualifierColumn] = 'BlockTypeId'
+                    AND a.[Key] = 'WorkflowActions'
+                    AND a.[EntityTypeQualifierValue] = (SELECT [Id] FROM [dbo].[BlockType] WHERE [Name] = 'person bio')
+                    AND v.[Value] NOT LIKE '%31DDC001-C91A-4418-B375-CAB1475F7A62%')
+
+                IF (@bioWFActionsAttributeValueId IS NOT NULL)
+                BEGIN
+                    UPDATE [dbo].[AttributeValue]
+                    SET [Value] = [Value] + ',31DDC001-C91A-4418-B375-CAB1475F7A62'
+                    WHERE [Id] = @bioWFActionsAttributeValueId
+                END" );
         }
 
         /// <summary>
