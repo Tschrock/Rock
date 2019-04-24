@@ -19,7 +19,7 @@
                 var self = this;
 
                 var $control = $('#' + options.id);
-
+                self.pageId = options.pageId;
                 if ($control.length == 0) {
                     return;
                 }
@@ -74,24 +74,29 @@
                         $('body').removeClass('state-drag');
                     })
                     .on('drop', function (el, target, source, sibling) {
+
                         if (target && target.classList.contains('js-drag-container')) {
 
                             var sourceParent = source.parentElement;
                             if (!sourceParent.classList.contains('js-mobile-blocktype-source-container')) {
                                 //dropped from a different zone
                                 //remove from current source;
-                             
+
                                 var sourceBlocks = $(source).find('.component');
                                 if (sourceBlocks) {
-
                                     $(sourceBlocks).each(function (i, e) {
-                                        if (e.firstElementChild.id == el.firstElementChild.id) {
-                                            e.remove();
-                                        }       
+
+                                        var sourceblockId = $(e.firstElementChild).attr('data-blockId');
+                                        var dropElementId = $(el).attr('data-blockId');
+                                        if (sourceblockId == dropElementId) {
+                                            e.remove;
+                                        }
                                     });
                                 }
                             }
 
+                            var index = self.getElementIndex(el);
+                            debugger;
                             var name = el.firstElementChild.innerText;
                             var $droppedElement = $(el.firstElementChild);
                             var blocktypeGuid = $droppedElement.attr('data-blocktype-guid');
@@ -99,17 +104,16 @@
                             self.pageId = pageId;
                             var blockId = $droppedElement.attr('data-blockId');
                             var zone = target.parentElement.firstElementChild.innerText;
+
                             var assingnBlockToZoneUrl = Rock.settings.get('baseUrl') + 'api/blocks/AssociateBlockToZone';
 
                             $.ajax({
                                 method: "PUT",
-                                url: assingnBlockToZoneUrl + '?blockId=' + blockId + '&name=' + name + '&pageId=' + pageId + '&blocktypeGuid=' + blocktypeGuid + '&zone=' + zone,
+                                url: assingnBlockToZoneUrl + '?blockId=' + blockId + '&name=' + name + '&pageId=' + pageId + '&blocktypeGuid=' + blocktypeGuid + '&zone=' + zone + '&order=' + index,
                             }).done(function (data) {
                                 if (data) {
                                     // update drag item with block id
                                     $droppedElement.attr('data-blockId', data.Id);
-                                    //after drag repopulate the zones
-                                    self.populateBlockTypesToZones(self.pageId);
                                 }
 
                             }).fail(function (a, b, c) {
@@ -117,19 +121,19 @@
                             })
                         }
                         else {
-                           
+
                         }
-                        self.trimSourceContainer();
+                        // self.trimSourceContainer();
                     });
 
                 this.trimSourceContainer();
-                this.initializeEventHandlers();
+                this.populateBlockTypesToZones(this.pageId);
+            },
 
-                var occurrenceEls = $(".js-mobile-blocktype-zone", $control).toArray();
-                $.each(occurrenceEls, function (i) {
-                    var $occurrence = $(occurrenceEls[i]);
-                    //self.populateScheduledOccurrence($occurrence);
-                });
+            getElementIndex: function (el) {
+
+                debugger;
+                return [].slice.call(el.parentElement.children).indexOf(el);
             },
             /** trims the source container if it just has whitespace, so that the :empty css selector works */
             trimSourceContainer: function () {
@@ -167,36 +171,25 @@
 
             populateResourceDiv: function ($container, block) {
 
-                var resourceTemplate = $('.js-unassigned-block-resource-template').find('.component').clone();
-                var resourceDiv = resourceTemplate.children(0);
-                resourceDiv.attr('data-blocktype-guid', block.blocktypeGuid);
-                resourceDiv.attr('data-page-id', block.pageId);
-                resourceDiv.attr('data-blockid', block.Id);
-                resourceDiv.innerText = block.Name;
+                var blockTypeGuid = block.BlockType.Guid;
+                var pageId = block.PageId;
+                var blockId = block.Id;
+                var blockName = block.Name;
+                var resourceTemplate = $('.js-unassigned-block-resource-template').clone();
+                var resourceDiv = resourceTemplate.find('.component');
+
+                var span = resourceDiv.children(0)[0];
+                span.setAttribute('data-blocktype-guid', blockTypeGuid);
+                span.setAttribute('data-page-id', pageId);
+                span.setAttribute('data-blockId', blockId);
+                span.text = blockName;
+                span.innerText = blockName;
 
                 var currentContainer = $container.find('.js-drag-container');
-
                 if (currentContainer) {
-                    var currentChildren = currentContainer.find('.component');
-                    if (currentChildren == null) {
-                        //no children this is the first one
-                        $(currentContainer).append(resourceDiv);
-
-                    }
-                    else {
-                        $(currentChildren).filter(function (i, e) {
-                            //Determine if the child is already there before adding
- 
-                        });
-                    }
+                    $(currentContainer).append(resourceDiv);
                 }
             },
-
-            initializeEventHandlers: function () {
-                var self = this;
-
-
-            }
         };
 
         return exports;

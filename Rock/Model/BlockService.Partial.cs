@@ -170,16 +170,15 @@ namespace Rock.Model
         /// <param name="pageId">The page identifier.</param>
         /// <param name="blockTypeGuid">The block type unique identifier.</param>
         /// <param name="zone">The zone.</param>
-        public Block AssociateBlockToZone(int blockId,string name, int pageId, int blockTypeId, string zone )
+        public Block AssociateBlockToZone(int blockId,string name, int pageId, int blockTypeId, string zone,int order )
         {
             var rockContext = this.Context as RockContext;
             var block = this.Queryable()
                 .FirstOrDefault( b => b.Id == blockId );
 
-
             if ( block == null )
             {
-                block = new Block { Name = name.Trim(), PageId = pageId, BlockTypeId = blockTypeId, Zone = zone };
+                block = new Block { Name = name.Trim(), PageId = pageId, BlockTypeId = blockTypeId, Zone = zone,Order= order };
                 this.Add( block );
             }
             else
@@ -188,6 +187,7 @@ namespace Rock.Model
                 block.PageId = pageId;
                 block.BlockTypeId = blockTypeId;
                 block.Zone = zone;
+                block.Order = order;
             }
 
             return block;         

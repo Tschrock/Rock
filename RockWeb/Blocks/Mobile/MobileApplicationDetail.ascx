@@ -170,7 +170,7 @@
                 </div>
             </asp:Panel>
             <!-- Page Tab View -->
-            <asp:HiddenField ID="hfPageId" runat="server" />
+            <asp:HiddenField ID="hfPageId"  runat="server" />
             <asp:Panel ID="pnlPages" runat="server" Visible="false">
                 <div class="panel-body">
                     <div class="col-md-2">
@@ -286,7 +286,7 @@
                                         <!-- resource template -->
                                         <div class="js-unassigned-block-resource-template">
                                             <div class="component">
-                                                <span id="0" title=""  class="fa fa-cube" data-blocktype-guid="" data-page-id="0" data-blockId="0" style="font-size: Small;">Login</span>
+                                                <span id="0" title="" class="fa fa-cube" data-blocktype-guid="" data-page-id="0" data-blockId="0" style="font-size: Small;"></span>
                                             </div>
                                         </div>
                                     </div>
@@ -304,11 +304,14 @@
             </asp:Panel>
         </div>
         <script>
+
             Sys.Application.add_load(function () {
 
                 var blockTypeContainerId = '<%=pnlZoneEdit.ClientID%>';
+                var pageId = '<%= hfPageId.Value %>';
                 Rock.controls.mobileApplication.initialize({
                     id: blockTypeContainerId,
+                    pageId:pageId,
                 });
             });
 
