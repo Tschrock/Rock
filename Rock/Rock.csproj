@@ -415,6 +415,11 @@
     <Compile Include="Model\CodeGenerated\SmsActionService.cs" />
     <Compile Include="Model\CodeGenerated\NoteAttachmentService.cs" />
     <Compile Include="Model\CodeGenerated\RegistrationTemplateFeeItemService.cs" />
+    <Compile Include="Model\CodeGenerated\StepProgramService.cs" />
+    <Compile Include="Model\CodeGenerated\StepService.cs" />
+    <Compile Include="Model\CodeGenerated\StepStatusService.cs" />
+    <Compile Include="Model\CodeGenerated\StepTypePrerequisiteService.cs" />
+    <Compile Include="Model\CodeGenerated\StepTypeService.cs" />
     <Compile Include="Model\CommunicationResponse.cs" />
     <Compile Include="Model\CommunicationResponseService.partial.cs" />
     <Compile Include="Model\SmsAction.cs" />
