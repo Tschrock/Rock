@@ -187,9 +187,9 @@ namespace Rock.Model
                 {
                     //update the order
                   
-                    var currentBlock = this.Queryable().Where( b => b.Id == id ).FirstOrDefault();
-                    currentBlock.Order = Array.IndexOf( blockIds, id );
-                    currentBlock.Zone = zone;   
+                    block = this.Queryable().Where( b => b.Id == id ).FirstOrDefault();
+                    block.Order = Array.IndexOf( blockIds, id );
+                    block.Zone = zone;   
                 }
             }
  

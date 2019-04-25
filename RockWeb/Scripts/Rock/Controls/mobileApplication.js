@@ -76,25 +76,21 @@
                     .on('drop', function (el, target, source, sibling) {
 
                         if (target && target.classList.contains('js-drag-container')) {
-
+                 
                             var sourceParent = source.parentElement;
                             if (!sourceParent.classList.contains('js-mobile-blocktype-source-container')) {
                                 //dropped from a different zone
                                 //remove from current source;
-
                                 var sourceBlocks = $(source).find('.component');
-                                if (sourceBlocks) {
-                                    $(sourceBlocks).each(function (i, e) {
+                                var dropElementId = $(el.children[0]).attr('data-blockId');
 
-                                        var sourceblockId = $(e.firstElementChild).attr('data-blockId');
-                                        var dropElementId = $(el).attr('data-blockId');
-                                        if (sourceblockId == dropElementId) {
-                                            e.remove;
-                                        }
-                                    });
+                                var elementToRemove = $(sourceBlocks).find("[data-blockId='" + dropElementId + "']");
+                                if (elementToRemove) {
+                                
+                                    elementToRemove.remove();
                                 }
                             }
-              
+
                             var name = el.firstElementChild.innerText;
                             var $droppedElement = $(el.firstElementChild);
                             var blocktypeGuid = $droppedElement.attr('data-blocktype-guid');
@@ -104,7 +100,7 @@
                             var zone = target.parentElement.firstElementChild.innerText;
                             var sortIds = self.getElementIdsInOrder(el);
                             var assingnBlockToZoneUrl = Rock.settings.get('baseUrl') + 'api/blocks/AssociateBlockToZone';
-                      
+
                             $.ajax({
                                 method: "PUT",
                                 url: assingnBlockToZoneUrl + '?blockId=' + blockId + '&name=' + name + '&pageId=' + pageId + '&blocktypeGuid=' + blocktypeGuid + '&zone=' + zone + '&sortIds=' + sortIds,
@@ -132,11 +128,12 @@
 
                 var idsInOrder = [];
                 $.each(el.parentElement.children, function (i, e) {
-                    
-                    idsInOrder.push($(e.firstElementChild).attr('data-blockId'));
+                    if ($(e.firstElementChild).attr('data-blockId')) {
+                        idsInOrder.push($(e.firstElementChild).attr('data-blockId'));
+                    }
                 });
 
-               return idsInOrder.toString();
+                return idsInOrder.toString();
             },
             /** trims the source container if it just has whitespace, so that the :empty css selector works */
             trimSourceContainer: function () {
@@ -173,7 +170,7 @@
             },
 
             populateResourceDiv: function ($container, block) {
-
+             
                 var blockTypeGuid = block.BlockType.Guid;
                 var pageId = block.PageId;
                 var blockId = block.Id;

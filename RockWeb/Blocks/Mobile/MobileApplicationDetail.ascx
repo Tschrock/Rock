@@ -234,7 +234,7 @@
                                                     <div class="js-drag-container">
                                             </HeaderTemplate>
                                             <ItemTemplate>
-                                                <div class="component">
+                                                <div class="component" >
                                                     <asp:Label runat="server" Font-Size="Small" OnDataBinding="rptMobileItem_DataBinding" />
                                                 </div>
                                             </ItemTemplate>
@@ -286,7 +286,7 @@
                                         <!-- resource template -->
                                         <div class="js-unassigned-block-resource-template">
                                             <div class="component">
-                                                <span id="0" title="" class="fa fa-cube" data-blocktype-guid="" data-page-id="0" data-blockId="0" style="font-size: Small;"></span>
+                                                <span id="0" title="" class="fa fa-cube js-reorder" data-blocktype-guid="" data-page-id="0" data-blockId="0" style="font-size: Small;"></span>
                                             </div>
                                         </div>
                                     </div>
