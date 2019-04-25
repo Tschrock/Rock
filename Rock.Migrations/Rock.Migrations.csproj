@@ -292,6 +292,10 @@
     <Compile Include="Migrations\201904241838299_SmsActions.Designer.cs">
       <DependentUpon>201904241838299_SmsActions.cs</DependentUpon>
     </Compile>
+    <Compile Include="Migrations\201904251745206_Steps.cs" />
+    <Compile Include="Migrations\201904251745206_Steps.Designer.cs">
+      <DependentUpon>201904251745206_Steps.cs</DependentUpon>
+    </Compile>
     <Compile Include="Migrations\CreateDatabase\201311251734059_CreateDatabase.cs" />
     <Compile Include="Migrations\CreateDatabase\201311251734059_CreateDatabase.Designer.cs">
       <DependentUpon>201311251734059_CreateDatabase.cs</DependentUpon>
@@ -751,6 +755,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Migrations\201904241838299_SmsActions.resx">
       <DependentUpon>201904241838299_SmsActions.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201904251745206_Steps.resx">
+      <DependentUpon>201904251745206_Steps.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Migrations\CreateDatabase\201311251734059_CreateDatabase.resx">
       <DependentUpon>201311251734059_CreateDatabase.cs</DependentUpon>

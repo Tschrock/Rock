@@ -73,7 +73,9 @@ namespace Rock.Model
             public StepTypePrerequisiteConfiguration()
             {
                 HasRequired( p => p.StepType ).WithMany().HasForeignKey( p => p.StepTypeId ).WillCascadeOnDelete( true );
-                HasRequired( p => p.PrerequisiteStepType ).WithMany().HasForeignKey( p => p.PrerequisiteStepTypeId ).WillCascadeOnDelete( true );
+                HasRequired( p => p.PrerequisiteStepType ).WithMany().HasForeignKey( p => p.PrerequisiteStepTypeId )
+                    // This has to be false because otherwise SQL server doesn't like the possiblity of dependency cycles
+                    .WillCascadeOnDelete( false );
             }
         }
 
