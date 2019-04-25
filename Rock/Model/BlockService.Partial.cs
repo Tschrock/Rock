@@ -170,26 +170,29 @@ namespace Rock.Model
         /// <param name="pageId">The page identifier.</param>
         /// <param name="blockTypeGuid">The block type unique identifier.</param>
         /// <param name="zone">The zone.</param>
-        public Block AssociateBlockToZone(int blockId,string name, int pageId, int blockTypeId, string zone,int order )
+        public Block AssociateBlockToZone(int blockId,string name, int pageId, int blockTypeId, string zone,int[] blockIds )
         {
-            var rockContext = this.Context as RockContext;
-            var block = this.Queryable()
-                .FirstOrDefault( b => b.Id == blockId );
+            Block block = null;
 
-            if ( block == null )
+            foreach ( var id in blockIds )
             {
-                block = new Block { Name = name.Trim(), PageId = pageId, BlockTypeId = blockTypeId, Zone = zone,Order= order };
-                this.Add( block );
-            }
-            else
-            {
-                block.Name = name;
-                block.PageId = pageId;
-                block.BlockTypeId = blockTypeId;
-                block.Zone = zone;
-                block.Order = order;
-            }
+                var index = Array.IndexOf( blockIds, id );
 
+                if ( id == 0 )
+                {
+                    block = new Block { Name = name.Trim(), PageId = pageId, BlockTypeId = blockTypeId, Zone = zone,Order = index };
+                    this.Add( block );
+                }
+                else
+                {
+                    //update the order
+                  
+                    var currentBlock = this.Queryable().Where( b => b.Id == id ).FirstOrDefault();
+                    currentBlock.Order = Array.IndexOf( blockIds, id );
+                    currentBlock.Zone = zone;   
+                }
+            }
+ 
             return block;         
         }
     }

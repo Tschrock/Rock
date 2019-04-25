@@ -16,6 +16,7 @@
 //
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using System.Web.Http;
 using Rock.Data;
@@ -104,18 +105,21 @@ namespace Rock.Rest.Controllers
         /// <param name="pageId">The page identifier.</param>
         /// <param name="blockTypeGuid">The block type unique identifier.</param>
         /// <param name="zone">The zone.</param>
-        /// <param name="order">The order.</param>
+        /// <param name="sortIds">The sort ids.</param>
         /// <returns></returns>
         [Authenticate, Secured]
         [HttpPut]
         [System.Web.Http.Route( "api/blocks/AssociateBlockToZone" )]
-        public Block AssociateBlockToZone(int blockId, string name,int pageId,Guid blockTypeGuid,string zone,int order)
+        public Block AssociateBlockToZone(int blockId, string name,int pageId,Guid blockTypeGuid,string zone,string sortIds )
         {
             var rockContext = new RockContext();
             var blockTypeService = new BlockTypeService( rockContext );
             var blockService = new BlockService( rockContext );
             var blockType = blockTypeService.Get( blockTypeGuid );
-            var block = blockService.AssociateBlockToZone(blockId,name ,pageId,blockType.Id, zone,order );
+            var idsInOrder = sortIds.Split( ',' );
+            int[] blockIds = idsInOrder.Select( i => int.Parse( i ) ).ToArray();
+            
+            var block = blockService.AssociateBlockToZone(blockId,name ,pageId,blockType.Id, zone,blockIds);
             if ( block.IsValid )
             {
                 rockContext.SaveChanges();

@@ -94,9 +94,7 @@
                                     });
                                 }
                             }
-
-                            var index = self.getElementIndex(el);
-                            debugger;
+              
                             var name = el.firstElementChild.innerText;
                             var $droppedElement = $(el.firstElementChild);
                             var blocktypeGuid = $droppedElement.attr('data-blocktype-guid');
@@ -104,12 +102,12 @@
                             self.pageId = pageId;
                             var blockId = $droppedElement.attr('data-blockId');
                             var zone = target.parentElement.firstElementChild.innerText;
-
+                            var sortIds = self.getElementIdsInOrder(el);
                             var assingnBlockToZoneUrl = Rock.settings.get('baseUrl') + 'api/blocks/AssociateBlockToZone';
-
+                      
                             $.ajax({
                                 method: "PUT",
-                                url: assingnBlockToZoneUrl + '?blockId=' + blockId + '&name=' + name + '&pageId=' + pageId + '&blocktypeGuid=' + blocktypeGuid + '&zone=' + zone + '&order=' + index,
+                                url: assingnBlockToZoneUrl + '?blockId=' + blockId + '&name=' + name + '&pageId=' + pageId + '&blocktypeGuid=' + blocktypeGuid + '&zone=' + zone + '&sortIds=' + sortIds,
                             }).done(function (data) {
                                 if (data) {
                                     // update drag item with block id
@@ -130,10 +128,15 @@
                 this.populateBlockTypesToZones(this.pageId);
             },
 
-            getElementIndex: function (el) {
+            getElementIdsInOrder: function (el) {
 
-                debugger;
-                return [].slice.call(el.parentElement.children).indexOf(el);
+                var idsInOrder = [];
+                $.each(el.parentElement.children, function (i, e) {
+                    
+                    idsInOrder.push($(e.firstElementChild).attr('data-blockId'));
+                });
+
+               return idsInOrder.toString();
             },
             /** trims the source container if it just has whitespace, so that the :empty css selector works */
             trimSourceContainer: function () {
