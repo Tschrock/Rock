@@ -448,6 +448,11 @@
     <Compile Include="Jobs\PostV84DataMigrations.cs" />
     <Compile Include="Lava\Shortcodes\Scripturize.cs" />
     <Compile Include="Lava\Shortcodes\LavaShortcodeMetaDataAttribute.cs" />
+    <Compile Include="Model\Step.cs" />
+    <Compile Include="Model\StepTypePrerequisite.cs" />
+    <Compile Include="Model\StepType.cs" />
+    <Compile Include="Model\StepStatus.cs" />
+    <Compile Include="Model\StepProgram.cs" />
     <Compile Include="Plugin\HotFixes\051_SparkData.cs" />
     <Compile Include="Plugin\HotFixes\052_MigrationRollupsForV8_1.cs" />
     <Compile Include="Plugin\HotFixes\060_MigrationRollupsForV8_6.cs" />
