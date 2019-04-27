@@ -93,6 +93,15 @@
             </ul>
         </Rock:RockControlWrapper>
 
+        <asp:LinkButton ID="btnReprintLabels" runat="server" OnClick="btnReprintLabels_Click" CssClass="btn btn-default">Reprint Labels</asp:LinkButton>
+        <Rock:ModalDialog ID="mdReprintLabels" runat="server" ValidationGroup="vgReprintLabels" Title="Label Reprints" OnSaveClick="mdReprintLabels_SaveClick" SaveButtonText="Print" Visible="false">
+            <Content>
+                <Rock:NotificationBox ID="nbReprintLabelMessages" runat="server" NotificationBoxType="Validation"></Rock:NotificationBox>
+                <Rock:RockCheckBoxList ID="cblLabels" runat="server" Label="Labels"></Rock:RockCheckBoxList>
+                <Rock:RockDropDownList ID="ddlPrinter" runat="server" Label="Printers"></Rock:RockDropDownList>
+            </Content>
+        </Rock:ModalDialog>
+
         <Rock:RockControlWrapper ID="rcwCheckinHistory" runat="server" Label="Check-in History">
             <Rock:Grid ID="gHistory" runat="server" DisplayType="Light" AllowPaging="false" CssClass="table-condensed">
                 <Columns>

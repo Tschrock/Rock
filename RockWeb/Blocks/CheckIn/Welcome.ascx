@@ -274,6 +274,7 @@
             </div>
 
             <div class="controls kioskmanager-actions checkin-actions">
+                <asp:LinkButton ID="btnReprintLabels" runat="server" CssClass="btn btn-default btn-large btn-block btn-checkin-select" Text="Reprint Labels" OnClick="btnReprintLabels_Click" />
                 <asp:LinkButton ID="btnOverride" runat="server" CssClass="btn btn-default btn-large btn-block btn-checkin-select" Text="Override" OnClick="btnOverride_Click" />
                 <asp:LinkButton ID="btnScheduleLocations" runat="server" CssClass="btn btn-default btn-large btn-block btn-checkin-select" Text="Schedule Locations" OnClick="btnScheduleLocations_Click" />
                 <asp:LinkButton ID="btnBack" runat="server" CssClass="btn btn-default btn-large btn-block btn-checkin-select" Text="Back" OnClick="btnBack_Click" />
