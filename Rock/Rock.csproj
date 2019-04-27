@@ -397,6 +397,7 @@
     <Compile Include="Field\FieldVisibilityRules.cs" />
     <Compile Include="Field\Types\AssetFieldType.cs" />
     <Compile Include="Field\Types\AssetStorageProviderFieldType.cs" />
+    <Compile Include="Field\Types\RegistryEntryFieldType.cs" />
     <Compile Include="Field\Types\ValueFilterFieldType.cs" />
     <Compile Include="Financial\HostedPaymentInfoControlOptions.cs" />
     <Compile Include="Financial\IGatewayComponent.cs" />
@@ -1742,6 +1743,7 @@
     <Compile Include="Web\UI\Controls\AttributeMatrixEditor.cs" />
     <Compile Include="Web\UI\Controls\DynamicPlaceholder.cs" />
     <Compile Include="Web\UI\Controls\FieldVisibilityRulesEditor.cs" />
+    <Compile Include="Web\UI\Controls\RegistryEntry.cs" />
     <Compile Include="Web\UI\Controls\ValueFilter.cs" />
     <Compile Include="Web\UI\Controls\Grid\EncryptedField.cs" />
     <Compile Include="Web\UI\Controls\Grid\HtmlField.cs" />
