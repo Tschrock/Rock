@@ -3,10 +3,13 @@
 <asp:UpdatePanel ID="upContent" runat="server">
     <ContentTemplate>
 
+        <Rock:NotificationBox ID="nbNotificationBox" runat="server" Visible="false" />
+
         <div class="panel panel-block">
+
             <div class="panel-heading">
                 <h1 class="panel-title">
-                    <i runat="server" class="fa fa-money"></i>
+                    <i runat="server" Id="iIcon"></i>
                     <asp:Literal runat="server" ID="lStepProgramName" />
                 </h1>
 
@@ -19,6 +22,17 @@
                     </a>
                 </div>
             </div>
+
+            <div class="panel-body">
+                <ul>
+                    <asp:repeater id="rStepTypes" runat="server">
+                        <itemtemplate>
+                            <%# Eval( "RenderedLava" ) %>
+                        </itemtemplate>
+                    </asp:repeater>
+                </ul>
+            </div>
+
         </div>
 
     </ContentTemplate>

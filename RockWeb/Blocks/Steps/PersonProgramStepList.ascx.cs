@@ -15,10 +15,14 @@
 // </copyright>
 //
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
+using System.Linq;
+using Rock;
 using Rock.Data;
 using Rock.Model;
 using Rock.Web.UI;
+using Rock.Web.UI.Controls;
 
 namespace RockWeb.Blocks.Steps
 {
@@ -28,6 +32,8 @@ namespace RockWeb.Blocks.Steps
 
     public partial class PersonProgramStepList : RockBlock
     {
+        #region Events
+
         /// <summary>
         /// Handles the OnInit event
         /// </summary>
@@ -37,12 +43,11 @@ namespace RockWeb.Blocks.Steps
             base.OnInit( e );
             BlockUpdated += PageMenu_BlockUpdated;
 
-            if (!IsPostBack)
+            if ( !IsPostBack )
             {
                 var rockContext = new RockContext();
-                var program = GetStepProgram( rockContext );
-
-                lStepProgramName.Text = program.Name;
+                SetProgramDetailsOnBlock( rockContext );
+                RenderCards( rockContext );
             }
         }
 
@@ -55,15 +60,170 @@ namespace RockWeb.Blocks.Steps
         {
         }
 
-        private int GetStepProgramId()
-        {
-            return 1;
-        }
+        #endregion Events
 
+        #region Model Helpers
+
+        /// <summary>
+        /// Gets the step program (model) that should be displayed in the block
+        /// </summary>
+        /// <returns></returns>
         private StepProgram GetStepProgram( RockContext rockContext )
         {
-            var id = GetStepProgramId();
-            return ( new StepProgramService( rockContext ) ).Get( id );
+            if ( _stepProgram == null )
+            {
+                var guid = new Guid( "2CAFBB12-901F-4880-A3E4-848F25CAF1A6" );
+                _stepProgram = new StepProgramService( rockContext ).Get( guid );
+            }
+
+            return _stepProgram;
         }
+        private StepProgram _stepProgram;
+
+        /// <summary>
+        /// Gets the person model that should be displayed in the block
+        /// </summary>
+        /// <param name="rockContext"></param>
+        /// <returns></returns>
+        private Person GetPerson( RockContext rockContext )
+        {
+            if ( _person == null )
+            {
+                _person = ContextEntity() as Person;
+            }
+
+            if ( _person == null )
+            {
+                var personId = PageParameter( "PersonId" ).AsIntegerOrNull();
+
+                if ( personId.HasValue )
+                {
+                    _person = new PersonService( rockContext ).Get( personId.Value );
+                }
+            }
+
+            return _person;
+        }
+        private Person _person;
+
+        /// <summary>
+        /// Get the person's steps for this program
+        /// </summary>
+        /// <param name="rockContext"></param>
+        /// <returns></returns>
+        private Dictionary<int, List<Step>> GetStepsForPerson( RockContext rockContext )
+        {
+            if ( _steps == null )
+            {
+                var person = GetPerson( rockContext );
+                var program = GetStepProgram( rockContext );
+
+                if ( person != null && program != null )
+                {
+                    _steps = program.StepTypes.ToDictionary(
+                        st => st.Id,
+                        st => st.Steps.Where( s => s.PersonAlias.PersonId == person.Id ).ToList() );
+                }
+            }
+
+            return _steps;
+        }
+        private Dictionary<int, List<Step>> _steps;
+
+        #endregion Model Helpers
+
+        #region Control Helpers
+
+        /// <summary>
+        /// Show an error in the notification box
+        /// </summary>
+        /// <param name="message"></param>
+        private void ShowError( string message )
+        {
+            nbNotificationBox.NotificationBoxType = NotificationBoxType.Danger;
+            nbNotificationBox.Title = "Uh oh...";
+            nbNotificationBox.Text = message;
+            nbNotificationBox.Visible = true;
+        }
+
+        /// <summary>
+        /// Set details on the block that come from the program
+        /// </summary>
+        /// <param name="rockContext"></param>
+        private void SetProgramDetailsOnBlock( RockContext rockContext )
+        {
+            var program = GetStepProgram( rockContext );
+
+            if ( program == null )
+            {
+                ShowError( "The step program was not found" );
+                return;
+            }
+
+            lStepProgramName.Text = program.Name;
+            iIcon.Attributes["class"] = program.IconCssClass;
+        }
+
+        /// <summary>
+        /// Render the step cards
+        /// </summary>
+        /// <param name="rockContext"></param>
+        private void RenderCards( RockContext rockContext )
+        {
+            var program = GetStepProgram( rockContext );
+
+            if ( program == null )
+            {
+                ShowError( "The step program was not found" );
+                return;
+            }
+
+            var person = GetPerson( rockContext );
+
+            if ( person == null )
+            {
+                ShowError( "The person was not found" );
+                return;
+            }
+
+            var stepTypes = program.StepTypes;
+
+            if ( stepTypes == null )
+            {
+                ShowError( "The step types were not found" );
+                return;
+            }
+
+            var personSteps = GetStepsForPerson( rockContext );
+
+            if ( personSteps == null )
+            {
+                ShowError( "The steps for the person were not found" );
+                return;
+            }
+
+            var renderedLavaTemplates = new List<string>();
+
+            foreach ( var stepType in stepTypes )
+            {
+                List<Step> personStepsOfType = null;
+                personSteps.TryGetValue( stepType.Id, out personStepsOfType );
+                personStepsOfType = personStepsOfType ?? new List<Step>();
+
+                var rendered = stepType.CardLavaTemplate.ResolveMergeFields( new Dictionary<string, object> {
+                    { "StepType", stepType },
+                    { "Steps", personStepsOfType },
+                    { "Person", person },
+                    { "Program", program }
+                } );
+
+                renderedLavaTemplates.Add( rendered );
+            }
+
+            rStepTypes.DataSource = from rlt in renderedLavaTemplates select new { RenderedLava = rlt };
+            rStepTypes.DataBind();
+        }
+
+        #endregion Control Helpers
     }
 }

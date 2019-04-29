@@ -19,7 +19,8 @@ namespace Rock.Model
         #region Constants
 
         private const string _defaultCardLavaTemplate = @"
-<h1>{{ Step.StepType.Name }} - {{ Step.PersonAlias.Person.FullName }}</h1>
+<h1>{{ StepType.Name }} - {{ Person.FullName }}</h1>
+<i class=""{{ StepType.IconCssClass }}"" />
 ";
 
         #endregion Constants
