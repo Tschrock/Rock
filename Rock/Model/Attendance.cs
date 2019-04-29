@@ -191,6 +191,15 @@ namespace Rock.Model
         [DataMember]
         public string Note { get; set; }
 
+        /// <summary>
+        /// Gets or sets additional data associated with the Attendance, including LabelData
+        /// </summary>
+        /// <value>
+        /// The label data.
+        /// </value>
+        [LavaInclude]
+        public virtual AttendanceData AttendanceData { get; set; }
+
         #endregion
 
         #region Virtual Properties
@@ -719,6 +728,7 @@ namespace Rock.Model
             this.HasOptional( a => a.SearchResultGroup ).WithMany().HasForeignKey( p => p.SearchResultGroupId ).WillCascadeOnDelete( false );
             this.HasOptional( a => a.Qualifier ).WithMany().HasForeignKey( p => p.QualifierValueId ).WillCascadeOnDelete( false );
             this.HasOptional( a => a.AttendanceCode ).WithMany( c => c.Attendances ).HasForeignKey( a => a.AttendanceCodeId ).WillCascadeOnDelete( false );
+            this.HasOptional( a => a.AttendanceData ).WithRequired().WillCascadeOnDelete();
         }
     }
 
