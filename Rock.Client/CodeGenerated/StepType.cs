@@ -41,6 +41,17 @@ namespace Rock.Client
         public bool AllowMultiple { get; set; } = true;
 
         /// <summary />
+        public int? AudienceDataViewId { get; set; }
+
+        /// <summary />
+        public int? AutoCompleteDataViewId { get; set; }
+
+        /// <summary />
+        public string CardLavaTemplate { get; set; } = @"
+<h1>{{ Step.StepType.Name }} - {{ Step.PersonAlias.Person.FullName }}</h1>
+";
+
+        /// <summary />
         public string Description { get; set; }
 
         /// <summary />
@@ -60,6 +71,12 @@ namespace Rock.Client
 
         /// <summary />
         public bool IsActive { get; set; } = true;
+
+        /// <summary />
+        public string MergeTemplateDescriptor { get; set; }
+
+        /// <summary />
+        public int? MergeTemplateId { get; set; }
 
         /// <summary>
         /// If the ModifiedByPersonAliasId is being set manually and should not be overwritten with current user when saved, set this value to true
@@ -113,6 +130,9 @@ namespace Rock.Client
             this.Id = source.Id;
             this.AllowManualEditing = source.AllowManualEditing;
             this.AllowMultiple = source.AllowMultiple;
+            this.AudienceDataViewId = source.AudienceDataViewId;
+            this.AutoCompleteDataViewId = source.AutoCompleteDataViewId;
+            this.CardLavaTemplate = source.CardLavaTemplate;
             this.Description = source.Description;
             this.ForeignGuid = source.ForeignGuid;
             this.ForeignKey = source.ForeignKey;
@@ -120,6 +140,8 @@ namespace Rock.Client
             this.HighlightColor = source.HighlightColor;
             this.IconCssClass = source.IconCssClass;
             this.IsActive = source.IsActive;
+            this.MergeTemplateDescriptor = source.MergeTemplateDescriptor;
+            this.MergeTemplateId = source.MergeTemplateId;
             this.ModifiedAuditValuesAlreadyUpdated = source.ModifiedAuditValuesAlreadyUpdated;
             this.Name = source.Name;
             this.Order = source.Order;
@@ -141,13 +163,28 @@ namespace Rock.Client
     public partial class StepType : StepTypeEntity
     {
         /// <summary />
+        public DataView AudienceDataView { get; set; }
+
+        /// <summary />
+        public DataView AutoCompleteDataView { get; set; }
+
+        /// <summary />
+        public MergeTemplate MergeTemplate { get; set; }
+
+        /// <summary />
         public StepProgram StepProgram { get; set; }
 
         /// <summary />
         public ICollection<Step> Steps { get; set; }
 
         /// <summary />
+        public ICollection<StepTypePrerequisite> StepTypeDependencies { get; set; }
+
+        /// <summary />
         public ICollection<StepTypePrerequisite> StepTypePrerequisites { get; set; }
+
+        /// <summary />
+        public ICollection<StepWorkflowTrigger> StepWorkflowTriggers { get; set; }
 
         /// <summary>
         /// NOTE: Attributes are only populated when ?loadAttributes is specified. Options for loadAttributes are true, false, 'simple', 'expanded' 

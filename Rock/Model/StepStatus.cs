@@ -1,4 +1,6 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Data.Entity.ModelConfiguration;
 using System.Runtime.Serialization;
@@ -12,7 +14,7 @@ namespace Rock.Model
     [RockDomain( "Steps" )]
     [Table( "StepStatus" )]
     [DataContract]
-    public partial class StepStatus : Model<StepStatus>, IOrdered
+    public partial class StepStatus : Model<StepStatus>, IOrdered, IHasActiveFlag
     {
         #region Entity Properties
 
@@ -44,13 +46,17 @@ namespace Rock.Model
         [DataMember]
         public string StatusColor { get; set; }
 
+        #endregion Entity Properties
+
+        #region IHasActiveFlag
+
         /// <summary>
-        /// Gets or sets a flag indicating if this status is active.
+        /// Gets or sets a flag indicating if this item is active or not.
         /// </summary>
         [DataMember]
         public bool IsActive { get; set; } = true;
 
-        #endregion Entity Properties
+        #endregion
 
         #region IOrdered
 
@@ -70,6 +76,17 @@ namespace Rock.Model
         [DataMember]
         public virtual StepProgram StepProgram { get; set; }
 
+        /// <summary>
+        /// Gets or sets a collection containing the <see cref="Step">Steps</see> that are of this step status.
+        /// </summary>
+        [DataMember]
+        public virtual ICollection<Step> Steps
+        {
+            get => _steps ?? ( _steps = new Collection<Step>() );
+            set => _steps = value;
+        }
+        private ICollection<Step> _steps;
+
         #endregion Virtual Properties
 
         #region Entity Configuration
@@ -84,7 +101,7 @@ namespace Rock.Model
             /// </summary>
             public StepStatusConfiguration()
             {
-                HasRequired( p => p.StepProgram ).WithMany( p => p.StepStatuses ).HasForeignKey( p => p.StepProgramId ).WillCascadeOnDelete( true );
+                HasRequired( ss => ss.StepProgram ).WithMany( sp => sp.StepStatuses ).HasForeignKey( sp => sp.StepProgramId ).WillCascadeOnDelete( true );
             }
         }
 

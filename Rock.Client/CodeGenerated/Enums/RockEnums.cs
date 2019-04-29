@@ -710,6 +710,15 @@ namespace Rock.Client.Enums
 
     /// <summary>
     /// </summary>
+    public enum WorkflowTriggerCondition
+    {
+        StatusChanged = 0x0,
+        Manual = 0x1,
+        IsComplete = 0x2,
+    }
+
+    /// <summary>
+    /// </summary>
     public enum WorkflowTriggerType
     {
         PreSave = 0x0,

@@ -107,7 +107,47 @@ namespace Rock.Model
         [DataMember]
         public virtual Campus Campus { get; set; }
 
+        /// <summary>
+        /// Gets or sets a collection containing the <see cref="StepWorkflow">StepWorkflows</see> that are of this step.
+        /// </summary>
+        [DataMember]
+        public virtual ICollection<StepWorkflow> StepWorkflows
+        {
+            get => _stepWorkflows ?? ( _stepWorkflows = new Collection<StepWorkflow>() );
+            set => _stepWorkflows = value;
+        }
+        private ICollection<StepWorkflow> _stepWorkflows;
+
         #endregion Virtual Properties
+
+        #region Overrides
+
+        /// <summary>
+        /// Gets a value indicating whether this instance is valid.
+        /// </summary>
+        public override bool IsValid
+        {
+            get
+            {
+                var isValid = base.IsValid;
+
+                if ( StartDateTime.HasValue && EndDateTime.HasValue && StartDateTime.Value > EndDateTime.Value )
+                {
+                    ValidationResults.Add( new ValidationResult( "The StartDateTime must occur before the EndDateTime" ) );
+                    isValid = false;
+                }
+
+                if ( StartDateTime.HasValue && CompletedDateTime.HasValue && StartDateTime.Value > CompletedDateTime.Value )
+                {
+                    ValidationResults.Add( new ValidationResult( "The StartDateTime must occur before the CompletedDateTime" ) );
+                    isValid = false;
+                }
+
+                return isValid;
+            }
+        }
+
+        #endregion Overrides
 
         #region Entity Configuration
 
@@ -121,11 +161,11 @@ namespace Rock.Model
             /// </summary>
             public StepConfiguration()
             {
-                HasRequired( p => p.StepType ).WithMany().HasForeignKey( p => p.StepTypeId ).WillCascadeOnDelete( true );
-                HasRequired( p => p.PersonAlias ).WithMany().HasForeignKey( p => p.PersonAliasId ).WillCascadeOnDelete( true );
+                HasRequired( s => s.StepType ).WithMany( st => st.Steps ).HasForeignKey( s => s.StepTypeId ).WillCascadeOnDelete( true );
+                HasRequired( s => s.PersonAlias ).WithMany().HasForeignKey( s => s.PersonAliasId ).WillCascadeOnDelete( true );
 
-                HasOptional( c => c.Campus ).WithMany().HasForeignKey( c => c.CampusId ).WillCascadeOnDelete( false );
-                HasOptional( c => c.StepStatus ).WithMany().HasForeignKey( c => c.StepStatusId ).WillCascadeOnDelete( false );
+                HasOptional( s => s.Campus ).WithMany().HasForeignKey( s => s.CampusId ).WillCascadeOnDelete( false );
+                HasOptional( s => s.StepStatus ).WithMany( ss => ss.Steps ).HasForeignKey( s => s.StepStatusId ).WillCascadeOnDelete( false );
             }
         }
 

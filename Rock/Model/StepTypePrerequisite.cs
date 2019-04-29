@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Data.Entity.ModelConfiguration;
 using System.Runtime.Serialization;
@@ -72,8 +70,8 @@ namespace Rock.Model
             /// </summary>
             public StepTypePrerequisiteConfiguration()
             {
-                HasRequired( p => p.StepType ).WithMany().HasForeignKey( p => p.StepTypeId ).WillCascadeOnDelete( true );
-                HasRequired( p => p.PrerequisiteStepType ).WithMany().HasForeignKey( p => p.PrerequisiteStepTypeId )
+                HasRequired( stp => stp.StepType ).WithMany( st => st.StepTypePrerequisites ).HasForeignKey( stp => stp.StepTypeId ).WillCascadeOnDelete( true );
+                HasRequired( stp => stp.PrerequisiteStepType ).WithMany( st => st.StepTypeDependencies ).HasForeignKey( stp => stp.PrerequisiteStepTypeId )
                     // This has to be false because otherwise SQL server doesn't like the possiblity of dependency cycles
                     .WillCascadeOnDelete( false );
             }

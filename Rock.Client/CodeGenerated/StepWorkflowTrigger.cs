@@ -27,9 +27,9 @@ using System.Collections.Generic;
 namespace Rock.Client
 {
     /// <summary>
-    /// Base client model for StepStatus that only includes the non-virtual fields. Use this for PUT/POSTs
+    /// Base client model for StepWorkflowTrigger that only includes the non-virtual fields. Use this for PUT/POSTs
     /// </summary>
-    public partial class StepStatusEntity
+    public partial class StepWorkflowTriggerEntity
     {
         /// <summary />
         public int Id { get; set; }
@@ -43,25 +43,28 @@ namespace Rock.Client
         /// <summary />
         public bool IsActive { get; set; } = true;
 
-        /// <summary />
-        public bool IsCompleteStatus { get; set; }
-
         /// <summary>
         /// If the ModifiedByPersonAliasId is being set manually and should not be overwritten with current user when saved, set this value to true
         /// </summary>
         public bool ModifiedAuditValuesAlreadyUpdated { get; set; }
 
         /// <summary />
-        public string Name { get; set; }
+        public int? StepProgramId { get; set; }
 
         /// <summary />
-        public int Order { get; set; }
+        public int? StepTypeId { get; set; }
 
         /// <summary />
-        public string StatusColor { get; set; }
+        public Rock.Client.Enums.WorkflowTriggerCondition TriggerType { get; set; }
 
         /// <summary />
-        public int StepProgramId { get; set; }
+        public string TypeQualifier { get; set; }
+
+        /// <summary />
+        public string WorkflowName { get; set; }
+
+        /// <summary />
+        public int WorkflowTypeId { get; set; }
 
         /// <summary>
         /// Leave this as NULL to let Rock set this
@@ -90,21 +93,22 @@ namespace Rock.Client
         public int? ForeignId { get; set; }
 
         /// <summary>
-        /// Copies the base properties from a source StepStatus object
+        /// Copies the base properties from a source StepWorkflowTrigger object
         /// </summary>
         /// <param name="source">The source.</param>
-        public void CopyPropertiesFrom( StepStatus source )
+        public void CopyPropertiesFrom( StepWorkflowTrigger source )
         {
             this.Id = source.Id;
             this.ForeignGuid = source.ForeignGuid;
             this.ForeignKey = source.ForeignKey;
             this.IsActive = source.IsActive;
-            this.IsCompleteStatus = source.IsCompleteStatus;
             this.ModifiedAuditValuesAlreadyUpdated = source.ModifiedAuditValuesAlreadyUpdated;
-            this.Name = source.Name;
-            this.Order = source.Order;
-            this.StatusColor = source.StatusColor;
             this.StepProgramId = source.StepProgramId;
+            this.StepTypeId = source.StepTypeId;
+            this.TriggerType = source.TriggerType;
+            this.TypeQualifier = source.TypeQualifier;
+            this.WorkflowName = source.WorkflowName;
+            this.WorkflowTypeId = source.WorkflowTypeId;
             this.CreatedDateTime = source.CreatedDateTime;
             this.ModifiedDateTime = source.ModifiedDateTime;
             this.CreatedByPersonAliasId = source.CreatedByPersonAliasId;
@@ -116,15 +120,21 @@ namespace Rock.Client
     }
 
     /// <summary>
-    /// Client model for StepStatus that includes all the fields that are available for GETs. Use this for GETs (use StepStatusEntity for POST/PUTs)
+    /// Client model for StepWorkflowTrigger that includes all the fields that are available for GETs. Use this for GETs (use StepWorkflowTriggerEntity for POST/PUTs)
     /// </summary>
-    public partial class StepStatus : StepStatusEntity
+    public partial class StepWorkflowTrigger : StepWorkflowTriggerEntity
     {
         /// <summary />
         public StepProgram StepProgram { get; set; }
 
         /// <summary />
-        public ICollection<Step> Steps { get; set; }
+        public StepType StepType { get; set; }
+
+        /// <summary />
+        public ICollection<StepWorkflow> StepWorkflows { get; set; }
+
+        /// <summary />
+        public WorkflowType WorkflowType { get; set; }
 
         /// <summary>
         /// NOTE: Attributes are only populated when ?loadAttributes is specified. Options for loadAttributes are true, false, 'simple', 'expanded' 

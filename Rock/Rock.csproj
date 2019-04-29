@@ -455,6 +455,8 @@
     <Compile Include="Lava\Shortcodes\Scripturize.cs" />
     <Compile Include="Lava\Shortcodes\LavaShortcodeMetaDataAttribute.cs" />
     <Compile Include="Model\Step.cs" />
+    <Compile Include="Model\StepWorkflow.cs" />
+    <Compile Include="Model\StepWorkflowTrigger.cs" />
     <Compile Include="Model\StepTypePrerequisite.cs" />
     <Compile Include="Model\StepType.cs" />
     <Compile Include="Model\StepStatus.cs" />

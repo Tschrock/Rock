@@ -14,7 +14,7 @@ namespace Rock.Model
     [RockDomain( "Steps" )]
     [Table( "StepProgram" )]
     [DataContract]
-    public partial class StepProgram : Model<StepProgram>, IOrdered
+    public partial class StepProgram : Model<StepProgram>, IOrdered, IHasActiveFlag
     {
         #region Entity Properties
 
@@ -52,13 +52,17 @@ namespace Rock.Model
         [DataMember]
         public ViewMode DefaultListView { get; set; } = ViewMode.Cards;
 
+        #endregion Entity Properties
+
+        #region IHasActiveFlag
+
         /// <summary>
         /// Gets or sets a flag indicating if this item is active or not.
         /// </summary>
         [DataMember]
         public bool IsActive { get; set; } = true;
 
-        #endregion Entity Properties
+        #endregion
 
         #region IOrdered
 
@@ -100,6 +104,17 @@ namespace Rock.Model
         }
         private ICollection<StepType> _stepTypes;
 
+        /// <summary>
+        /// Gets or sets a collection containing the <see cref="StepWorkflowTrigger">StepWorkflowTriggers</see> that are of this step program.
+        /// </summary>
+        [DataMember]
+        public virtual ICollection<StepWorkflowTrigger> StepWorkflowTriggers
+        {
+            get => _stepWorkflowTriggers ?? ( _stepWorkflowTriggers = new Collection<StepWorkflowTrigger>() );
+            set => _stepWorkflowTriggers = value;
+        }
+        private ICollection<StepWorkflowTrigger> _stepWorkflowTriggers;
+
         #endregion Virtual Properties
 
         #region Entity Configuration
@@ -114,7 +129,7 @@ namespace Rock.Model
             /// </summary>
             public StepProgramConfiguration()
             {
-                HasRequired( p => p.Category ).WithMany().HasForeignKey( p => p.CategoryId ).WillCascadeOnDelete( false );
+                HasRequired( sp => sp.Category ).WithMany().HasForeignKey( sp => sp.CategoryId ).WillCascadeOnDelete( false );
             }
         }
 
@@ -123,7 +138,7 @@ namespace Rock.Model
         #region Enumerations
 
         /// <summary>
-        /// Represents the default view mode of a <see cref="StepProgram"/>.
+        /// Represents the view mode of a <see cref="StepProgram"/>.
         /// </summary>
         public enum ViewMode
         {

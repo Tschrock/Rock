@@ -27,9 +27,9 @@ using System.Collections.Generic;
 namespace Rock.Client
 {
     /// <summary>
-    /// Base client model for StepStatus that only includes the non-virtual fields. Use this for PUT/POSTs
+    /// Base client model for StepWorkflow that only includes the non-virtual fields. Use this for PUT/POSTs
     /// </summary>
-    public partial class StepStatusEntity
+    public partial class StepWorkflowEntity
     {
         /// <summary />
         public int Id { get; set; }
@@ -40,28 +40,19 @@ namespace Rock.Client
         /// <summary />
         public string ForeignKey { get; set; }
 
-        /// <summary />
-        public bool IsActive { get; set; } = true;
-
-        /// <summary />
-        public bool IsCompleteStatus { get; set; }
-
         /// <summary>
         /// If the ModifiedByPersonAliasId is being set manually and should not be overwritten with current user when saved, set this value to true
         /// </summary>
         public bool ModifiedAuditValuesAlreadyUpdated { get; set; }
 
         /// <summary />
-        public string Name { get; set; }
+        public int StepId { get; set; }
 
         /// <summary />
-        public int Order { get; set; }
+        public int StepWorkflowTriggerId { get; set; }
 
         /// <summary />
-        public string StatusColor { get; set; }
-
-        /// <summary />
-        public int StepProgramId { get; set; }
+        public int WorkflowId { get; set; }
 
         /// <summary>
         /// Leave this as NULL to let Rock set this
@@ -90,21 +81,18 @@ namespace Rock.Client
         public int? ForeignId { get; set; }
 
         /// <summary>
-        /// Copies the base properties from a source StepStatus object
+        /// Copies the base properties from a source StepWorkflow object
         /// </summary>
         /// <param name="source">The source.</param>
-        public void CopyPropertiesFrom( StepStatus source )
+        public void CopyPropertiesFrom( StepWorkflow source )
         {
             this.Id = source.Id;
             this.ForeignGuid = source.ForeignGuid;
             this.ForeignKey = source.ForeignKey;
-            this.IsActive = source.IsActive;
-            this.IsCompleteStatus = source.IsCompleteStatus;
             this.ModifiedAuditValuesAlreadyUpdated = source.ModifiedAuditValuesAlreadyUpdated;
-            this.Name = source.Name;
-            this.Order = source.Order;
-            this.StatusColor = source.StatusColor;
-            this.StepProgramId = source.StepProgramId;
+            this.StepId = source.StepId;
+            this.StepWorkflowTriggerId = source.StepWorkflowTriggerId;
+            this.WorkflowId = source.WorkflowId;
             this.CreatedDateTime = source.CreatedDateTime;
             this.ModifiedDateTime = source.ModifiedDateTime;
             this.CreatedByPersonAliasId = source.CreatedByPersonAliasId;
@@ -116,15 +104,18 @@ namespace Rock.Client
     }
 
     /// <summary>
-    /// Client model for StepStatus that includes all the fields that are available for GETs. Use this for GETs (use StepStatusEntity for POST/PUTs)
+    /// Client model for StepWorkflow that includes all the fields that are available for GETs. Use this for GETs (use StepWorkflowEntity for POST/PUTs)
     /// </summary>
-    public partial class StepStatus : StepStatusEntity
+    public partial class StepWorkflow : StepWorkflowEntity
     {
         /// <summary />
-        public StepProgram StepProgram { get; set; }
+        public Step Step { get; set; }
 
         /// <summary />
-        public ICollection<Step> Steps { get; set; }
+        public StepWorkflowTrigger StepWorkflowTrigger { get; set; }
+
+        /// <summary />
+        public Workflow Workflow { get; set; }
 
         /// <summary>
         /// NOTE: Attributes are only populated when ?loadAttributes is specified. Options for loadAttributes are true, false, 'simple', 'expanded' 

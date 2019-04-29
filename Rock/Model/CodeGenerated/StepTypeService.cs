@@ -51,6 +51,18 @@ namespace Rock.Model
         public bool CanDelete( StepType item, out string errorMessage )
         {
             errorMessage = string.Empty;
+ 
+            if ( new Service<StepTypePrerequisite>( Context ).Queryable().Any( a => a.PrerequisiteStepTypeId == item.Id ) )
+            {
+                errorMessage = string.Format( "This {0} is assigned to a {1}.", StepType.FriendlyTypeName, StepTypePrerequisite.FriendlyTypeName );
+                return false;
+            }  
+ 
+            if ( new Service<StepWorkflowTrigger>( Context ).Queryable().Any( a => a.StepTypeId == item.Id ) )
+            {
+                errorMessage = string.Format( "This {0} is assigned to a {1}.", StepType.FriendlyTypeName, StepWorkflowTrigger.FriendlyTypeName );
+                return false;
+            }  
             return true;
         }
     }
@@ -90,6 +102,9 @@ namespace Rock.Model
             target.Id = source.Id;
             target.AllowManualEditing = source.AllowManualEditing;
             target.AllowMultiple = source.AllowMultiple;
+            target.AudienceDataViewId = source.AudienceDataViewId;
+            target.AutoCompleteDataViewId = source.AutoCompleteDataViewId;
+            target.CardLavaTemplate = source.CardLavaTemplate;
             target.Description = source.Description;
             target.ForeignGuid = source.ForeignGuid;
             target.ForeignKey = source.ForeignKey;
@@ -97,6 +112,8 @@ namespace Rock.Model
             target.HighlightColor = source.HighlightColor;
             target.IconCssClass = source.IconCssClass;
             target.IsActive = source.IsActive;
+            target.MergeTemplateDescriptor = source.MergeTemplateDescriptor;
+            target.MergeTemplateId = source.MergeTemplateId;
             target.Name = source.Name;
             target.Order = source.Order;
             target.ShowCountOnBadge = source.ShowCountOnBadge;

@@ -14,15 +14,15 @@ namespace Rock.Model
     [RockDomain( "Steps" )]
     [Table( "StepType" )]
     [DataContract]
-    public partial class StepType : Model<StepType>, IOrdered
+    public partial class StepType : Model<StepType>, IOrdered, IHasActiveFlag
     {
-        /// TODO
-        /// 
-        /// AudienceDataViewId
-        /// AutoCompleteDataViewId
-        /// CardLavaTemplate
-        /// MergeTemplateId
-        /// MergeTemplateDescriptor
+        #region Constants
+
+        private const string _defaultCardLavaTemplate = @"
+<h1>{{ Step.StepType.Name }} - {{ Step.PersonAlias.Person.FullName }}</h1>
+";
+
+        #endregion Constants
 
         #region Entity Properties
 
@@ -61,22 +61,30 @@ namespace Rock.Model
         public bool AllowMultiple { get; set; } = true;
 
         /// <summary>
-        /// Gets or sets a flag indicating if this item is active or not.
-        /// </summary>
-        [DataMember]
-        public bool IsActive { get; set; } = true;
-
-        /// <summary>
         /// Gets or sets a flag indicating if this step type happens over time (like being in a group) or is it achievement based (like attended a class).
         /// </summary>
         [DataMember]
         public bool HasEndDate { get; set; } = false;
 
         /// <summary>
+        /// Gets or sets the Id of the <see cref="DataView"/> associated with this step type. The data view reveals the people that are allowed to be
+        /// considered for this step type.
+        /// </summary>
+        [DataMember]
+        public int? AudienceDataViewId { get; set; }
+
+        /// <summary>
         /// Gets or sets a flag indicating if the number of occurences should be shown on the badge.
         /// </summary>
         [DataMember]
         public bool ShowCountOnBadge { get; set; } = true;
+
+        /// <summary>
+        /// Gets or sets the Id of the <see cref="DataView"/> associated with this step type. The data view reveals the people that should be considered
+        /// as having completed this step.
+        /// </summary>
+        [DataMember]
+        public int? AutoCompleteDataViewId { get; set; }
 
         /// <summary>
         /// Gets or sets a flag indicating if this item can be edited by a person.
@@ -91,7 +99,48 @@ namespace Rock.Model
         [DataMember]
         public string HighlightColor { get; set; }
 
+        /// <summary>
+        /// Gets or sets the lava template used to render custom card details.
+        /// </summary>
+        [DataMember]
+        public string CardLavaTemplate
+        {
+            get
+            {
+                return _cardLavaTemplate.IsNullOrWhiteSpace() ? _defaultCardLavaTemplate : _cardLavaTemplate;
+            }
+            set
+            {
+                _cardLavaTemplate = value;
+            }
+        }
+        private string _cardLavaTemplate;
+
+        /// <summary>
+        /// Gets or sets the Id of the <see cref="MergeTemplate"/> associated with this step type. This template can represent things like
+        /// certificates or letters.
+        /// </summary>
+        [DataMember]
+        public int? MergeTemplateId { get; set; }
+
+        /// <summary>
+        /// Gets or sets the name used to describe the merge template (e.g. Certificate).
+        /// </summary>
+        [MaxLength( 50 )]
+        [DataMember]
+        public string MergeTemplateDescriptor { get; set; }
+
         #endregion Entity Properties
+
+        #region IHasActiveFlag
+
+        /// <summary>
+        /// Gets or sets a flag indicating if this item is active or not.
+        /// </summary>
+        [DataMember]
+        public bool IsActive { get; set; } = true;
+
+        #endregion IHasActiveFlag
 
         #region IOrdered
 
@@ -123,7 +172,8 @@ namespace Rock.Model
         private ICollection<Step> _steps;
 
         /// <summary>
-        /// Gets or sets a collection containing the <see cref="StepTypePrerequisite">Prerequisites</see> for this step type.
+        /// Gets or sets a collection containing the <see cref="StepTypePrerequisite">Prerequisites</see> for this step type. These are StepTypes
+        /// that must be completed prior to this step type.
         /// </summary>
         [DataMember]
         public virtual ICollection<StepTypePrerequisite> StepTypePrerequisites
@@ -132,6 +182,51 @@ namespace Rock.Model
             set => _stepTypePrerequisites = value;
         }
         private ICollection<StepTypePrerequisite> _stepTypePrerequisites;
+
+        /// <summary>
+        /// Gets or sets a collection containing the <see cref="StepTypePrerequisite">Dependencies</see> for this step type. These are StepTypes
+        /// where this StepType is a prerequisite. These are step types that require this step type to be completed before that step type can
+        /// be completed.
+        /// </summary>
+        [DataMember]
+        public virtual ICollection<StepTypePrerequisite> StepTypeDependencies
+        {
+            get => _stepTypeDependencies ?? ( _stepTypeDependencies = new Collection<StepTypePrerequisite>() );
+            set => _stepTypeDependencies = value;
+        }
+        private ICollection<StepTypePrerequisite> _stepTypeDependencies;
+
+        /// <summary>
+        /// Gets or sets the Data View.  The data view reveals the people that are allowed to be
+        /// considered for this step type.
+        /// </summary>
+        [DataMember]
+        public virtual DataView AudienceDataView { get; set; }
+
+        /// <summary>
+        /// Gets or sets the Data View.  The data view reveals the people that should be considered
+        /// as having completed this step.
+        /// </summary>
+        [DataMember]
+        public virtual DataView AutoCompleteDataView { get; set; }
+
+        /// <summary>
+        /// Gets or sets the Merge Template.  This template can represent things like
+        /// certificates or letters.
+        /// </summary>
+        [DataMember]
+        public virtual MergeTemplate MergeTemplate { get; set; }
+
+        /// <summary>
+        /// Gets or sets a collection containing the <see cref="StepWorkflowTrigger">StepWorkflowTriggers</see> that are of this step type.
+        /// </summary>
+        [DataMember]
+        public virtual ICollection<StepWorkflowTrigger> StepWorkflowTriggers
+        {
+            get => _stepWorkflowTriggers ?? ( _stepWorkflowTriggers = new Collection<StepWorkflowTrigger>() );
+            set => _stepWorkflowTriggers = value;
+        }
+        private ICollection<StepWorkflowTrigger> _stepWorkflowTriggers;
 
         #endregion Virtual Properties
 
@@ -147,7 +242,11 @@ namespace Rock.Model
             /// </summary>
             public StepTypeConfiguration()
             {
-                HasRequired( p => p.StepProgram ).WithMany().HasForeignKey( p => p.StepProgramId ).WillCascadeOnDelete( true );
+                HasRequired( st => st.StepProgram ).WithMany( sp => sp.StepTypes ).HasForeignKey( st => st.StepProgramId ).WillCascadeOnDelete( true );
+
+                HasOptional( st => st.AudienceDataView ).WithMany().HasForeignKey( st => st.AudienceDataViewId ).WillCascadeOnDelete( false );
+                HasOptional( st => st.AutoCompleteDataView ).WithMany().HasForeignKey( st => st.AutoCompleteDataViewId ).WillCascadeOnDelete( false );
+                HasOptional( st => st.MergeTemplate ).WithMany().HasForeignKey( st => st.MergeTemplateId ).WillCascadeOnDelete( false );
             }
         }
 

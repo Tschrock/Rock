@@ -28,15 +28,15 @@ using Rock.Data;
 namespace Rock.Model
 {
     /// <summary>
-    /// MergeTemplate Service class
+    /// StepWorkflowTrigger Service class
     /// </summary>
-    public partial class MergeTemplateService : Service<MergeTemplate>
+    public partial class StepWorkflowTriggerService : Service<StepWorkflowTrigger>
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="MergeTemplateService"/> class
+        /// Initializes a new instance of the <see cref="StepWorkflowTriggerService"/> class
         /// </summary>
         /// <param name="context">The context.</param>
-        public MergeTemplateService(RockContext context) : base(context)
+        public StepWorkflowTriggerService(RockContext context) : base(context)
         {
         }
 
@@ -48,15 +48,9 @@ namespace Rock.Model
         /// <returns>
         ///   <c>true</c> if this instance can delete the specified item; otherwise, <c>false</c>.
         /// </returns>
-        public bool CanDelete( MergeTemplate item, out string errorMessage )
+        public bool CanDelete( StepWorkflowTrigger item, out string errorMessage )
         {
             errorMessage = string.Empty;
- 
-            if ( new Service<StepType>( Context ).Queryable().Any( a => a.MergeTemplateId == item.Id ) )
-            {
-                errorMessage = string.Format( "This {0} is assigned to a {1}.", MergeTemplate.FriendlyTypeName, StepType.FriendlyTypeName );
-                return false;
-            }  
             return true;
         }
     }
@@ -64,44 +58,45 @@ namespace Rock.Model
     /// <summary>
     /// Generated Extension Methods
     /// </summary>
-    public static partial class MergeTemplateExtensionMethods
+    public static partial class StepWorkflowTriggerExtensionMethods
     {
         /// <summary>
-        /// Clones this MergeTemplate object to a new MergeTemplate object
+        /// Clones this StepWorkflowTrigger object to a new StepWorkflowTrigger object
         /// </summary>
         /// <param name="source">The source.</param>
         /// <param name="deepCopy">if set to <c>true</c> a deep copy is made. If false, only the basic entity properties are copied.</param>
         /// <returns></returns>
-        public static MergeTemplate Clone( this MergeTemplate source, bool deepCopy )
+        public static StepWorkflowTrigger Clone( this StepWorkflowTrigger source, bool deepCopy )
         {
             if (deepCopy)
             {
-                return source.Clone() as MergeTemplate;
+                return source.Clone() as StepWorkflowTrigger;
             }
             else
             {
-                var target = new MergeTemplate();
+                var target = new StepWorkflowTrigger();
                 target.CopyPropertiesFrom( source );
                 return target;
             }
         }
 
         /// <summary>
-        /// Copies the properties from another MergeTemplate object to this MergeTemplate object
+        /// Copies the properties from another StepWorkflowTrigger object to this StepWorkflowTrigger object
         /// </summary>
         /// <param name="target">The target.</param>
         /// <param name="source">The source.</param>
-        public static void CopyPropertiesFrom( this MergeTemplate target, MergeTemplate source )
+        public static void CopyPropertiesFrom( this StepWorkflowTrigger target, StepWorkflowTrigger source )
         {
             target.Id = source.Id;
-            target.CategoryId = source.CategoryId;
-            target.Description = source.Description;
             target.ForeignGuid = source.ForeignGuid;
             target.ForeignKey = source.ForeignKey;
-            target.MergeTemplateTypeEntityTypeId = source.MergeTemplateTypeEntityTypeId;
-            target.Name = source.Name;
-            target.PersonAliasId = source.PersonAliasId;
-            target.TemplateBinaryFileId = source.TemplateBinaryFileId;
+            target.IsActive = source.IsActive;
+            target.StepProgramId = source.StepProgramId;
+            target.StepTypeId = source.StepTypeId;
+            target.TriggerType = source.TriggerType;
+            target.TypeQualifier = source.TypeQualifier;
+            target.WorkflowName = source.WorkflowName;
+            target.WorkflowTypeId = source.WorkflowTypeId;
             target.CreatedDateTime = source.CreatedDateTime;
             target.ModifiedDateTime = source.ModifiedDateTime;
             target.CreatedByPersonAliasId = source.CreatedByPersonAliasId;

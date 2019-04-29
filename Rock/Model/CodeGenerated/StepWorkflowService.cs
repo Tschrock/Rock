@@ -28,15 +28,15 @@ using Rock.Data;
 namespace Rock.Model
 {
     /// <summary>
-    /// MergeTemplate Service class
+    /// StepWorkflow Service class
     /// </summary>
-    public partial class MergeTemplateService : Service<MergeTemplate>
+    public partial class StepWorkflowService : Service<StepWorkflow>
     {
         /// <summary>
-        /// Initializes a new instance of the <see cref="MergeTemplateService"/> class
+        /// Initializes a new instance of the <see cref="StepWorkflowService"/> class
         /// </summary>
         /// <param name="context">The context.</param>
-        public MergeTemplateService(RockContext context) : base(context)
+        public StepWorkflowService(RockContext context) : base(context)
         {
         }
 
@@ -48,15 +48,9 @@ namespace Rock.Model
         /// <returns>
         ///   <c>true</c> if this instance can delete the specified item; otherwise, <c>false</c>.
         /// </returns>
-        public bool CanDelete( MergeTemplate item, out string errorMessage )
+        public bool CanDelete( StepWorkflow item, out string errorMessage )
         {
             errorMessage = string.Empty;
- 
-            if ( new Service<StepType>( Context ).Queryable().Any( a => a.MergeTemplateId == item.Id ) )
-            {
-                errorMessage = string.Format( "This {0} is assigned to a {1}.", MergeTemplate.FriendlyTypeName, StepType.FriendlyTypeName );
-                return false;
-            }  
             return true;
         }
     }
@@ -64,44 +58,41 @@ namespace Rock.Model
     /// <summary>
     /// Generated Extension Methods
     /// </summary>
-    public static partial class MergeTemplateExtensionMethods
+    public static partial class StepWorkflowExtensionMethods
     {
         /// <summary>
-        /// Clones this MergeTemplate object to a new MergeTemplate object
+        /// Clones this StepWorkflow object to a new StepWorkflow object
         /// </summary>
         /// <param name="source">The source.</param>
         /// <param name="deepCopy">if set to <c>true</c> a deep copy is made. If false, only the basic entity properties are copied.</param>
         /// <returns></returns>
-        public static MergeTemplate Clone( this MergeTemplate source, bool deepCopy )
+        public static StepWorkflow Clone( this StepWorkflow source, bool deepCopy )
         {
             if (deepCopy)
             {
-                return source.Clone() as MergeTemplate;
+                return source.Clone() as StepWorkflow;
             }
             else
             {
-                var target = new MergeTemplate();
+                var target = new StepWorkflow();
                 target.CopyPropertiesFrom( source );
                 return target;
             }
         }
 
         /// <summary>
-        /// Copies the properties from another MergeTemplate object to this MergeTemplate object
+        /// Copies the properties from another StepWorkflow object to this StepWorkflow object
         /// </summary>
         /// <param name="target">The target.</param>
         /// <param name="source">The source.</param>
-        public static void CopyPropertiesFrom( this MergeTemplate target, MergeTemplate source )
+        public static void CopyPropertiesFrom( this StepWorkflow target, StepWorkflow source )
         {
             target.Id = source.Id;
-            target.CategoryId = source.CategoryId;
-            target.Description = source.Description;
             target.ForeignGuid = source.ForeignGuid;
             target.ForeignKey = source.ForeignKey;
-            target.MergeTemplateTypeEntityTypeId = source.MergeTemplateTypeEntityTypeId;
-            target.Name = source.Name;
-            target.PersonAliasId = source.PersonAliasId;
-            target.TemplateBinaryFileId = source.TemplateBinaryFileId;
+            target.StepId = source.StepId;
+            target.StepWorkflowTriggerId = source.StepWorkflowTriggerId;
+            target.WorkflowId = source.WorkflowId;
             target.CreatedDateTime = source.CreatedDateTime;
             target.ModifiedDateTime = source.ModifiedDateTime;
             target.CreatedByPersonAliasId = source.CreatedByPersonAliasId;
