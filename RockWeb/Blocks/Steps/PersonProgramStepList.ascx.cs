@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using Rock;
+using Rock.Attribute;
 using Rock.Data;
 using Rock.Model;
 using Rock.Web.UI;
@@ -30,8 +31,24 @@ namespace RockWeb.Blocks.Steps
     [Category( "Steps" )]
     [Description( "Renders a page menu based on a root page and lava template." )]
 
+    #region Attributes
+
+    [IntegerField(
+        name: "Step Program Id",
+        description: "The Id of the Step Program to display. This value can also be a page parameter: StepProgramId. Leave blank to use the page parameter.",
+        required: false,
+        order: 1,
+        key: AttributeKeys.StepProgramId )]
+
+    #endregion Attributes
+
     public partial class PersonProgramStepList : RockBlock
     {
+        private class AttributeKeys
+        {
+            public const string StepProgramId = "StepProgramId";
+        }
+
         #region Events
 
         /// <summary>
@@ -72,8 +89,21 @@ namespace RockWeb.Blocks.Steps
         {
             if ( _stepProgram == null )
             {
-                var guid = new Guid( "2CAFBB12-901F-4880-A3E4-848F25CAF1A6" );
-                _stepProgram = new StepProgramService( rockContext ).Get( guid );
+                var programId = GetAttributeValue( AttributeKeys.StepProgramId ).AsIntegerOrNull();
+
+                if ( programId.HasValue )
+                {
+                    _stepProgram = new StepProgramService( rockContext ).Get( programId.Value );
+                }
+                else
+                {
+                    programId = PageParameter( "StepProgramId" ).AsIntegerOrNull();
+
+                    if ( programId.HasValue )
+                    {
+                        _stepProgram = new StepProgramService( rockContext ).Get( programId.Value );
+                    }
+                }
             }
 
             return _stepProgram;
