@@ -289,6 +289,7 @@
     <Compile Include="Attribute\LavaFieldAttribute.cs" />
     <Compile Include="Attribute\RegistrationInstanceFieldAttribute.cs" />
     <Compile Include="Attribute\RegistrationTemplateFieldAttribute.cs" />
+    <Compile Include="Attribute\RegistryEntryFieldAttribute.cs" />
     <Compile Include="Attribute\ReportFieldAttribute.cs" />
     <Compile Include="Attribute\SelectFieldAttribute.cs" />
     <Compile Include="Attribute\TextValueFilterFieldAttribute.cs" />
