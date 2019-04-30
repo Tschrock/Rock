@@ -19,8 +19,20 @@ namespace Rock.Model
         #region Constants
 
         private const string _defaultCardLavaTemplate = @"
-<h1>{{ StepType.Name }} - {{ Person.FullName }}</h1>
-<i class=""{{ StepType.IconCssClass }}"" />
+<h2>{{ StepType.Name }}</h2>
+<i class=""{{ StepType.IconCssClass }} fa-4x""></i>
+{% if IsComplete %}
+    <p>
+        Completed
+        {% if CompletedDateTime %}
+            <br />
+            <small>{{ CompletedDateTime | Date:'M/d/yyyy' }}</small>
+        {% endif %}
+    </p>
+{% endif %}
+{% if StepCount > 1 %}
+    <span class=""badge"">{{ StepCount }}</span>
+{% endif %}
 ";
 
         #endregion Constants
