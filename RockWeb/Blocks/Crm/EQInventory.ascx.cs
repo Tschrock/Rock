@@ -64,14 +64,147 @@ namespace Rockweb.Blocks.Crm
 
 <h2>EQ Inventory Assessment</h2>
 
+<h3>Self Awareness</h3>
 <p>
-    <b>Self Awareness</b> Value : {{ SelfAwareness }}.<br>
-    <b>Self Regulating</b> Value : {{ SelfRegulating }}.<br>
-    <b>Others Awareness</b> Value : {{ OthersAwareness }}.<br>
-    <b>Others Regulating</b> Value : {{ OthersRegulating }}.<br>
-    <b>EQ in Problem Solving</b> Value : {{ EQinProblemSolving }}.<br>
-    <b>EQ Under Stress</b> Value : {{ EQUnderStress }}.<br>
+    Self Awareness is being aware of what emotions you are experiencing and why you
+    are experiencing these emotions. This skill is demonstrated in real time. In other
+    words, when you are in the midst of a discussion or even a disagreement with someone
+    else, ask yourself these questions:
+    <ul>
+        <li>Are you aware of what emotions you are experiencing?</li>
+        <li>Are you aware of why you are experiencing these emotions?</li>
+    </ul>
+
+    More than just knowing you are angry, our goal is to understand what has caused the
+    anger, such as frustration, hurt, pain, confusion, etc.
 </p>
+
+<!-- Graph -->
+{[ chart type:'horizontalBar' legendshow:'false' tooltipshow:'false' chartheight:'50' xaxistype:'linear0to100' ]}
+    [[ dataitem label:'Self Awareness' value:'{{SelfAwareness}}' fillcolor:'#5c8ae7' ]] [[ enddataitem ]]
+{[ endchart ]}
+<p class='text-center'><cite>Source: https://healthygrowingleaders.com</cite></p>
+
+<blockquote>
+    Your responses to the items on the Self Awareness scale indicate the score for the
+    ability to be aware of your own emotions is equal to or better than {{ SelfAwareness }}%
+    of those who completed this instrument.
+</blockquote>
+
+<h3>Self Regulating</h3>
+<p>
+    Self Regulating is appropriately expressing your emotions in the context of relationships
+    around you. Don’t confuse this with learning to suppress your emotions; rather, think of Self
+    Regulating as the ability to express your emotions appropriately. Healthy human beings
+    experience a full range of emotions and these are important for family, friends, and
+    co-workers to understand. Self Regulating is learning to tell others what you are
+    feeling in the moment.
+</p>
+
+    {[ chart type:'horizontalBar' legendshow:'false' tooltipshow:'false' chartheight:'50' xaxistype:'linear0to100' ]}
+        [[ dataitem label:'Self Regulating' value:'{{SelfRegulating}}' fillcolor:'#175c2d']] [[ enddataitem ]]
+    {[ endchart ]}
+<p class='text-center'><cite>Source: https://healthygrowingleaders.com</cite></p>
+
+<blockquote>
+    Your responses to the items on the Self Regulation scale indicate the score for the
+    the ability to appropriately express your own emotions is equal to or better than {{ SelfRegulating }}%
+    of those who completed this instrument.
+</blockquote>
+
+
+<h3>Others Awareness</h3>
+<p>
+    Others Awareness is being aware of what emotions others are experiencing around you and
+    why they are experiencing these emotions. As with understanding your own emotions, this
+    skill is knowing in real time what another is experiencing. This skill involves reading
+    cues to their emotional state through their eyes, facial expressions, body posture, the
+    tone of voice or many other ways. It is critical you learn to pay attention to these
+    cues for you to enhance your awareness of others' emotions.
+</p>
+
+    {[ chart type:'horizontalBar' legendshow:'false' tooltipshow:'false' chartheight:'50' xaxistype:'linear0to100' ]}
+        [[ dataitem label:'Others Awareness' value:'{{OthersAwareness}}' fillcolor:'#2e2e5e' ]] [[ enddataitem ]]
+    {[ endchart ]}
+<p class='text-center'><cite>Source: https://healthygrowingleaders.com</cite></p>
+
+<blockquote>
+    Your responses to the items on the Others Awareness scale indicate the score for the
+    ability to be aware of others emotions is equal to or better than {{ OthersAwareness }}%
+    of those who completed this instrument.
+</blockquote>
+
+
+<h3>Others Regulating</h3>
+<p>
+    Others Regulating is helping those around you express their emotions appropriately
+    in the context of your relationship with them. This skill centers on helping others
+    know what emotions they are experiencing and then asking questions or giving permission
+    to them to freely and appropriately express their emotions in the context of your relationship.
+</p>
+
+    {[ chart type:'horizontalBar' legendshow:'false' tooltipshow:'false' chartheight:'50' xaxistype:'linear0to100' ]}
+        [[ dataitem label:'Others Regulating' value:'{{OthersRegulating}}' fillcolor:'#5c5c2d' ]] [[ enddataitem ]]
+    {[ endchart ]}
+<p class='text-center'><cite>Source: https://healthygrowingleaders.com</cite></p>
+
+<blockquote>
+    Your responses to the items on the Others Regulation scale indicate the score for
+    the ability to enable others to appropriately express their emotions in the context
+    of your relationship is equal to or better than {{OthersRegulating}}% of those who
+    completed this instrument.
+</blockquote>
+
+
+<h2>Additional Scales</h2>
+<p>
+    The EQ*i includes two additional scales which are particularly useful for those in
+    leadership roles: 1) EQ in Problem Solving and 2) EQ under stress. Frequently we
+    find it difficult to appreciate that conflicting emotions exacerbate most problems
+    we experience in life. The solution, therefore, must account for these emotions, not
+    just logic or doing the “right” thing.
+</p>
+
+<h3>EQ in Problem Solving</h3>
+<p>
+    The EQ in Problem Solving identifies how proficient you are in using emotions to
+    solve problems. This skill requires first being aware of what emotions are involved
+    in the problem and what is the source of those emotions. It also includes helping
+    others (and yourself) express those emotions within the discussion.
+</p>
+
+    {[ chart type:'horizontalBar' legendshow:'false' tooltipshow:'false' chartheight:'50' xaxistype:'linear0to100' ]}
+        [[ dataitem label:'EQ in Problem Solving' value:'{{EQinProblemSolving}}' fillcolor:'#5b2d09' ]] [[ enddataitem ]]
+    {[ endchart ]}
+<p class='text-center'><cite>Source: https://healthygrowingleaders.com</cite></p>
+
+<blockquote>
+    Your responses to the items on the EQ in Problem Solving scale indicate the score for
+    the ability to use emotions in resolving problems is equal to or better than {{ EQinProblemSolving }}%
+    of those who completed this instrument.
+</blockquote>
+
+
+<h3>EQ Under Stress</h3>
+<p>
+    It is more difficult to maintain high EQ under high stress than at any other time,
+    so EQ Under Stress identifies how capable you are to keep high EQ under high-stress
+    moments. This skill requires highly developed Self and Others awareness to understand
+    how the stress is impacting yourself and others. It also involves being able to
+    articulate the appropriate emotions under pressure which may be different from
+    articulating them when not under stress.
+</p>
+
+    {[ chart type:'horizontalBar' legendshow:'false' tooltipshow:'false' chartheight:'50' xaxistype:'linear0to100' ]}
+        [[ dataitem label:'EQ Under Stress' value:'{{EQUnderStress}}' fillcolor:'#8a5c2d' ]] [[ enddataitem ]]
+    {[ endchart ]}
+<p class='text-center'><cite>Source: https://healthygrowingleaders.com</cite></p>
+
+<blockquote>
+    Your responses to the items on the EQ in Under Stress scale indicate the score
+    for the ability to maintain EQ under significant stress is equal to or better than {{ EQUnderStress }}%
+    of those who completed this instrument.
+</blockquote>
 " )]
     public partial class EQInventory : Rock.Web.UI.RockBlock
     {
@@ -88,7 +221,7 @@ namespace Rockweb.Blocks.Crm
         private Dictionary<int, string> NEGATIVE_OPTION = new Dictionary<int, string>
         {
             { 5, "Never" },
-            { 4,"Rarely" },
+            { 4, "Rarely" },
             { 3, "Sometimes" },
             { 2, "Usually" },
             { 1, "Always" }
@@ -97,7 +230,7 @@ namespace Rockweb.Blocks.Crm
         private Dictionary<int, string> POSITIVE_OPTION = new Dictionary<int, string>
         {
             { 1, "Never" },
-            { 2,"Rarely" },
+            { 2, "Rarely" },
             { 3, "Sometimes" },
             { 4, "Usually" },
             { 5, "Always" }
