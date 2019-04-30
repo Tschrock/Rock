@@ -1,0 +1,409 @@
+{% comment %} {% include '~/Assets/Lava/LessonBuilder/LessonBuilder.lava' %} {% endcomment %}
+
+<div class="wrapper">
+  <div class="container-fluid">
+
+    <section id="pjax-content">
+      <!-- Page-Title -->
+      <div class="row">
+        <div class="col-sm-12">
+          <h4 class="page-title">Create A Lesson </h4>
+        </div>
+      </div>
+      <!-- Page-Title -->
+
+      <div class="row" data-module="create-a-lesson">
+
+        <script type="application/json" id="config-json">
+          {
+            "edit": false,
+            "lesson": false
+          }
+        </script>
+        <script type="application/json" id="messages-json">
+          {
+            "No Available Lessons": {
+              "title": "Oops!",
+              "text": "There are currently no lessons available for your account.",
+              "type": "warning",
+              "confirm_button_text": "Go To My Lessons",
+              "confirm_button_url": "\/lessons\/my-lessons",
+              "confirm_button_color": "81bd41",
+              "cancel_button_text": null
+            },
+            "Lesson Plan Complete": {
+              "title": "Your lesson plan is complete!",
+              "text": "Would you like to submit your lesson plan?",
+              "type": "warning",
+              "confirm_button_text": "Yes, submit it!",
+              "confirm_button_url": null,
+              "confirm_button_color": "f58220",
+              "cancel_button_text": "Continue Editing"
+            },
+            "Lesson Plan Submitted": {
+              "title": "Success!",
+              "text": "Your lesson plan has been submitted!",
+              "type": "success",
+              "confirm_button_text": "Go To Dashboard",
+              "confirm_button_url": "\/dashboard",
+              "confirm_button_color": "0094c8",
+              "cancel_button_text": null
+            },
+            "Lesson Plan Exists": {
+              "title": "Oops!",
+              "text": "You have already submitted this lesson plan.",
+              "type": "error",
+              "confirm_button_text": "Go To My Lessons",
+              "confirm_button_url": "\/lessons\/my-lessons",
+              "confirm_button_color": "81bd41",
+              "cancel_button_text": null
+            },
+            "Lesson Plan Edited": {
+              "title": "Success!",
+              "text": "Your lesson plan has been saved.",
+              "type": "success",
+              "confirm_button_text": "Return to My Lessons",
+              "confirm_button_url": "\/lessons\/my-lessons",
+              "confirm_button_color": "81bd41",
+              "cancel_button_text": null
+            }
+          }
+        </script>
+
+        <div class="col-lg-9">
+
+            <div class="col-xs-12">
+
+                <div class="panel panel-color panel-warning" data-step="0">
+                <div class="panel-heading">
+                    <h3 class="panel-title">Select Option</h3>
+                </div>
+                <div class="panel-body">
+
+                    <div class="row">
+                    <form>
+                    <div class="col-xs-6 col-sm-3">
+
+                        <label>
+                                My Group(s)<br/>
+
+                                <label class="form-switch-alt"><input checked type="checkbox" class="switchBoxGroup group_sub" data-value="my_groups"><i></i></label>
+
+                            </label>
+
+                    </div>
+
+                    <div class="col-xs-6 col-sm-3">
+
+                        <label>
+                                I'm Substituting<br/>
+
+                                <label class="form-switch-alt"><input type="checkbox" class="switchBoxGroup group_sub" data-value="substituting"><i></i></label>
+
+                            </label>
+
+                    </div>
+                    </form>
+                    <div class="col-xs-12 col-sm-6" data-age-group>
+
+                        <label>
+                                Select Age Group<br/>
+                                <!-- Group Types -->
+                                <select id="ageGroupSelect">
+                                {% assign isUserAgeGroup = 'false' %}
+                                {% for group in SelectedGroups %}
+                                    {% for userGroup in UserAgeGroups %}
+                                        {% assign isUserAgeGroup = 'false' %}
+                                        {% if userGroup.Id == group.Id %}
+                                            {% assign isUserAgeGroup = 'true' %}
+                                        {% endif %}
+                                    {% endfor %}
+                                    <option data-user-age-group="{{ isUserAgeGroup }}" value="{{ group.Id }}">{{ group.Name }}</option>
+                                <br />
+                                {% endfor %}
+
+                                <!--
+                                    <option data-user-age-group="false" value="3299">EK: 2 & 3 year olds</option>
+                                    <option data-user-age-group="false" value="3302">EK: 2nd-3rd Grade ACORNS groups</option>
+                                    <option data-user-age-group="false" value="3310">EK: 2nd-3rd Grade OAKS Groups</option>
+                                    <option data-user-age-group="false" value="3304">EK: 4th-5th Grade BOLTS groups</option>
+                                    <option data-user-age-group="false" value="6878">EK: 4th-5th Grade BRACKETS groups</option>
+                                    <option data-user-age-group="false" value="6877">EK: 4th-5th Grade GADGETS Groups</option>
+                                    <option data-user-age-group="false" value="3303">EK: 4th-5th Grade GEARS Groups</option>
+                                    <option data-user-age-group="false" value="3298">EK: Eastview Kids Staff</option>
+                                    <option data-user-age-group="true" value="3309">EK: Kindergarten-1st Grade groups</option>
+                                    <option data-user-age-group="false" value="3301">EK: NURSERY</option>
+                                    <option data-user-age-group="false" value="3307">EK: Pre-K Groups</option>
+                                    <option data-user-age-group="false" value="6785">EK: SPEC ADULT</option>
+                                    <option data-user-age-group="false" value="6784">EK: SPEC CHILD</option>
+                                -->
+                                </select>
+                            </label>
+
+                    </div>
+
+                    </div>
+
+                </div>
+                </div>
+
+            </div>
+
+
+          <div class="clearfix"></div>
+
+{% contentchannelitem where:'ContentChannelId == {{LessonPlanContentChannelId}}' sort:'StartDateTime' %}
+            <div class="col-xs-12">
+
+                <div class="panel panel-color panel-primary " data-step="1" data-big-idea-flash="">
+                <div class="panel-heading">
+                    <h3 class="panel-title">Select a Big Idea</h3>
+                </div>
+                <div class="panel-body">
+
+                    <div data-response>
+                    {% include '~/Assets/Lava/LessonBuilder/Components/bigIdea.lava' %}
+                    </div>
+
+                </div>
+                </div>
+
+            </div>
+
+{% endcontentchannelitem %}
+
+            <div class="col-xs-12">
+
+                <div class="panel panel-color panel-warning disabled" data-step="2">
+                <div class="panel-heading">
+                    <h3 class="panel-title">Select a Group and Hour</h3>
+                </div>
+                <div class="panel-body">
+
+                    <div data-response>{% include '~/Assets/Lava/LessonBuilder/Components/groupHourOptions.lava' %}</div>
+
+
+                </div>
+                </div>
+
+            </div>
+
+
+          <div class="clearfix"></div>
+
+<!-- TODO: Setup Ajax for Big Idea Id + Lesson -->
+
+
+
+
+            <div class="col-lg-12">
+                <!-- TODO: add disabled back -->
+
+                <div class="panel panel-color panel-success disabled" data-step="3">
+                <div class="panel-heading">
+                    <h3 class="panel-title">Create Your Lesson</h3>
+                    <div class="panel-sub-title font-13 text-muted">Please choose one of the following options for your Study</div>
+                </div>
+                <div class="panel-body">
+
+                    <div id="lesson-options-test" data-response></div>
+                    <div id="lesson-options" data-response></div>
+
+                </div>
+                </div>
+
+            </div>
+
+
+
+        </div>
+
+        <div class="col-lg-3">
+
+          <div id="lesson-progress" class="affix" style="width: 23%;">
+
+            <div class="card-box" data-progress="chart" style="padding-left: 10px;">
+
+
+              <div class="clearfix pull-left">
+                  <div id="progressCircle" class="blue x-small"></div>
+              </div>
+
+              <div id="big-idea" data-progress="big-idea">
+
+                <h4>Select a Big Idea</h4>
+
+              </div>
+
+              <div data-progress="group-hour" >
+
+                <div data-response=""><hr style="margin-top: 0;">
+                  <div style="margin-bottom: 10px;">
+                    <span id="group-hour" class="label"></span>
+                  </div>
+                  <div id="serviceTime">
+                    <label>Hour:</label>
+                    <span id="serviceTimeTime">Unselected</span>
+                  </div>
+                  <div id="serviceGroup">
+                    <label>Group:</label>
+                    <span id="serviceTimeClass">Unselected</span>
+                  </div>
+                </div>
+
+              </div>
+
+              <div class="clearfix"></div>
+
+            </div>
+
+            <div class="card-box" data-progress="lesson">
+
+              <label>Lesson</label>
+              <hr/>
+
+              <div data-response="" class="hidden">
+                <h4>Beginning Connection Time</h4>
+                <div class="text-success">
+                  <i class="fa fa-check m-r-10"></i>
+                  No option required.
+                </div>
+                <h4>First Small Group Time Activity</h4>
+                <div class="text-danger">
+                  <i class="fa fa-close m-r-10"></i>
+                  Unselected
+                </div>
+                <h4>Second Small Group Time Activity</h4>
+                <div class="text-danger">
+                  <i class="fa fa-close m-r-10"></i>
+                  Unselected
+                </div>
+              </div>
+              <div id="fullLesson" data-response="" class="">
+                <div id="lessonStep1"></div>
+                <div id="lessonStep2"></div>
+                <div id="lessonStep3"></div>
+                <div id="lessonStep4"></div>
+              </div>
+
+            </div>
+
+            <button id="save-lesson" class="btn btn-success btn-block btn-lg m-t-15 disabled">Save My Lesson</button>
+
+          </div>
+
+        </div>
+
+      </div>
+
+  </div>
+  <!-- end container -->
+</div>
+<!-- End wrapper -->
+
+
+
+{%- javascript -%}
+  var btnBigId;
+
+    $(function() {
+       $('.group_sub').on('change', function() {
+            $('.group_sub').not(this).prop( "checked", false );
+       });
+    });
+
+    $(function() {
+        $('.group_sub').on('click', function() {
+          if($(this).data("value") == "my_groups"){
+              groupHourLabel("label-success");
+              groupHourLabelR("label-danger");
+            } else {
+              groupHourLabel("label-danger");
+              groupHourLabelR("label-success");
+            };
+        })
+    });
+
+    $(function() {
+    $("#lesson-progress-circle").circliful({
+                  animationStep: 5,
+                  foregroundBorderWidth: 15,
+                  backgroundBorderWidth: 15,
+                  strokeLinecap: 'round'
+            });
+    });
+
+    $(function(){
+      groupHourLabelText();
+    });
+
+    $(function() {
+      $( "#ageGroupSelect" ).on('change', function() {
+        groupHourLabelText();
+      });
+    });
+
+
+
+
+  // TODO: Update progress circle
+    $(function(){
+        $("#progressCircle").progressCircle({percent: 10,text: "10%"});
+    });
+
+    $(function() {
+      $('#changeCircle').click(function(e){
+        let $v = $(this).data("percent");
+            e.preventDefault();
+            changeCircle($v);
+        });
+    });
+
+    function changeCircle(v){
+        $("#progressCircle").progressCircle({text:''});
+        $("#progressCircle").progressCircle({
+            text: "",
+            percent: v
+        });
+    }
+    $(function() {
+      if ($('.group_sub').is(":checked")) {
+        document.getElementById('group-hour').classList.add('label-success');
+      }
+    });
+
+    //Reload button
+    $(function loadbtn() {
+      $('#load-button').click(function(){
+        lessonReload(sessionStorage.btnBigId);
+      });
+    });
+
+    function groupHourLabel($class) {
+      document.getElementById('group-hour').classList.add($class);
+    }
+
+    function groupHourLabelR($rclass) {
+      document.getElementById('group-hour').classList.remove($rclass);
+    }
+
+    function groupHour($group) {
+      document.getElementById('group-hour').innerHTML = $group;
+    }
+
+    function groupHourLabelText() {
+      let x = document.getElementById("ageGroupSelect").selectedIndex;
+      let y = document.getElementById("ageGroupSelect").options;
+      let ageGroup = y[x].text;
+      groupHour(ageGroup);
+    }
+
+    function lessonReload($v){
+      let lessonUrl = "http://localhost:6229/ev-lesson-options?BigId=" + $v;
+      $("#lesson-options").load( lessonUrl );
+    }
+
+
+
+{%- endjavascript -%}
+

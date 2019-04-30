@@ -1,0 +1,114 @@
+{% comment %} {% include '~~/Assets/Lava/LessonBuilder/Components/group-hour-options.lava' %} {% endcomment %}
+
+<style>
+
+</style>
+
+
+<div data-response="">
+	<div class="row form-group">
+		<label class="col-sm-2 control-label">Service Time</label>
+		<div class="col-sm-10">
+                  <select id="groupHourTime" name="hour" class="form-control">
+					          <option value="">-- Select Service Time --</option>
+										<option value="5626">9:00 Teachers</option>
+										<option value="5627">11:00 Teachers</option>
+										<option value="5628">5:00 Teachers</option>
+									</select>
+									</div>
+	</div>
+
+
+<!-- Replace with Groups -->
+	<div class="row form-group">
+		<label class="col-sm-2 control-label">Group</label>
+		<div class="col-sm-10">
+            <select id="groupHour" name="group" class="form-control">
+                <option value="">-- Select Group --</option>
+                <option value="3362">Red Bakery</option>
+                <option value="3496">Red Church</option>
+                <option value="4426">Red Construction Zone</option>
+                <option value="4009">Red Dentist</option>
+                <option value="3415">Red Diner</option>
+                <option value="3464">Red Fire Station</option>
+                <option value="3454">Red Library</option>
+                <option value="3353">Red Police Station</option>
+                <option value="3462">Red Post Office</option>
+                <option value="3461">Red School</option>
+                <option value="3463">Red Zoo</option>
+                <option value="3422">Special Needs Children Class</option>
+                <option value="6908">Special Needs Student Class</option>
+                <option value="3550">Yellow Bakery</option>
+                <option value="3611">Yellow Church</option>
+                <option value="4424">Yellow Construction Zone</option>
+                <option value="4161">Yellow Dentist</option>
+                <option value="3414">Yellow Diner</option>
+                <option value="3469">Yellow Fire Station</option>
+                <option value="3465">Yellow Library</option>
+                <option value="3548">Yellow Police Station</option>
+                <option value="3467">Yellow Post Office</option>
+                <option value="3466">Yellow School</option>
+                <option value="3468">Yellow Zoo</option>
+                <option value="6880">zStand In K-1</option>
+                <option value="6949">zStand In preview</option>
+            </select>
+        </div>
+	</div>
+</div>
+
+{%- javascript -%}
+function changeCircle(v){
+        $("#progressCircle").progressCircle({text:''});
+        $("#progressCircle").progressCircle({
+            text: "",
+            percent: v
+        });
+    }
+    function lessonReload($v){
+
+      let lessonUrl = "http://localhost:6229/ev-lesson-options?BigId=" + $v;
+
+      console.log(lessonUrl);
+      $("#lesson-options").load( lessonUrl );
+
+    }
+
+    function groupTime($time) {
+      document.getElementById('serviceTimeTime').innerHTML = $time;
+    }
+
+    function groupGroup($groupClass) {
+      document.getElementById('serviceTimeClass').innerHTML = $groupClass;
+    }
+
+    function groupHourTimeText() {
+      let x = document.getElementById("groupHourTime").selectedIndex;
+      let y = document.getElementById("groupHourTime").options;
+      let hourTime = y[x].text;
+      groupTime(hourTime);
+    }
+
+    function groupHourClassText() {
+      let x = document.getElementById("groupHour").selectedIndex;
+      let y = document.getElementById("groupHour").options;
+      let ageGroup = y[x].text;
+      groupGroup(ageGroup);
+    }
+
+    $(function() {
+      $( "#groupHourTime" ).on('change', function() {
+        groupHourTimeText();
+        changeCircle(30)
+      });
+    });
+
+    $(function() {
+      $( "#groupHour" ).on('change', function() {
+        $('[data-step="3"]').removeClass('disabled');
+        lessonReload(sessionStorage.btnBigId);
+        groupHourClassText();
+        changeCircle(40)
+      });
+    });
+
+{%- endjavascript -%}

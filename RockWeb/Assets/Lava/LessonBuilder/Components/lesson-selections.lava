@@ -1,0 +1,157 @@
+{% comment %} {% include '~~/Assets/Lava/LessonBuilder/Components/lesson-selections.lava' %} {% endcomment %}
+
+<style>
+
+</style>
+
+
+    {%- for item in contentchannelitemItems -%}
+        {%- assign panelTitle = item.Title -%}
+
+    {%- for item in item.ChildItems -%}
+
+        {%- assign optionTitle = item.ChildContentChannelItem.Title -%}
+        {%- assign optionId = item.ChildContentChannelItem.Id -%}
+        {%- assign optionInfo = item.ChildContentChannelItem.Content -%}
+        {%- assign materialsInfo = item.ChildContentChannelItem | Attribute:'MaterialsNeeded' -%}
+        {%- assign autismInfo = item.ChildContentChannelItem | Attribute:'AutismSPDNotes' -%}
+        {%- assign hearingInfo = item.ChildContentChannelItem | Attribute:'HearingImpairmentNotes' -%}
+        {%- assign visionInfo = item.ChildContentChannelItem | Attribute:'VisionImpairmentNotes' -%}
+        {%- assign adhdInfo = item.ChildContentChannelItem | Attribute:'ADHSADDNotes' -%}
+        {%- assign physInfo = item.ChildContentChannelItem | Attribute:'PDNotes' -%}
+        {%- assign intInfo = item.ChildContentChannelItem | Attribute:'ILDNotes' -%}
+
+        <div class="panel panel-default" data-option="{{ optionId }}" data-title="{{ optionTitle }}">
+            <div class="panel-heading">
+                <h4 class="panel-title">
+                    <a data-toggle="collapse" data-parent="#accordion-{{ optionId }}" href="#option-{{ optionId }}" class="collapsed" target="_blank">
+                        <i class="fa null"></i> {{ optionTitle }} {{ optionId }} </a>
+                </h4>
+            </div>
+            <div id="option-{{ optionId }}" class="panel-collapse collapse">
+                <div class="panel-body">
+
+                    <p>
+                        {{ optionInfo }}
+                        <strong>Materials Provided In Your Teacher Tub:</strong> {{ materialsInfo }}
+                    </p>
+
+                    <div class="row m-t-20">
+
+                    {%- if autismInfo != empty -%}
+                        <div class="col-lg-4">
+                            <div class="card-box widget-icon">
+                                <div>
+                                    <i class="md md-account-child text-primary"></i>
+                                    <div class="wid-icon-info" style="min-height: 90px;">
+                                        <p class="text-muted m-b-5 font-13 text-uppercase">Autism / SPD Notes</p>
+                                        <small class="text-default">{{ autismInfo }}</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {%- endif -%}
+                    {%- if hearingInfo != empty -%}
+                        <div class="col-lg-4">
+                            <div class="card-box widget-icon">
+                                <div>
+                                    <i class="md md-account-child text-primary"></i>
+                                    <div class="wid-icon-info" style="min-height: 90px;">
+                                        <p class="text-muted m-b-5 font-13 text-uppercase">Hearing Impairment Notes</p>
+                                        <small class="text-default">{{ hearingInfo }}</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {%- endif -%}
+                    {%- if visionInfo != empty -%}
+                        <div class="col-lg-4">
+                            <div class="card-box widget-icon">
+                                <div>
+                                    <i class="md md-account-child text-primary"></i>
+                                    <div class="wid-icon-info" style="min-height: 90px;">
+                                        <p class="text-muted m-b-5 font-13 text-uppercase">Vision Impairment Notes</p>
+                                        <small class="text-default">{{ visionInfo }}</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {%- endif -%}
+                    {%- if adhdInfo != empty -%}
+                        <div class="col-lg-4">
+                            <div class="card-box widget-icon">
+                                <div>
+                                    <i class="md md-account-child text-primary"></i>
+                                    <div class="wid-icon-info" style="min-height: 54px;">
+                                        <p class="text-muted m-b-5 font-13 text-uppercase">ADHS / ADD Notes</p>
+                                        <small class="text-default">{{ adhdInfo }}</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {%- endif -%}
+                    {%- if physInfo != empty -%}
+                        <div class="col-lg-4">
+                            <div class="card-box widget-icon">
+                                <div>
+                                    <i class="md md-account-child text-primary"></i>
+                                    <div class="wid-icon-info" style="min-height: 54px;">
+                                        <p class="text-muted m-b-5 font-13 text-uppercase">Physical Disability Notes</p>
+                                        <small class="text-default">{{ physInfo }}</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {%- endif -%}
+                    {%- if intInfo != empty -%}
+                        <div class="col-lg-4">
+                            <div class="card-box widget-icon">
+                                <div>
+                                    <i class="md md-account-child text-primary"></i>
+                                    <div class="wid-icon-info" style="min-height: 54px;">
+                                        <p class="text-muted m-b-5 font-13 text-uppercase">Intellectual / Learning Disability Notes</p>
+                                        <small class="text-default">{{ intInfo }}</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {%- endif -%}
+
+                    </div>
+
+                    <div class="row">
+
+                        <div class="col-xs-12">
+
+                            <div class="alert alert-success">
+
+                                <div class="col-lg-8">
+                                    <strong>Select This Activity</strong>
+                                </div>
+
+                                <div class="col-lg-4 text-right">
+
+                                    <label class="form-switch"><input value="{{ optionId }}" type="checkbox" class="switchBox lessonOptionsSwitch" data-stepNum="lessonStep{{ stepNum }}" data-stepId="{{ optionId }}" data-panelTitle="{{ panelTitle }}" data-title="{{ optionTitle }}"><i></i></label>
+
+                                </div>
+
+                                <div class="clearfix"></div>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+
+    {%- endfor -%}
+    {%- endfor -%}
+
+{%- javascript -%}
+
+
+{%- endjavascript -%}

@@ -1,0 +1,89 @@
+{% comment %} {% include '~~/Assets/Lava/LessonBuilder/Components/lesson-options.lava' %} {% endcomment %}
+
+<style>
+
+</style>
+
+
+
+{%- assign bigIdeaId = PageParameter.BigId -%}
+
+{% contentchannelitem where:'Id  == {{bigIdeaId}}'  %}
+<form id="create-a-lesson-form" method="get" action="" class="form-horizontal" data-no-pjax="" data-links-new-tab="">
+    <div id="create-a-lesson-wizard" class="pull-in">
+        <ul class="nav nav-tabs navtab-custom nav-justified bg-muted">
+            {% for item in contentchannelitemItems %}
+
+                {%- for item in item.ChildItems -%}
+                {%- assign itemId = item.ChildContentChannelItem.Id -%}
+                {%- assign tabTitle = item.ChildContentChannelItem.Title -%}
+                    {% if forloop.first %}
+                        <li class="active">
+                    {%- else -%}
+                        <li class="">
+                    {% endif %}
+                            <a href="#{{ itemId }}" data-toggle="tab" aria-expanded="true" target="_blank">
+                            <strong>Step </strong> {{ tabTitle }}
+                            </a>
+                        </li>
+                {%- endfor -%}
+
+            {% endfor %}
+        </ul>
+        <div class="tab-content m-b-0 bx-s-0">
+        {%- assign panelArray = '[]' -%}
+            {% for item in contentchannelitemItems %}
+
+                    {%- for item in item.ChildItems -%}
+                        {%- assign stepNum = forloop.index -%}
+                        {%- assign panelTitle = item.ChildContentChannelItem.Title -%}
+                        {%- assign panelId = item.ChildContentChannelItem.Id -%}
+                        {%- assign panelInfo = item.ChildContentChannelItem.Content -%}
+                        {%- if forloop.first -%}
+                        <div class="tab-pane fade active in" id="{{ panelId }}" data-section="385" data-title="{{ panelTitle }}">
+                        {%- else -%}
+                        <div class="tab-pane fade in" id="{{ panelId }}" data-section="385" data-title="{{ panelTitle }}">
+                        {%- endif -%}
+
+                            <div class="m-b-2">
+                            {{ panelInfo }}
+                            Panel Id: {{ panelId }}
+                            <br>
+                            Big Idea Id: {{bigIdeaId}}
+                            </div>
+                            <hr>
+
+
+                            <div class="panel-group" id="accordion-{{ panelId }}">
+                            {% contentchannelitem where:'Id  == {{panelId}}'  %}
+                                {% include '~~/Assets/Lava/LessonBuilder/Components/lesson-selections.lava' %}
+                            {% endcontentchannelitem %}
+                            </div>
+
+
+                        </div>
+                    {%- endfor -%}
+
+            {% endfor %}
+        </div>
+    </div>
+</form>
+{% endcontentchannelitem %}
+
+{%- javascript -%}
+function changeCircle(v){
+        $("#progressCircle").progressCircle({text:''});
+        $("#progressCircle").progressCircle({
+            text: "",
+            percent: v
+        });
+    }
+
+
+//function bigIdea($title, $time) {
+//    document.getElementById('big-idea').innerHTML = `<h3>${$time}</h3><h4>${$title}<h4>`;
+//}
+
+
+{%- endjavascript -%}
+
