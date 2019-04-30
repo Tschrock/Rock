@@ -5,10 +5,27 @@
         border: 1px solid #d4d4d4;
         padding: 5px;
         height: 235px;
+        overflow: hidden;
+        position: relative;
     }
 
     .step-card .badge {
         background-color: #23a5c5;
+    }
+
+    .step-card > .step-card-hover {
+        top: 0;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        opacity: 0;
+        transition-duration: 0.25s;
+        position: absolute;
+        background-color: #fff;
+    }
+
+    .step-card:hover > .step-card-hover {
+        opacity: 1;
     }
 </style>
 
@@ -63,7 +80,10 @@
                             <div class="col-xs-12 col-sm-6 col-md-4 col-lg-3 text-center">
                                 <div class="step-card">
                                     <%# Eval( "RenderedLava" ) %>
-                                </div>
+                                    <div class="step-card-hover">
+                                        This step ...
+                                    </div>
+                                </div>                                
                             </div>
                         </itemtemplate>
                     </asp:repeater>

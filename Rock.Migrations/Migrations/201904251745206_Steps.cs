@@ -1,4 +1,4 @@
-// <copyright>
+﻿// <copyright>
 // Copyright by the Spark Development Network
 //
 // Licensed under the Rock Community License (the "License");
@@ -26,6 +26,8 @@ namespace Rock.Migrations
     {
         /// <summary>
         /// Operations to be performed during the upgrade process.
+        /// Add sample pages and blocks: https://gist.github.com/bjwiley2/a800176a96fbcda22a8759cf20f250da
+        /// Add sample data: https://gist.github.com/bjwiley2/09bd2bbd5c0d4921411dbe424eee420f
         /// </summary>
         public override void Up()
         {
