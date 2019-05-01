@@ -86,6 +86,7 @@
                                         <Rock:RockLiteralField HeaderText="Step Type" ID="lStepType" SortExpression="StepTypeName" OnDataBound="lStepType_DataBound" />
                                         <Rock:DateField DataField="CompletedDateTime" HeaderText="Completion Date" SortExpression="CompletedDateTime" ItemStyle-HorizontalAlign="Left" HeaderStyle-HorizontalAlign="Left" />
                                         <Rock:RockLiteralField HeaderText="Status" ID="lStepStatus" SortExpression="Status" OnDataBound="lStepStatus_DataBound" />
+                                        <Rock:DeleteField OnClick="gStepList_Delete" />
                                     </Columns>
                                 </Rock:Grid>
                             </div><!-- .grid -->

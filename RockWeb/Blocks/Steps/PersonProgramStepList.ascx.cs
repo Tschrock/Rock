@@ -61,6 +61,10 @@ namespace RockWeb.Blocks.Steps
         {
             base.OnInit( e );
 
+            gStepList.DataKeyNames = new[] { "id" };
+            gStepList.ShowActionRow = false;
+            gStepList.GridRebind += gStepList_GridRebind;
+
             if ( !IsPostBack )
             {
                 SetProgramDetailsOnBlock();
@@ -69,6 +73,16 @@ namespace RockWeb.Blocks.Steps
             }
 
             SetViewMode( hfIsCardView.Value.AsBoolean() );
+        }
+
+        /// <summary>
+        /// Handle the rebind event for the step list grid
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void gStepList_GridRebind( object sender, GridRebindEventArgs e )
+        {
+            RenderGridView();
         }
 
         /// <summary>
@@ -143,6 +157,35 @@ namespace RockWeb.Blocks.Steps
             var stepTypeId = e.CommandArgument.ToStringSafe().AsIntegerOrNull();
 
             // TODO
+        }
+
+        /// <summary>
+        /// Handle the event where the user wants to delete a step from the grid
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        protected void gStepList_Delete( object sender, RowEventArgs e )
+        {
+            var rockContext = GetRockContext();
+            var service = new StepService( rockContext );
+            var step = service.Get( e.RowKeyId );
+            string errorMessage;
+
+            if ( step == null )
+            {
+                return;
+            }
+
+            if ( !service.CanDelete( step, out errorMessage ) )
+            {
+                ShowError( errorMessage );
+                return;
+            }
+
+            service.Delete( step );
+            rockContext.SaveChanges();
+
+            RenderGridView();
         }
 
         #endregion Events
@@ -457,6 +500,7 @@ namespace RockWeb.Blocks.Steps
                 var personStepsOfType = GetPersonStepsOfType( stepType.Id );
                 rows.AddRange( personStepsOfType.Select( s => new StepGridRow
                 {
+                    Id = s.Id,
                     StepTypeName = stepType.Name,
                     CompletedDateTime = s.CompletedDateTime,
                     StepStatus = s.StepStatus,
@@ -486,6 +530,7 @@ namespace RockWeb.Blocks.Steps
 
         public class StepGridRow
         {
+            public int Id { get; set; }
             public string StepTypeName { get; set; }
             public DateTime? CompletedDateTime { get; set; }
             public StepStatus StepStatus { get; set; }
