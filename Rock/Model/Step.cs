@@ -118,6 +118,15 @@ namespace Rock.Model
         }
         private ICollection<StepWorkflow> _stepWorkflows;
 
+        /// <summary>
+        /// Indicates if this step has been completed
+        /// </summary>
+        [DataMember]
+        public virtual bool IsComplete
+        {
+            get => StepStatus != null && StepStatus.IsCompleteStatus;
+        }
+
         #endregion Virtual Properties
 
         #region Overrides

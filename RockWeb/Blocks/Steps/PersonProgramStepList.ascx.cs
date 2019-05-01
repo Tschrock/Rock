@@ -17,6 +17,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Data.Entity;
 using System.Linq;
 using System.Web.UI.WebControls;
 using Rock;
@@ -62,10 +63,9 @@ namespace RockWeb.Blocks.Steps
 
             if ( !IsPostBack )
             {
-                var rockContext = new RockContext();
-                SetProgramDetailsOnBlock( rockContext );
-                RenderCards( rockContext );
-                RenderGrid( rockContext );                
+                SetProgramDetailsOnBlock();
+                RenderCardView();
+                RenderGridView();                
             }
 
             SetViewMode( hfIsCardView.Value.AsBoolean() );
@@ -133,6 +133,18 @@ namespace RockWeb.Blocks.Steps
             lStepStatus.Text = string.Format( "<span class='label label-{0}'>{1}</span>", stepGridRow.StepStatus.StatusColor, stepGridRow.StepStatus.Name );
         }
 
+        /// <summary>
+        /// The click event of the add step buttons
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        protected void AddStep( object sender, CommandEventArgs e )
+        {
+            var stepTypeId = e.CommandArgument.ToStringSafe().AsIntegerOrNull();
+
+            // TODO
+        }
+
         #endregion Events
 
         #region Model Helpers
@@ -141,24 +153,23 @@ namespace RockWeb.Blocks.Steps
         /// Gets the step program (model) that should be displayed in the block
         /// </summary>
         /// <returns></returns>
-        private StepProgram GetStepProgram( RockContext rockContext )
+        private StepProgram GetStepProgram()
         {
             if ( _stepProgram == null )
             {
+                var rockContext = GetRockContext();
                 var programId = GetAttributeValue( AttributeKeys.StepProgramId ).AsIntegerOrNull();
+
+                if ( !programId.HasValue )
+                {
+                    programId = PageParameter( "StepProgramId" ).AsIntegerOrNull();
+                }
 
                 if ( programId.HasValue )
                 {
-                    _stepProgram = new StepProgramService( rockContext ).Get( programId.Value );
-                }
-                else
-                {
-                    programId = PageParameter( "StepProgramId" ).AsIntegerOrNull();
-
-                    if ( programId.HasValue )
-                    {
-                        _stepProgram = new StepProgramService( rockContext ).Get( programId.Value );
-                    }
+                    _stepProgram = new StepProgramService( rockContext ).Queryable()
+                        .AsNoTracking()
+                        .FirstOrDefault( sp => sp.Id == programId.Value && sp.IsActive );
                 }
             }
 
@@ -170,15 +181,15 @@ namespace RockWeb.Blocks.Steps
         /// Gets the step types (model) in the order they should be displayed for this program
         /// </summary>
         /// <returns></returns>
-        private IOrderedEnumerable<StepType> GetOrderedStepTypes( RockContext rockContext )
+        private IOrderedEnumerable<StepType> GetOrderedStepTypes()
         {
             if ( _orderedStepTypes == null )
             {
-                var program = GetStepProgram( rockContext );
+                var program = GetStepProgram();
 
                 if ( program != null )
                 {
-                    _orderedStepTypes = program.StepTypes.OrderBy( st => st.Order ).ThenBy( st => st.Name );
+                    _orderedStepTypes = program.StepTypes.Where( st => st.IsActive ).OrderBy( st => st.Order ).ThenBy( st => st.Name );
                 }                
             }
 
@@ -189,9 +200,8 @@ namespace RockWeb.Blocks.Steps
         /// <summary>
         /// Gets the person model that should be displayed in the block
         /// </summary>
-        /// <param name="rockContext"></param>
         /// <returns></returns>
-        private Person GetPerson( RockContext rockContext )
+        private Person GetPerson()
         {
             if ( _person == null )
             {
@@ -204,6 +214,7 @@ namespace RockWeb.Blocks.Steps
 
                 if ( personId.HasValue )
                 {
+                    var rockContext = GetRockContext();
                     _person = new PersonService( rockContext ).Get( personId.Value );
                 }
             }
@@ -215,13 +226,12 @@ namespace RockWeb.Blocks.Steps
         /// <summary>
         /// Get a list of the steps that the person has taken within the given step type
         /// </summary>
-        /// <param name="rockContext"></param>
         /// <param name="stepTypeId"></param>
         /// <returns></returns>
-        private List<Step> GetPersonStepsOfType( RockContext rockContext, int stepTypeId )
+        private List<Step> GetPersonStepsOfType( int stepTypeId )
         {
             var defaultValue = new List<Step>();
-            var personStepsMap = GetStepTypeToPersonStepMap( rockContext );
+            var personStepsMap = GetStepTypeToPersonStepMap();
 
             if ( personStepsMap == null )
             {
@@ -236,18 +246,17 @@ namespace RockWeb.Blocks.Steps
         /// <summary>
         /// Get the person's steps for this program
         /// </summary>
-        /// <param name="rockContext"></param>
         /// <returns></returns>
-        private Dictionary<int, List<Step>> GetStepTypeToPersonStepMap( RockContext rockContext )
+        private Dictionary<int, List<Step>> GetStepTypeToPersonStepMap()
         {
             if ( _personStepsMap == null )
             {
-                var person = GetPerson( rockContext );
-                var program = GetStepProgram( rockContext );
+                var person = GetPerson();
+                var program = GetStepProgram();
 
                 if ( person != null && program != null )
                 {
-                    _personStepsMap = program.StepTypes.ToDictionary(
+                    _personStepsMap = program.StepTypes.Where( st => st.IsActive ).ToDictionary(
                         st => st.Id,
                         st => st.Steps
                             .Where( s => s.PersonAlias.PersonId == person.Id )
@@ -259,6 +268,88 @@ namespace RockWeb.Blocks.Steps
             return _personStepsMap;
         }
         private Dictionary<int, List<Step>> _personStepsMap;
+
+        /// <summary>
+        /// Get a list of the prerequisites for the given step type id
+        /// </summary>
+        /// <param name="stepTypeId"></param>
+        /// <returns></returns>
+        private List<StepType> GetPrerequisiteStepTypes( int stepTypeId )
+        {
+            var rockContext = GetRockContext();
+            var service = new StepTypePrerequisiteService( rockContext );
+
+            return service.Queryable()
+                .AsNoTracking()
+                .Include( stp => stp.PrerequisiteStepType )
+                .Where( stp => stp.StepTypeId == stepTypeId && stp.PrerequisiteStepType.IsActive )
+                .Select( stp => stp.PrerequisiteStepType )
+                .ToList();
+        }
+
+        /// <summary>
+        /// Has the person met the prereqs for the given step type
+        /// </summary>
+        /// <param name="stepTypeId"></param>
+        /// <returns></returns>
+        private bool HasMetPrerequisites( int stepTypeId )
+        {
+            var preReqs = GetPrerequisiteStepTypes( stepTypeId );
+
+            if ( !preReqs.Any() )
+            {
+                return true;
+            }
+
+            foreach ( var preReq in preReqs )
+            {
+                var steps = GetPersonStepsOfType( preReq.Id );
+
+                if ( !steps.Any() || steps.All( s => !s.IsComplete ) )
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// Can a step of the given step type be added for the person. Checks for active, prereqs, and if the step
+        /// type allows more than one step record
+        /// </summary>
+        /// <param name="stepType"></param>
+        /// <returns></returns>
+        private bool CanAddStep( StepType stepType )
+        {
+            if ( !stepType.IsActive || !HasMetPrerequisites(stepType.Id))
+            {
+                return false;
+            }
+
+            if ( stepType.AllowMultiple )
+            {
+                return true;
+            }
+
+            var exisitingSteps = GetPersonStepsOfType( stepType.Id );
+            return !exisitingSteps.Any();
+        }
+
+        /// <summary>
+        /// Get the rock context
+        /// </summary>
+        /// <returns></returns>
+        private RockContext GetRockContext()
+        {
+            if ( _rockContext == null )
+            {
+                _rockContext = new RockContext();
+            }
+
+            return _rockContext;
+        }
+        private RockContext _rockContext;
 
         #endregion Model Helpers
 
@@ -279,10 +370,9 @@ namespace RockWeb.Blocks.Steps
         /// <summary>
         /// Set details on the block that come from the program
         /// </summary>
-        /// <param name="rockContext"></param>
-        private void SetProgramDetailsOnBlock( RockContext rockContext )
+        private void SetProgramDetailsOnBlock()
         {
-            var program = GetStepProgram( rockContext );
+            var program = GetStepProgram();
 
             if ( program == null )
             {
@@ -297,10 +387,9 @@ namespace RockWeb.Blocks.Steps
         /// <summary>
         /// Render the step cards
         /// </summary>
-        /// <param name="rockContext"></param>
-        private void RenderCards( RockContext rockContext )
+        private void RenderCardView()
         {
-            var program = GetStepProgram( rockContext );
+            var program = GetStepProgram();
 
             if ( program == null )
             {
@@ -308,7 +397,7 @@ namespace RockWeb.Blocks.Steps
                 return;
             }
 
-            var person = GetPerson( rockContext );
+            var person = GetPerson();
 
             if ( person == null )
             {
@@ -316,7 +405,7 @@ namespace RockWeb.Blocks.Steps
                 return;
             }
 
-            var stepTypes = GetOrderedStepTypes( rockContext );
+            var stepTypes = GetOrderedStepTypes();
 
             if ( stepTypes == null )
             {
@@ -324,26 +413,18 @@ namespace RockWeb.Blocks.Steps
                 return;
             }
 
-            var personStepsMap = GetStepTypeToPersonStepMap( rockContext );
-
-            if ( personStepsMap == null )
-            {
-                ShowError( "The steps for the person were not found" );
-                return;
-            }
-
             var renderedLavaTemplates = new List<string>();
 
             foreach ( var stepType in stepTypes )
             {
-                var personStepsOfType = GetPersonStepsOfType( rockContext, stepType.Id );
+                var personStepsOfType = GetPersonStepsOfType( stepType.Id );
 
                 var rendered = stepType.CardLavaTemplate.ResolveMergeFields( new Dictionary<string, object> {
                     { "StepType", stepType },
                     { "Steps", personStepsOfType },
                     { "Person", person },
                     { "Program", program },
-                    { "IsComplete", personStepsOfType.Any( s => s.CompletedDateTime.HasValue ) },
+                    { "IsComplete", personStepsOfType.Any( s => s.IsComplete ) },
                     { "CompletedDateTime", personStepsOfType.Where( s => s.CompletedDateTime.HasValue ).Max( s => s.CompletedDateTime ) },
                     { "StepCount", personStepsOfType.Count }
                 } );
@@ -351,17 +432,16 @@ namespace RockWeb.Blocks.Steps
                 renderedLavaTemplates.Add( rendered );
             }
 
-            rStepTypes.DataSource = from rlt in renderedLavaTemplates select new { RenderedLava = rlt };
-            rStepTypes.DataBind();
+            rStepTypeCards.DataSource = from rlt in renderedLavaTemplates select new { RenderedLava = rlt };
+            rStepTypeCards.DataBind();
         }
 
         /// <summary>
         /// Get data and bind it to the grid to display step records for the given person
         /// </summary>
-        /// <param name="rockContext"></param>
-        private void RenderGrid( RockContext rockContext )
+        private void RenderGridView()
         {
-            var stepTypes = GetOrderedStepTypes( rockContext );
+            var stepTypes = GetOrderedStepTypes();
 
             if ( stepTypes == null )
             {
@@ -370,10 +450,11 @@ namespace RockWeb.Blocks.Steps
             }
 
             var rows = new List<StepGridRow>();
+            var addButtons = new List<AddStepButton>();
 
             foreach ( var stepType in stepTypes )
             {
-                var personStepsOfType = GetPersonStepsOfType( rockContext, stepType.Id );
+                var personStepsOfType = GetPersonStepsOfType( stepType.Id );
                 rows.AddRange( personStepsOfType.Select( s => new StepGridRow
                 {
                     StepTypeName = stepType.Name,
@@ -381,10 +462,22 @@ namespace RockWeb.Blocks.Steps
                     StepStatus = s.StepStatus,
                     StepTypeIconCssClass = stepType.IconCssClass
                 } ) );
+
+                var addButtonIsEnabled = CanAddStep( stepType );
+
+                addButtons.Add( new AddStepButton
+                {
+                    StepTypeId = stepType.Id,
+                    IsEnabled = CanAddStep( stepType ),
+                    ButtonContents = string.Format( "<i class=\"{0}\"></i> &nbsp; {1}", stepType.IconCssClass, stepType.Name )
+                } );
             }
 
             gStepList.DataSource = rows;
             gStepList.DataBind();
+
+            rAddStepButtons.DataSource = addButtons;
+            rAddStepButtons.DataBind();
         }
 
         #endregion Control Helpers
@@ -397,6 +490,13 @@ namespace RockWeb.Blocks.Steps
             public DateTime? CompletedDateTime { get; set; }
             public StepStatus StepStatus { get; set; }
             public string StepTypeIconCssClass { get; set; }
+        }
+
+        public class AddStepButton
+        {
+            public int StepTypeId { get; set; }
+            public bool IsEnabled { get; set; }
+            public string ButtonContents { get; set; }
         }
 
         #endregion Helper Classes

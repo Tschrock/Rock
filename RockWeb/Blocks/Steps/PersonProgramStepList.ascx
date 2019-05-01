@@ -44,10 +44,10 @@
 
                 <div class="panel-labels">
                     <asp:LinkButton runat="server" class="btn btn-xs btn-square btn-default" OnClick="ShowCards">
-                        <i class='fa fa-th'></i>
+                        <i class="fa fa-th"></i>
                     </asp:LinkButton>
                     <asp:LinkButton runat="server" class="btn btn-xs btn-square btn-default" OnClick="ShowGrid">
-                        <i class='fa fa-list'></i>
+                        <i class="fa fa-list"></i>
                     </asp:LinkButton>
                 </div>
             </div>
@@ -57,6 +57,19 @@
                 <asp:HiddenField runat="server" ID="hfIsCardView" Value="true" ClientIDMode="Static" />
 
                 <div class="row" runat="server" id="divGridView">
+                    <div class="col-xs-12">
+                        <div class="btn-group"
+                            <asp:repeater id="rAddStepButtons" runat="server">
+                                <itemtemplate>
+                                    <asp:LinkButton runat="server" class="btn btn-sm btn-default" OnCommand="AddStep" CommandArgument='<%# Eval("StepTypeId") %>'>
+                                        <i class="fa fa-plus"></i>
+                                        &nbsp;
+                                        <%# Eval("ButtonContents") %>
+                                    </asp:LinkButton>
+                                </itemtemplate>
+                            </asp:repeater>
+                        </div>
+                    </div>
                     <div class="col-xs-12">
                         <div class="grid grid-panel">
                             <Rock:GridFilter ID="gfGridFilter" runat="server">
@@ -75,7 +88,7 @@
                 </div>
 
                 <div class="row" runat="server" id="divCardView">
-                    <asp:repeater id="rStepTypes" runat="server">
+                    <asp:repeater id="rStepTypeCards" runat="server">
                         <itemtemplate>
                             <div class="col-xs-12 col-sm-6 col-md-4 col-lg-3 text-center">
                                 <div class="step-card">
