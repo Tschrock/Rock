@@ -62,7 +62,6 @@ namespace RockWeb.Blocks.Steps
             base.OnInit( e );
 
             gStepList.DataKeyNames = new[] { "id" };
-            gStepList.ShowActionRow = false;
             gStepList.GridRebind += gStepList_GridRebind;
 
             if ( !IsPostBack )
