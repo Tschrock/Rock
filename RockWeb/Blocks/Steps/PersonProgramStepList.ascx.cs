@@ -98,8 +98,8 @@ namespace RockWeb.Blocks.Steps
         private void SetViewMode( bool isCardView )
         {
             hfIsCardView.Value = isCardView.ToString();
-            divCardView.Visible = isCardView;
-            divGridView.Visible = !isCardView;
+            pnlCardView.Visible = isCardView;
+            pnlGridView.Visible = !isCardView;
         }
 
         /// <summary>

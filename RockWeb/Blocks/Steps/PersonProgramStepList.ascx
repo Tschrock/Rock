@@ -27,6 +27,10 @@
     .step-card:hover > .step-card-hover {
         opacity: 1;
     }
+
+    .add-step-buttons + .row {
+        margin-top: 25px;
+    }
 </style>
 
 <asp:UpdatePanel ID="upContent" runat="server">
@@ -43,22 +47,22 @@
                 </h1>
 
                 <div class="panel-labels">
-                    <asp:LinkButton runat="server" class="btn btn-xs btn-square btn-default" OnClick="ShowCards">
+                    <asp:LinkButton ID="lbShowCards" runat="server" class="btn btn-xs btn-square btn-default" OnClick="ShowCards" AutoPostBack="true">
                         <i class="fa fa-th"></i>
                     </asp:LinkButton>
-                    <asp:LinkButton runat="server" class="btn btn-xs btn-square btn-default" OnClick="ShowGrid">
+                    <asp:LinkButton ID="lbShowGrid" runat="server" class="btn btn-xs btn-square btn-default" OnClick="ShowGrid" AutoPostBack="true">
                         <i class="fa fa-list"></i>
                     </asp:LinkButton>
                 </div>
-            </div>
+            </div><!-- panel heading -->
 
             <div class="panel-body">
 
                 <asp:HiddenField runat="server" ID="hfIsCardView" Value="true" ClientIDMode="Static" />
 
-                <div class="row" runat="server" id="divGridView">
-                    <div class="col-xs-12">
-                        <div class="btn-group"
+                <asp:Panel runat="server" id="pnlGridView">
+                    <div class="row add-step-buttons">
+                        <div class="col-xs-12">
                             <asp:repeater id="rAddStepButtons" runat="server">
                                 <itemtemplate>
                                     <asp:LinkButton runat="server" class="btn btn-sm btn-default" OnCommand="AddStep" CommandArgument='<%# Eval("StepTypeId") %>'>
@@ -68,43 +72,47 @@
                                     </asp:LinkButton>
                                 </itemtemplate>
                             </asp:repeater>
-                        </div>
-                    </div>
-                    <div class="col-xs-12">
-                        <div class="grid grid-panel">
-                            <Rock:GridFilter ID="gfGridFilter" runat="server">
-                                <Rock:DateRangePicker ID="drpDateRangePicker" runat="server" Label="Date Range" />
-                            </Rock:GridFilter>
+                        </div><!-- col -->
+                    </div><!-- row -->
+                    <div class="row">
+                        <div class="col-xs-12">
+                            <div class="grid grid-panel">
+                                <Rock:GridFilter ID="gfGridFilter" runat="server">
+                                    <Rock:DateRangePicker ID="drpDateRangePicker" runat="server" Label="Date Range" />
+                                </Rock:GridFilter>
 
-                            <Rock:Grid ID="gStepList" runat="server" RowItemText="Step" AllowSorting="true">
-                                <Columns>
-                                    <Rock:RockLiteralField HeaderText="Step Type" ID="lStepType" SortExpression="StepTypeName" OnDataBound="lStepType_DataBound" />
-                                    <Rock:DateField DataField="CompletedDateTime" HeaderText="Completion Date" SortExpression="CompletedDateTime" ItemStyle-HorizontalAlign="Left" HeaderStyle-HorizontalAlign="Left" />
-                                    <Rock:RockLiteralField HeaderText="Status" ID="lStepStatus" SortExpression="Status" OnDataBound="lStepStatus_DataBound" />
-                                </Columns>
-                            </Rock:Grid>
-                        </div>
-                    </div>
-                </div>
+                                <Rock:Grid ID="gStepList" runat="server" RowItemText="Step" AllowSorting="true">
+                                    <Columns>
+                                        <Rock:RockLiteralField HeaderText="Step Type" ID="lStepType" SortExpression="StepTypeName" OnDataBound="lStepType_DataBound" />
+                                        <Rock:DateField DataField="CompletedDateTime" HeaderText="Completion Date" SortExpression="CompletedDateTime" ItemStyle-HorizontalAlign="Left" HeaderStyle-HorizontalAlign="Left" />
+                                        <Rock:RockLiteralField HeaderText="Status" ID="lStepStatus" SortExpression="Status" OnDataBound="lStepStatus_DataBound" />
+                                    </Columns>
+                                </Rock:Grid>
+                            </div><!-- .grid -->
+                        </div><!-- col -->
+                    </div><!-- row -->
+                </asp:Panel><!-- pnlGridView -->
 
-                <div class="row" runat="server" id="divCardView">
-                    <asp:repeater id="rStepTypeCards" runat="server">
-                        <itemtemplate>
-                            <div class="col-xs-12 col-sm-6 col-md-4 col-lg-3 text-center">
-                                <div class="step-card">
-                                    <%# Eval( "RenderedLava" ) %>
-                                    <div class="step-card-hover">
-                                        This step ...
-                                    </div>
-                                </div>                                
-                            </div>
-                        </itemtemplate>
-                    </asp:repeater>
-                </div>
+                <asp:Panel runat="server" id="pnlCardView">
+                    <div class="row">
+                        <asp:repeater id="rStepTypeCards" runat="server">
+                            <itemtemplate>
+                                <div class="col-xs-12 col-sm-6 col-md-4 col-lg-3 text-center">
+                                    <div class="step-card">
+                                        <%# Eval( "RenderedLava" ) %>
+                                        <div class="step-card-hover">
+                                            This step ...
+                                        </div>
+                                    </div>                                
+                                </div><!-- col -->
+                            </itemtemplate>
+                        </asp:repeater>
+                    </div><!-- row -->
+                </asp:Panel><!-- pnlCardView -->
 
-            </div>
+            </div><!-- .panel-body -->
 
-        </div>
+        </div><!-- .panel -->
 
     </ContentTemplate>
 </asp:UpdatePanel>
