@@ -41,7 +41,7 @@ namespace Rockweb.Blocks.Crm
     [TextField( "Set Page Icon", "The css class name to use for the heading icon.", false, "fa fa-gift", order: 1 )]
     [IntegerField( "Number of Questions", "The number of questions to show per page while taking the test", true, 7, order: 2 )]
     [BooleanField( "Allow Retakes", "If enabled, the person can retake the test after the minimum days passes.", true, order: 3 )]
-    [IntegerField( "Min Days To Retake", "The number of days that must pass before the test can be taken again.", false, 360, order: 4 )]
+    [IntegerField( "Min Days To Retake", "The number of days that must pass before the test can be taken again. Leave blank to use the Assessment Type's minimum.", false, order: 4 )]
     [CodeEditorField( "Instructions", "The text (HTML) to display at the top of the instructions section.  <span class='tip tip-lava'></span> <span class='tip tip-html'></span>", CodeEditorMode.Html, CodeEditorTheme.Rock, 400, true, @"
 <h2>Welcome to the Conflict Profile Assessment</h2>
 <p>
@@ -440,6 +440,11 @@ namespace Rockweb.Blocks.Crm
 
             var allowRetakes = GetAttributeValue( ALLOW_RETAKES ).AsBoolean();
             var minDays = GetAttributeValue( MIN_DAYS_TO_RETAKE ).AsInteger();
+            if ( minDays == 0 )
+            {
+                minDays = assessment.AssessmentType.MinimumDaysToRetake;
+            }
+
             if ( !_isQuerystringPersonKey && allowRetakes && assessment.CompletedDateTime.HasValue && assessment.CompletedDateTime.Value.AddDays( minDays ) <= RockDateTime.Now )
             {
                 btnRetakeTest.Visible = true;

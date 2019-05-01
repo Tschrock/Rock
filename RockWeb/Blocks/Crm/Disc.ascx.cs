@@ -37,7 +37,7 @@ namespace Rockweb.Blocks.Crm
     [DisplayName( "DISC" )]
     [Category( "CRM" )]
     [Description( "Allows you to take a DISC test and saves your DISC score." )]
-    [IntegerField( "Min Days To Retake", "The number of days that must pass before the test can be taken again.", false, 30 )]
+    [IntegerField( "Min Days To Retake", "The number of days that must pass before the test can be taken again. Leave blank to use the Assessment Type's minimum.", false )]
     [CodeEditorField( "Instructions", "The text (HTML) to display at the top of the instructions section.  <span class='tip tip-lava'></span> <span class='tip tip-html'></span>", CodeEditorMode.Html, CodeEditorTheme.Rock, 400, true, @"
             <h2>Welcome!</h2>
             <p>
@@ -531,6 +531,11 @@ namespace Rockweb.Blocks.Crm
 
             // Show re-take test button if MinDaysToRetake has passed...
             double days = GetAttributeValue( "MinDaysToRetake" ).AsDouble();
+            if ( days == 0 )
+            {
+                days = assessment.AssessmentType.MinimumDaysToRetake;
+            }
+
             if ( !_isQuerystringPersonKey && assessment.CompletedDateTime.HasValue && assessment.CompletedDateTime.Value.AddDays( days ) <= RockDateTime.Now )
             {
                 btnRetakeTest.Visible = true;
