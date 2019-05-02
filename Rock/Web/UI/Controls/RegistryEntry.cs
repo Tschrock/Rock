@@ -14,12 +14,9 @@
 // limitations under the License.
 // </copyright>
 
-using System;
 using System.ComponentModel;
 using System.Web.UI;
 using System.Web.UI.WebControls;
-
-using Rock.Security;
 
 namespace Rock.Web.UI.Controls
 {
@@ -29,29 +26,42 @@ namespace Rock.Web.UI.Controls
         private TextBox tbPage;
         private TextBox tbLine;
 
+        /// <summary>
+        /// Gets or sets the text for the control.
+        /// </summary>
+        /// <value>
+        /// The text.
+        /// </value>
         public string Text
         {
             get
             {
                 EnsureChildControls();
-                return $"{tbVolume.Text},{tbPage.Text},{tbLine.Text}";
+                string volume = tbVolume.Text.IsNullOrWhiteSpace() ? "0" : tbVolume.Text;
+                string page = tbPage.Text.IsNullOrWhiteSpace() ? "0" : tbPage.Text;
+                string line = tbLine.Text.IsNullOrWhiteSpace() ? "0" : tbLine.Text;
+
+                return $"{volume},{page},{line}";
             }
             set
             {
                 EnsureChildControls();
                 string[] values = value.Split( ',' );
-                if ( values.Length != 3 || values[0].AsIntegerOrNull() == null || values[1].AsIntegerOrNull() == null || values[2].AsIntegerOrNull() == null)
+                if ( values.Length != 3 )
                 {
                     // Need three numbers and only three numbers.
                     return;
                 }
 
-                tbVolume.Text = values[0];
-                tbPage.Text = values[1];
-                tbLine.Text = values[2];
+                tbVolume.Text = values[0].AsIntegerOrNull() != null ? values[0] : string.Empty;
+                tbPage.Text = values[1].AsIntegerOrNull() != null ? values[1] : string.Empty;
+                tbLine.Text = values[2].AsIntegerOrNull() != null ? values[2] : string.Empty;
             }
         }
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="RegistryEntry"/> class.
+        /// </summary>
         public RegistryEntry() : base()
         {
             RequiredFieldValidator = new HiddenFieldValidator();
@@ -252,17 +262,41 @@ namespace Rock.Web.UI.Controls
         /// <param name="writer">The writer.</param>
         public void RenderBaseControl( HtmlTextWriter writer )
         {
-            writer.AddAttribute( "class", "form-control-group" );
+            writer.AddAttribute( "class", "form-control-group row" );
             writer.RenderBeginTag( HtmlTextWriterTag.Div );
 
+            // Bootstrap this to horizontal
+            writer.AddAttribute( "class", "col-sm-4" );
+            writer.RenderBeginTag( HtmlTextWriterTag.Div );
             tbVolume.RenderControl( writer );
+            writer.RenderEndTag();
+
+            writer.AddAttribute( "class", "col-sm-4" );
+            writer.RenderBeginTag( HtmlTextWriterTag.Div );
             tbPage.RenderControl( writer );
+            writer.RenderEndTag();
+
+            writer.AddAttribute( "class", "col-sm-4" );
+            writer.RenderBeginTag( HtmlTextWriterTag.Div );
             tbLine.RenderControl( writer );
+            writer.RenderEndTag();
 
             writer.RenderEndTag();
         }
 
         #endregion IRockControl Implementation
+
+        /// <summary>
+        /// Outputs server control content to a provided <see cref="T:System.Web.UI.HtmlTextWriter" /> object and stores tracing information about the control if tracing is enabled.
+        /// </summary>
+        /// <param name="writer">The <see cref="T:System.Web.UI.HtmlTextWriter" /> object that receives the control content.</param>
+        public override void RenderControl( HtmlTextWriter writer )
+        {
+            if ( this.Visible )
+            {
+                RockControlHelper.RenderControl( this, writer );
+            }
+        }
 
         /// <summary>
         /// Called by the ASP.NET page framework to notify server controls that use composition-based implementation to create any child controls they contain in preparation for posting back or rendering.
