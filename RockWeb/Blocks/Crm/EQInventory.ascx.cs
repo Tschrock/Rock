@@ -62,9 +62,16 @@ namespace Rockweb.Blocks.Crm
 
     [CodeEditorField( "Results Message", "The text (HTML) to display at the top of the results section.<span class='tip tip-lava'></span><span class='tip tip-html'></span>", CodeEditorMode.Html, CodeEditorTheme.Rock, 400, true, @"
 
-<h2>EQ Inventory Assessment</h2>
+{%- assign chartColor = '#5c8ae7' -%}
+{%- assign chartHeight = '100px' -%}
+{%- assign includeFurtherReading = true -%}
 
-<h3>Self Awareness</h3>
+{%- assign includeFurtherReading = includeFurtherReading | AsBoolean -%}
+
+
+<h1 class='text-center'>EQ Inventory Assessment Results</h1>
+
+<h2 id='eq-SelfAwareness'>Self Awareness</h2>
 <p>
     Self Awareness is being aware of what emotions you are experiencing and why you
     are experiencing these emotions. This skill is demonstrated in real time. In other
@@ -80,10 +87,10 @@ namespace Rockweb.Blocks.Crm
 </p>
 
 <!-- Graph -->
-{[ chart type:'horizontalBar' legendshow:'false' tooltipshow:'false' chartheight:'50' xaxistype:'linear0to100' ]}
-    [[ dataitem label:'Self Awareness' value:'{{SelfAwareness}}' fillcolor:'#5c8ae7' ]] [[ enddataitem ]]
+{[ chart type:'horizontalBar' legendshow:'false' tooltipshow:'false' chartheight:'{{chartHeight}}' xaxistype:'linearhorizontal0to100' ]}
+    [[ dataitem label:'Self Awareness' value:'{{SelfAwareness}}' fillcolor:'{{chartColor}}' ]] [[ enddataitem ]]
 {[ endchart ]}
-<p class='text-center'><cite>Source: https://healthygrowingleaders.com</cite></p>
+<p class='text-center text-muted small'><cite>Source: https://healthygrowingleaders.com</cite></p>
 
 <blockquote>
     Your responses to the items on the Self Awareness scale indicate the score for the
@@ -91,7 +98,7 @@ namespace Rockweb.Blocks.Crm
     of those who completed this instrument.
 </blockquote>
 
-<h3>Self Regulating</h3>
+<h2 id='eq-selfregulating'>Self Regulating</h2>
 <p>
     Self Regulating is appropriately expressing your emotions in the context of relationships
     around you. Don’t confuse this with learning to suppress your emotions; rather, think of Self
@@ -101,19 +108,19 @@ namespace Rockweb.Blocks.Crm
     feeling in the moment.
 </p>
 
-    {[ chart type:'horizontalBar' legendshow:'false' tooltipshow:'false' chartheight:'50' xaxistype:'linear0to100' ]}
-        [[ dataitem label:'Self Regulating' value:'{{SelfRegulating}}' fillcolor:'#175c2d']] [[ enddataitem ]]
+    {[ chart type:'horizontalBar' legendshow:'false' tooltipshow:'false' chartheight:'{{chartHeight}}' xaxistype:'linearhorizontal0to100' ]}
+        [[ dataitem label:'Self Regulating' value:'{{SelfRegulating}}' fillcolor:'{{chartColor}}']] [[ enddataitem ]]
     {[ endchart ]}
-<p class='text-center'><cite>Source: https://healthygrowingleaders.com</cite></p>
+<p class='text-center text-muted small'><cite>Source: https://healthygrowingleaders.com</cite></p>
 
 <blockquote>
     Your responses to the items on the Self Regulation scale indicate the score for the
-    the ability to appropriately express your own emotions is equal to or better than {{ SelfRegulating }}%
+    ability to appropriately express your own emotions is equal to or better than {{ SelfRegulating }}%
     of those who completed this instrument.
 </blockquote>
 
 
-<h3>Others Awareness</h3>
+<h2 id='eq-othersawareness'>Others Awareness</h2>
 <p>
     Others Awareness is being aware of what emotions others are experiencing around you and
     why they are experiencing these emotions. As with understanding your own emotions, this
@@ -123,10 +130,10 @@ namespace Rockweb.Blocks.Crm
     cues for you to enhance your awareness of others' emotions.
 </p>
 
-    {[ chart type:'horizontalBar' legendshow:'false' tooltipshow:'false' chartheight:'50' xaxistype:'linear0to100' ]}
-        [[ dataitem label:'Others Awareness' value:'{{OthersAwareness}}' fillcolor:'#2e2e5e' ]] [[ enddataitem ]]
+    {[ chart type:'horizontalBar' legendshow:'false' tooltipshow:'false' chartheight:'{{chartHeight}}' xaxistype:'linearhorizontal0to100' ]}
+        [[ dataitem label:'Others Awareness' value:'{{OthersAwareness}}' fillcolor:'{{chartColor}}' ]] [[ enddataitem ]]
     {[ endchart ]}
-<p class='text-center'><cite>Source: https://healthygrowingleaders.com</cite></p>
+<p class='text-center text-muted small'><cite>Source: https://healthygrowingleaders.com</cite></p>
 
 <blockquote>
     Your responses to the items on the Others Awareness scale indicate the score for the
@@ -135,7 +142,7 @@ namespace Rockweb.Blocks.Crm
 </blockquote>
 
 
-<h3>Others Regulating</h3>
+<h2 id='eq-othersregulating'>Others Regulating</h2>
 <p>
     Others Regulating is helping those around you express their emotions appropriately
     in the context of your relationship with them. This skill centers on helping others
@@ -143,10 +150,10 @@ namespace Rockweb.Blocks.Crm
     to them to freely and appropriately express their emotions in the context of your relationship.
 </p>
 
-    {[ chart type:'horizontalBar' legendshow:'false' tooltipshow:'false' chartheight:'50' xaxistype:'linear0to100' ]}
-        [[ dataitem label:'Others Regulating' value:'{{OthersRegulating}}' fillcolor:'#5c5c2d' ]] [[ enddataitem ]]
+    {[ chart type:'horizontalBar' legendshow:'false' tooltipshow:'false' chartheight:'{{chartHeight}}' xaxistype:'linearhorizontal0to100' ]}
+        [[ dataitem label:'Others Regulating' value:'{{OthersRegulating}}' fillcolor:'{{chartColor}}' ]] [[ enddataitem ]]
     {[ endchart ]}
-<p class='text-center'><cite>Source: https://healthygrowingleaders.com</cite></p>
+<p class='text-center text-muted small'><cite>Source: https://healthygrowingleaders.com</cite></p>
 
 <blockquote>
     Your responses to the items on the Others Regulation scale indicate the score for
@@ -156,7 +163,7 @@ namespace Rockweb.Blocks.Crm
 </blockquote>
 
 
-<h2>Additional Scales</h2>
+<h2 id='eq-additionalscales'>Additional Scales</h2>
 <p>
     The EQ*i includes two additional scales which are particularly useful for those in
     leadership roles: 1) EQ in Problem Solving and 2) EQ under stress. Frequently we
@@ -165,7 +172,7 @@ namespace Rockweb.Blocks.Crm
     just logic or doing the “right” thing.
 </p>
 
-<h3>EQ in Problem Solving</h3>
+<h3 id='eq-problemsolving'>EQ in Problem Solving</h3>
 <p>
     The EQ in Problem Solving identifies how proficient you are in using emotions to
     solve problems. This skill requires first being aware of what emotions are involved
@@ -173,10 +180,10 @@ namespace Rockweb.Blocks.Crm
     others (and yourself) express those emotions within the discussion.
 </p>
 
-    {[ chart type:'horizontalBar' legendshow:'false' tooltipshow:'false' chartheight:'50' xaxistype:'linear0to100' ]}
-        [[ dataitem label:'EQ in Problem Solving' value:'{{EQinProblemSolving}}' fillcolor:'#5b2d09' ]] [[ enddataitem ]]
+    {[ chart type:'horizontalBar' legendshow:'false' tooltipshow:'false' chartheight:'{{chartHeight}}' xaxistype:'linearhorizontal0to100' ]}
+        [[ dataitem label:'EQ in Problem Solving' value:'{{EQinProblemSolving}}' fillcolor:'{{chartColor}}' ]] [[ enddataitem ]]
     {[ endchart ]}
-<p class='text-center'><cite>Source: https://healthygrowingleaders.com</cite></p>
+<p class='text-center text-muted small'><cite>Source: https://healthygrowingleaders.com</cite></p>
 
 <blockquote>
     Your responses to the items on the EQ in Problem Solving scale indicate the score for
@@ -185,7 +192,7 @@ namespace Rockweb.Blocks.Crm
 </blockquote>
 
 
-<h3>EQ Under Stress</h3>
+<h3 id='eq-understress'>EQ Under Stress</h3>
 <p>
     It is more difficult to maintain high EQ under high stress than at any other time,
     so EQ Under Stress identifies how capable you are to keep high EQ under high-stress
@@ -195,16 +202,50 @@ namespace Rockweb.Blocks.Crm
     articulating them when not under stress.
 </p>
 
-    {[ chart type:'horizontalBar' legendshow:'false' tooltipshow:'false' chartheight:'50' xaxistype:'linear0to100' ]}
-        [[ dataitem label:'EQ Under Stress' value:'{{EQUnderStress}}' fillcolor:'#8a5c2d' ]] [[ enddataitem ]]
+    {[ chart type:'horizontalBar' legendshow:'false' tooltipshow:'false' chartheight:'{{chartHeight}}' xaxistype:'linearhorizontal0to100' ]}
+        [[ dataitem label:'EQ Under Stress' value:'{{EQUnderStress}}' fillcolor:'{{chartColor}}' ]] [[ enddataitem ]]
     {[ endchart ]}
-<p class='text-center'><cite>Source: https://healthygrowingleaders.com</cite></p>
+<p class='text-center text-muted small'><cite>Source: https://healthygrowingleaders.com</cite></p>
 
 <blockquote>
     Your responses to the items on the EQ in Under Stress scale indicate the score
     for the ability to maintain EQ under significant stress is equal to or better than {{ EQUnderStress }}%
     of those who completed this instrument.
 </blockquote>
+
+<h3 id='eq-beforeyougo'>Before You Go</h3>
+
+<p>
+Your scores on each of these scales are simply a reflection on the skill sets you have
+developed in each of these areas. You should not take pride or feel shame for any of the
+scores. Instead, we should each commit to working
+on our lowest scores or that which is most troublesome. Take a look at the list below for a number of resources which are
+helpful as a place to begin</p>
+
+<p>However, as we said in the introduction to this instrument, EQ is developed through
+intentional effort, coaching and practice. The remarkable aspect of EQ is that research has
+shown that individuals well into their 90s have the capacity to increase their EQ in any of
+the six scales.</p>
+
+<p>We have personally seen individuals raise their EQ significantly in a few short years.
+You are not destined to retain your current EQ, but it is simply a launching point for where you can
+go from this point forward.</p>
+
+{% if includeFurtherReading %}
+<h3>Further Reading</h3>
+
+<p>Developing your EQ is like riding a bike. While it may be helpful to read a book on bike riding, it is even more useful to watch videos. But, the only way to learn to ride a bike is to DO IT! You must develop the kinesthetic sense to feel the balance by your senses, coordinated by your nerves and implemented by many muscles. The same is true with EQ--it is intentionally developed, seen in others, coached in real time, and practiced in relationships.</p>
+<p>Here are a few books which we believe are great resources for developing your EQ:</p>
+
+<ul>
+<li><a href='https://www.goodreads.com/book/show/151881.A_Failure_of_Nerve'>A Failure of Nerve: Leadership in the Age of the Quick Fix</a>, by Edwin Friedman</li>
+<li><a href='https://www.goodreads.com/book/show/336913.Coaching_for_Emotional_Intelligence'>Coaching for Emotional Intelligence: The Secret to Developing the Star Potential in Your Employees</a>, by Bob Wall</li>
+<li><a href='https://www.goodreads.com/book/show/15014.Crucial_Conversations'>Crucial Conversations: Tools for Talking When Stakes Are High</a> by Kerry Patterson, Joseph Grenny, Ron McMillan, Al Switzler, Stephen R. Covey (Foreword)</li>
+<li><a href='https://www.goodreads.com/book/show/6788858-emotional-intelligence-for-dummies'>Emotional Intelligence for Dummies</a> by Steven J. Stein</li>
+<li><a href='https://www.goodreads.com/book/show/180463.Leadership_and_Self_Deception'>Leadership and Self-Deception: Getting Out of the Box</a> by The Arbinger Group</li>
+<li><a href='https://www.goodreads.com/book/show/163106.Primal_Leadership'>Primal Leadership: Realizing the Power of Emotional Intelligence</a> by Daniel Goleman</li>
+</ul>
+{% endif %}
 " )]
     public partial class EQInventory : Rock.Web.UI.RockBlock
     {
@@ -514,7 +555,7 @@ namespace Rockweb.Blocks.Crm
             if ( assessmentResponseRow.Code.EndsWith( "N" ) )
             {
                 rblQuestion.DataSource = NEGATIVE_OPTION;
-               
+
             }
             else
             {
