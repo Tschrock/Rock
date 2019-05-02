@@ -248,6 +248,10 @@
     <Compile Include="Migrations\201904232307529_AssessmentSystem.Designer.cs">
       <DependentUpon>201904232307529_AssessmentSystem.cs</DependentUpon>
     </Compile>
+    <Compile Include="Migrations\201905011250264_AddMotivators.cs" />
+    <Compile Include="Migrations\201905011250264_AddMotivators.Designer.cs">
+      <DependentUpon>201905011250264_AddMotivators.cs</DependentUpon>
+    </Compile>
     <Compile Include="Migrations\CreateDatabase\201311251734059_CreateDatabase.cs" />
     <Compile Include="Migrations\CreateDatabase\201311251734059_CreateDatabase.Designer.cs">
       <DependentUpon>201311251734059_CreateDatabase.cs</DependentUpon>
@@ -674,6 +678,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Migrations\201904232307529_AssessmentSystem.resx">
       <DependentUpon>201904232307529_AssessmentSystem.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201905011250264_AddMotivators.resx">
+      <DependentUpon>201905011250264_AddMotivators.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Migrations\CreateDatabase\201311251734059_CreateDatabase.resx">
       <DependentUpon>201311251734059_CreateDatabase.cs</DependentUpon>

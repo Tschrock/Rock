@@ -185,6 +185,141 @@ namespace Rock.SystemGuid
         /// </summary>
         public const string PERSON_EQ_SCALES_UNDER_STRESS = "C3CB8FB5-34A2-48C8-B1FC-7CEBA670C1ED";
 
+        /// <summary>
+        /// The person attribute for the Motivator Beliving
+        /// </summary>
+        public const string PERSON_MOTIVATOR_BELIVING = "2045D752-2B7F-4314-A58D-AE77AE095CA8";
+
+        /// <summary>
+        /// The person attribute for the Motivator Caring
+        /// </summary>
+        public const string PERSON_MOTIVATOR_CARING = "95C6E9B1-4E26-4D7A-8944-3FED076C12B6";
+
+        /// <summary>
+        /// The person attribute for the Motivator Communicating
+        /// </summary>
+        public const string PERSON_MOTIVATOR_COMMUNICATING = "79CC222F-ABB0-489B-8DC3-20FA10A29ADE";
+
+        /// <summary>
+        /// The person attribute for the Motivator Empowering
+        /// </summary>
+        public const string PERSON_MOTIVATOR_EMPOWERING = "510523B0-E428-407A-8C6F-216ADD27CCE0";
+
+        /// <summary>
+        /// The person attribute for the Motivator Engaging
+        /// </summary>
+        public const string PERSON_MOTIVATOR_ENGAGING = "A3B93C89-8C89-431D-A408-7E8C209DF62A";
+
+        /// <summary>
+        /// The person attribute for the Motivator Flexing
+        /// </summary>
+        public const string PERSON_MOTIVATOR_FLEXING = "7E32DC1C-D912-45AA-9C16-F098ED33A0D2";
+
+        /// <summary>
+        /// The person attribute for the Motivator Gathering
+        /// </summary>
+        public const string PERSON_MOTIVATOR_GATHERING = "2E6960AE-9381-457C-9191-C09CDCAC6FBB";
+
+        /// <summary>
+        /// The person attribute for the Motivator Innovating
+        /// </summary>
+        public const string PERSON_MOTIVATOR_INNOVATING = "B907EC74-CC86-4AEC-9A85-F46FA4152993";
+
+        /// <summary>
+        /// The person attribute for the Motivator Leading
+        /// </summary>
+        public const string PERSON_MOTIVATOR_LEADING = "52652A3A-BE69-4956-B86A-40341481A57C";
+
+        /// <summary>
+        /// The person attribute for the Motivator Learning
+        /// </summary>
+        public const string PERSON_MOTIVATOR_LEARNING = "2579C27B-CE3F-4F2F-B413-1131781106BC";
+
+        /// <summary>
+        /// The person attribute for the Motivator Maximizing
+        /// </summary>
+        public const string PERSON_MOTIVATOR_MAXIMIZING = "F0611197-79C6-4AA3-9BB8-3296604CDA2E";
+
+        /// <summary>
+        /// The person attribute for the Motivator Organizing
+        /// </summary>
+        public const string PERSON_MOTIVATOR_ORGANIZING = "8BA793F1-81B3-43D3-A096-79C3CF50D4C6";
+
+        /// <summary>
+        /// The person attribute for the Motivator Pacing
+        /// </summary>
+        public const string PERSON_MOTIVATOR_PACING = "DD20707F-155B-4784-9BEC-76894A2216A3";
+
+        /// <summary>
+        /// The person attribute for the Motivator Perceiving
+        /// </summary>
+        public const string PERSON_MOTIVATOR_PERCEIVING = "33DBCA52-367D-40CB-BB79-DB38D41E7CF4";
+
+        /// <summary>
+        /// The person attribute for the Motivator Relating
+        /// </summary>
+        public const string PERSON_MOTIVATOR_RELATING = "60653130-E82A-472B-984E-11594547B26C";
+
+        /// <summary>
+        /// The person attribute for the Motivator Serving
+        /// </summary>
+        public const string PERSON_MOTIVATOR_SERVING = "C63CEF01-A942-445B-A27D-824FC6197F4E";
+
+        /// <summary>
+        /// The person attribute for the Motivator Thinking
+        /// </summary>
+        public const string PERSON_MOTIVATOR_THINKING = "4AA4D77D-138D-45A8-827E-1644062BA5C2";
+
+        /// <summary>
+        /// The person attribute for the Motivator Transforming
+        /// </summary>
+        public const string PERSON_MOTIVATOR_TRANSFORMING = "EB185628-9F15-4BFB-BE75-9B08DA73CF7B";
+
+        /// <summary>
+        /// The person attribute for the Motivator Uniting
+        /// </summary>
+        public const string PERSON_MOTIVATOR_UNITING = "D7A987CA-7DF6-4539-96F6-A3641C3F1DED";
+
+        /// <summary>
+        /// The person attribute for the Motivator Unwavering
+        /// </summary>
+        public const string PERSON_MOTIVATOR_UNWAVERING = "C4361DE6-6F62-446C-B4B3-39CB670AC0E1";
+
+        /// <summary>
+        /// The person attribute for the Motivator Venturing
+        /// </summary>
+        public const string PERSON_MOTIVATOR_VENTURING = "04ED7F11-4C01-43B6-9EF7-C5C4820055B0";
+
+        /// <summary>
+        /// The person attribute for the Motivator Visioning
+        /// </summary>
+        public const string PERSON_MOTIVATOR_VISIONING = "C9BC83A0-27D4-4194-A199-56F2EA83363C";
+
+        /// <summary>
+        /// The person attribute for the Motivator Growth Propensity
+        /// </summary>
+        public const string PERSON_MOTIVATOR_GROWTHPROPENSITY = "3BDBF9D3-F4DF-4E4C-A81D-64730217B6EA";
+
+        /// <summary>
+        /// The person attribute for the Motivator Cluster Influential
+        /// </summary>
+        public const string PERSON_MOTIVATOR_CLUSTER_INFLUENTIAL = "CDCBA1D3-4129-43DB-9607-74F57BEBF807";
+
+        /// <summary>
+        /// The person attribute for the Motivator Cluster Organizational
+        /// </summary>
+        public const string PERSON_MOTIVATOR_CLUSTER_ORGANIZATIONAL = "0815E9BE-BC24-4568-AC1A-3ECCDFF44D9F";
+
+        /// <summary>
+        /// The person attribute for the Motivator Cluster Intellectual
+        /// </summary>
+        public const string PERSON_MOTIVATOR_CLUSTER_INTELLECTUAL = "592A5F89-5E8A-43D8-8843-760207D71699";
+
+        /// <summary>
+        /// The person attribute for the Motivator Cluster Operational
+        /// </summary>
+        public const string PERSON_MOTIVATOR_CLUSTER_OPERATIONAL = "075FDF4D-DDEC-4106-B996-F48CD1EFC978";
+
         #endregion
 
         /// <summary>
