@@ -166,19 +166,19 @@ namespace RockWeb.Blocks.Education
                         .ToList()
                     );
                 }
+
+                var mergeFields = new Dictionary<string, object>()
+                {
+                    { "SelectedGroups", selectedGroups },
+                    { "UserAgeGroups", userAgeGroups }
+                };
+                if (contentChannel != null)
+                {
+                    mergeFields.Add( "LessonPlanContentChannelId", contentChannel.Id );
+                }
+                lOutput.Text = GetAttributeValue( AttributeKey.LavaTemplate ).ResolveMergeFields( mergeFields );
             }
 
-            var mergeFields = new Dictionary<string, object>()
-            {
-                { "SelectedGroups", selectedGroups },
-                { "UserAgeGroups", userAgeGroups }
-            };
-            if (contentChannel != null)
-            {
-                mergeFields.Add( "LessonPlanContentChannelId", contentChannel.Id );
-            }
-            lOutput.Text = GetAttributeValue( AttributeKey.LavaTemplate ).ResolveMergeFields( mergeFields );
-            //lOutput.Text = GetAttributeValue( "LavaTemplate" ).ResolveMergeFields( mergeFields );
             //RockPage.PageTitle = pageTitle;
             //RockPage.BrowserTitle = String.Format( "{0} | {1}", pageTitle, RockPage.Site.Name );
             //RockPage.Header.Title = String.Format( "{0} | {1}", pageTitle, RockPage.Site.Name );
