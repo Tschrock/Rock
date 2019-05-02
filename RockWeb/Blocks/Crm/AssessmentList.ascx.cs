@@ -101,16 +101,16 @@ namespace Rockweb.Blocks.Crm
         }
         #endregion Atrribute Keys
 
-        #region Fields
+        #region constants
 
-        protected const string lavaTemplateDefaultValue = @"<div class='panel-heading panel-default rollover-container clearfix'>
-     <div class='panel-heading'>Assessments</div>
+        protected const string lavaTemplateDefaultValue = @"<div class='panel panel-default'>
+    <div class='panel-heading'>Assessments</div>
     <div class='panel-body'>
             {% for assessmenttype in AssessmentTypes %}
                 {% if assessmenttype.LastRequestObject %}
                     {% if assessmenttype.LastRequestObject.Status == 'Complete' %}
                         <div class='panel panel-success'>
-                            <div class='panel-heading'> {{ assessmenttype.Title }}</br>
+                            <div class='panel-heading'>{{ assessmenttype.Title }}</br>
                                 Completed: {{ assessmenttype.LastRequestObject.CompletedDate | Date:'M/d/yyyy'}} </br>
                                 <a href='{{ assessmenttype.AssessmentResultsPath}}'>View Results</a>
                             </div>
@@ -122,7 +122,7 @@ namespace Rockweb.Blocks.Crm
                                 <a href='{{ assessmenttype.AssessmentPath}}'>Start Assessment</a>
                             </div>
                         </div>
-                    {% endif %}   
+                    {% endif %}
                     {% else %}
                         <div class='panel panel-default'>
                             <div class='panel-heading'> {{ assessmenttype.Title }}</br>
@@ -135,7 +135,7 @@ namespace Rockweb.Blocks.Crm
     </div>
 </div>";
 
-        #endregion
+        #endregion constants
 
         #region Base Control Methods
 
@@ -166,7 +166,7 @@ namespace Rockweb.Blocks.Crm
             }
         }
 
-        #endregion
+        #endregion Base Control Methods
 
         #region Events
 
@@ -180,7 +180,7 @@ namespace Rockweb.Blocks.Crm
             BindData();
         }
 
-        #endregion
+        #endregion Events
 
         #region Methods
 
@@ -268,6 +268,6 @@ namespace Rockweb.Blocks.Crm
             }
         }
 
-        #endregion
+        #endregion Methods
     }
 }

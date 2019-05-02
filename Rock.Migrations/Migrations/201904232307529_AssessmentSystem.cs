@@ -362,14 +362,14 @@ SELECT  CASE
             // Attrib for BlockType: Conflict Profile:Number of Questions
             RockMigrationHelper.UpdateBlockTypeAttribute("91473D2F-607D-4260-9C6A-DD3762FE472D","A75DFC58-7A1B-4799-BF31-451B2BBE38FF","Number of Questions","NumberofQuestions","",@"The number of questions to show per page while taking the test",2,@"7","6CBCA505-E5BA-4FE9-9DD8-7F3C507B12B8");
             // Attrib for BlockType: Assessment List:Lava Template
-            RockMigrationHelper.UpdateBlockTypeAttribute("0AD1D108-4ABF-4AED-B3B7-4AAEA16D10E4","1D0D3794-C210-48A8-8C68-3FBEC08A6BA5","Lava Template","LavaTemplate","",@"The lava template to use to format the entire block.  <span class='tip tip-lava'></span> <span class='tip tip-html'></span>",0,@"<div class='panel-heading panel-default rollover-container clearfix'>
-     <div class='panel-heading'>Assessments</div>
+            RockMigrationHelper.UpdateBlockTypeAttribute("0AD1D108-4ABF-4AED-B3B7-4AAEA16D10E4","1D0D3794-C210-48A8-8C68-3FBEC08A6BA5","Lava Template","LavaTemplate","",@"The lava template to use to format the entire block.  <span class='tip tip-lava'></span> <span class='tip tip-html'></span>",0,@"<div class='panel panel-default'>
+    <div class='panel-heading'>Assessments</div>
     <div class='panel-body'>
             {% for assessmenttype in AssessmentTypes %}
                 {% if assessmenttype.LastRequestObject %}
                     {% if assessmenttype.LastRequestObject.Status == 'Complete' %}
                         <div class='panel panel-success'>
-                            <div class='panel-heading'> {{ assessmenttype.Title }}</br>
+                            <div class='panel-heading'>{{ assessmenttype.Title }}</br>
                                 Completed: {{ assessmenttype.LastRequestObject.CompletedDate | Date:'M/d/yyyy'}} </br>
                                 <a href='{{ assessmenttype.AssessmentResultsPath}}'>View Results</a>
                             </div>
@@ -381,7 +381,7 @@ SELECT  CASE
                                 <a href='{{ assessmenttype.AssessmentPath}}'>Start Assessment</a>
                             </div>
                         </div>
-                    {% endif %}   
+                    {% endif %}
                     {% else %}
                         <div class='panel panel-default'>
                             <div class='panel-heading'> {{ assessmenttype.Title }}</br>
