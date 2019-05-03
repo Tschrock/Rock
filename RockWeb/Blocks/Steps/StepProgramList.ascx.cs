@@ -36,17 +36,20 @@ namespace RockWeb.Blocks.Steps
 
     #region Block Attributes
 
-    [CategoryField( name: "Categories",
-                    key: AttributeKey.Categories,
-                    description: "If block should only display Step Programs from specific categories, select the categories here.",
-                    allowMultiple: true,
-                    entityTypeName: "Rock.Model.StepProgram",
-                    order: 1,
-                    required: false )]
-    [LinkedPage( name: "Detail Page",
-                 key: AttributeKey.DetailPage,
-                 category: AttributeCategory.LinkedPages,
-                 order: 2 )]
+    [CategoryField(
+        "Categories",
+        Key = AttributeKey.Categories,
+        Description = "If block should only display Step Programs from specific categories, select the categories here.",
+        AllowMultiple = true,
+        EntityTypeName = "Rock.Model.StepProgram",
+        IsRequired = false,
+        Order = 1 )]
+
+    [LinkedPage(
+        "Detail Page",
+        Key = AttributeKey.DetailPage,
+        Category = AttributeCategory.LinkedPages,
+        Order = 2 )]
 
     #endregion Block Attributes
 
@@ -414,7 +417,7 @@ namespace RockWeb.Blocks.Steps
 
             public int Id { get; set; }
             public string Name { get; set; }
-            public string NameHtml { get; set; }
+            public string IconCssClass { get; set; }
             public string Category { get; set; }
             public int StepTypeCount { get; set; }
             public int StepCompletedCount { get; set; }
@@ -426,15 +429,7 @@ namespace RockWeb.Blocks.Steps
                 newItem.Id = stepProgram.Id;
                 newItem.Name = stepProgram.Name;
                 newItem.Category = stepProgram.Category.Name;
-
-                if ( string.IsNullOrWhiteSpace( stepProgram.IconCssClass ) )
-                {
-                    newItem.NameHtml = string.Format( "<i class='fa fa-fw'></i>  {0}", newItem.Name );
-                }
-                else
-                {
-                    newItem.NameHtml = string.Format( "<i class='{0} fa-fw'></i>  {1}", stepProgram.IconCssClass, newItem.Name );
-                }
+                newItem.IconCssClass = stepProgram.IconCssClass;
 
                 if ( stepProgram.StepTypes != null )
                 {

@@ -12,7 +12,7 @@
             <div class="panel-body">
 
                 <div class="grid grid-panel">
-                    <Rock:GridFilter ID="rFilter" runat="server"  OnClearFilterClick="rFilter_ClearFilterClick">
+                    <Rock:GridFilter ID="rFilter" runat="server" OnClearFilterClick="rFilter_ClearFilterClick">
                         <Rock:CategoryPicker ID="cpCategory" runat="server" Label="Category" Required="false" EntityTypeName="Rock.Model.StepProgram" />
                         <Rock:RockDropDownList ID="ddlActiveFilter" runat="server" Label="Active Status">
                             <asp:ListItem></asp:ListItem>
@@ -23,8 +23,12 @@
                     <Rock:Grid ID="gStepProgram" runat="server" AllowSorting="false">
                         <Columns>
                             <Rock:ReorderField />
-                            <Rock:RockBoundField DataField="Name" HeaderText="Name" SortExpression="Name" Visible="false" ExcelExportBehavior="AlwaysInclude" />
-                            <Rock:HtmlField DataField="NameHtml" HeaderText="Name" SortExpression="Name" DisplayMode="Rendered" ExcelExportBehavior="NeverInclude"/>
+                             <Rock:RockTemplateField ExcelExportBehavior="NeverInclude" HeaderStyle-Width="48px">
+                                <ItemTemplate>
+                                   <i class="fa-fw <%# Eval( "IconCssClass" ) %>"></i>
+                                </ItemTemplate>
+                            </Rock:RockTemplateField>
+                            <Rock:RockBoundField DataField="Name" HeaderText="Name" SortExpression="Name" Visible="true" ExcelExportBehavior="AlwaysInclude" />
                             <Rock:RockBoundField DataField="Category" HeaderText="Category"/>
                             <Rock:RockBoundField DataField="StepTypeCount" HeaderText="Step Types" DataFormatString="{0:#;#;-}" />
                             <Rock:RockBoundField DataField="StepCompletedCount" HeaderText="Steps Taken" DataFormatString="{0:#;#;-}" />
