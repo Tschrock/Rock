@@ -31,7 +31,7 @@ namespace RockWeb.Blocks.Steps
 {
     [DisplayName( "Steps" )]
     [Category( "Steps" )]
-    [Description( "Renders a page menu based on a root page and lava template." )]
+    [Description( "Displays step records for a person in a step program." )]
 
     #region Attributes
 

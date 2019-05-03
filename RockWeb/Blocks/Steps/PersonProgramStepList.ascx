@@ -66,6 +66,17 @@
     .prereq-list-info {
         padding: 20px 20px 0 20px;
     }
+
+    .step-card a {
+        color: inherit;
+    }
+
+    .card-add-step-button {
+        width: 100%;
+        position: absolute;
+        top: 10px;
+        left: 0;
+    }
 </style>
 
 <asp:UpdatePanel ID="upContent" runat="server">
@@ -139,6 +150,11 @@
                                         <%# Eval( "RenderedLava" ) %>
                                         <div class="step-card-hover">
                                             <asp:Panel ID="pnlStepRecords" runat="server">
+                                                <asp:LinkButton runat="server" OnCommand="AddStep" CommandArgument='<%# Eval("StepType.Id") %>' CssClass="card-add-step-button">
+                                                    <i class="fa fa-plus-circle fa-4x"></i>
+                                                    <br />
+                                                    Add a Step
+                                                </asp:LinkButton>
                                                 <table class="step-records-table">
                                                     <asp:repeater id="rSteps" runat="server">
                                                         <itemtemplate>
