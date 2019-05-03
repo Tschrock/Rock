@@ -154,7 +154,17 @@ namespace RockWeb.Blocks.Steps
         protected void AddStep( object sender, CommandEventArgs e )
         {
             var stepTypeId = e.CommandArgument.ToStringSafe().AsIntegerOrNull();
+            // TODO
+        }
 
+        /// <summary>
+        /// Event when the user clicks to delete a step from the card view
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        protected void rSteps_Edit( object sender, CommandEventArgs e )
+        {
+            var stepId = e.CommandArgument.ToStringSafe().AsInteger();
             // TODO
         }
 

@@ -144,7 +144,11 @@
                                                         <itemtemplate>
                                                             <tr>
                                                                 <td><%# Eval("StatusHtml") %></td>
-                                                                <td><i class="fa fa-pencil"></i></td>
+                                                                <td>
+                                                                    <asp:LinkButton runat="server" OnCommand="rSteps_Edit" CommandArgument='<%# Eval("StepId") %>'>
+                                                                        <i class="fa fa-pencil"></i>
+                                                                    </asp:LinkButton>
+                                                                </td>
                                                                 <td>
                                                                     <asp:LinkButton runat="server" OnCommand="rSteps_Delete" CommandArgument='<%# Eval("StepId") %>'>
                                                                         <i class="fa fa-times"></i>
