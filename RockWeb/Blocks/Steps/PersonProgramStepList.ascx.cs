@@ -159,32 +159,86 @@ namespace RockWeb.Blocks.Steps
         }
 
         /// <summary>
+        /// Event when the user clicks to delete a step from the card view
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        protected void rSteps_Delete( object sender, CommandEventArgs e )
+        {
+            var stepId = e.CommandArgument.ToStringSafe().AsInteger();
+            DeleteStep( stepId );
+            RenderCardView();
+        }
+
+        /// <summary>
         /// Handle the event where the user wants to delete a step from the grid
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
         protected void gStepList_Delete( object sender, RowEventArgs e )
         {
-            var rockContext = GetRockContext();
-            var service = new StepService( rockContext );
-            var step = service.Get( e.RowKeyId );
-            string errorMessage;
-
-            if ( step == null )
-            {
-                return;
-            }
-
-            if ( !service.CanDelete( step, out errorMessage ) )
-            {
-                ShowError( errorMessage );
-                return;
-            }
-
-            service.Delete( step );
-            rockContext.SaveChanges();
-
+            var stepId = e.RowKeyId;
+            DeleteStep( stepId );
             RenderGridView();
+        }
+
+        protected void rAddStepButtons_ItemDataBound( Object Sender, RepeaterItemEventArgs e )
+        {
+            if ( e.Item.ItemType != ListItemType.Item && e.Item.ItemType != ListItemType.AlternatingItem )
+            {
+                return;
+            }
+
+            var addStepButton = e.Item.DataItem as AddStepButton;
+
+            if ( !addStepButton.IsEnabled )
+            {
+                var linkButton = e.Item.FindControl( "lbAddStep" ) as LinkButton;
+                linkButton.Attributes["disabled"] = "disabled";
+            }
+        }
+
+        protected void rStepTypeCards_ItemDataBound( Object Sender, RepeaterItemEventArgs e )
+        {
+            if ( e.Item.ItemType != ListItemType.Item && e.Item.ItemType != ListItemType.AlternatingItem )
+            {
+                return;
+            }
+
+            var cardData = e.Item.DataItem as CardData;
+            var stepTypeId = cardData.StepType.Id;
+            var hasMetPrerequisites = HasMetPrerequisites( stepTypeId );
+
+            var pnlStepRecords = e.Item.FindControl( "pnlStepRecords" ) as Panel;
+            var pnlPrereqs = e.Item.FindControl( "pnlPrereqs" ) as Panel;
+
+            pnlStepRecords.Visible = hasMetPrerequisites;
+            pnlPrereqs.Visible = !hasMetPrerequisites;
+
+            if ( hasMetPrerequisites )
+            {
+                var steps = GetPersonStepsOfType( stepTypeId );
+
+                var data = steps.Select( s => new CardStepData
+                {
+                    StepId = s.Id,
+                    StatusHtml = string.Format( "{0}<br /><small>{1}</small>",
+                        s.StepStatus != null ? s.StepStatus.Name : string.Empty,
+                        s.CompletedDateTime.HasValue ? s.CompletedDateTime.Value.ToShortDateString() : string.Empty )
+                } );
+
+                var rSteps = e.Item.FindControl( "rSteps" ) as Repeater;
+                rSteps.DataSource = data;
+                rSteps.DataBind();
+            }
+            else
+            {
+                var prereqs = GetPrerequisiteStepTypes( stepTypeId );
+
+                var rPrereqs = e.Item.FindControl( "rPrereqs" ) as Repeater;
+                rPrereqs.DataSource = prereqs;
+                rPrereqs.DataBind();
+            }
         }
 
         #endregion Events
@@ -379,6 +433,35 @@ namespace RockWeb.Blocks.Steps
         }
 
         /// <summary>
+        /// Delete the step with the given Id and then re-render the lists of steps
+        /// </summary>
+        /// <param name="stepId"></param>
+        private void DeleteStep( int stepId )
+        {
+            var rockContext = GetRockContext();
+            var service = new StepService( rockContext );
+            var step = service.Get( stepId );
+            string errorMessage;
+
+            if ( step == null )
+            {
+                return;
+            }
+
+            if ( !service.CanDelete( step, out errorMessage ) )
+            {
+                ShowError( errorMessage );
+                return;
+            }
+
+            service.Delete( step );
+            rockContext.SaveChanges();
+
+            RenderGridView();
+            RenderCardView();
+        }
+
+        /// <summary>
         /// Get the rock context
         /// </summary>
         /// <returns></returns>
@@ -455,7 +538,7 @@ namespace RockWeb.Blocks.Steps
                 return;
             }
 
-            var renderedLavaTemplates = new List<string>();
+            var cardsData = new List<CardData>();
 
             foreach ( var stepType in stepTypes )
             {
@@ -471,10 +554,14 @@ namespace RockWeb.Blocks.Steps
                     { "StepCount", personStepsOfType.Count }
                 } );
 
-                renderedLavaTemplates.Add( rendered );
+                cardsData.Add( new CardData
+                {
+                    StepType = stepType,
+                    RenderedLava = rendered
+                } );
             }
 
-            rStepTypeCards.DataSource = from rlt in renderedLavaTemplates select new { RenderedLava = rlt };
+            rStepTypeCards.DataSource = cardsData;
             rStepTypeCards.DataBind();
         }
 
@@ -541,6 +628,18 @@ namespace RockWeb.Blocks.Steps
             public int StepTypeId { get; set; }
             public bool IsEnabled { get; set; }
             public string ButtonContents { get; set; }
+        }
+
+        public class CardData
+        {
+            public StepType StepType { get; set; }
+            public string RenderedLava { get; set; }
+        }
+
+        public class CardStepData
+        {
+            public int StepId { get; set; }
+            public string StatusHtml { get; set; }
         }
 
         #endregion Helper Classes
