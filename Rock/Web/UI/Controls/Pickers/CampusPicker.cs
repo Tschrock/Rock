@@ -160,16 +160,7 @@ namespace Rock.Web.UI.Controls
         /// <param name="selectedValue">The selected value.</param>
         private void LoadItems( int? selectedValue )
         {
-            string firstItemText = Items.Count > 0 && Items[0].Value == string.Empty ? Items[0].Text : string.Empty;
-
-            var selectedItems = Items.Cast<ListItem>()
-                .Where( i => i.Selected )
-                .Select( i => i.Value ).AsIntegerList();
-
             Items.Clear();
-
-            // add Empty option first
-            Items.Add( new ListItem( firstItemText, string.Empty ) );
 
             var campuses = CampusCache.All()
                 .Where( c =>
@@ -178,11 +169,39 @@ namespace Rock.Web.UI.Controls
                 .OrderBy( c => c.Name )
                 .ToList();
 
-            foreach ( CampusCache campus in campuses )
+            if ( campuses.Count == 1 )
             {
-                var li = new ListItem( campus.Name, campus.Id.ToString() );
-                li.Selected = selectedItems.Contains( campus.Id );
+                // Single Campus, set it as selected
+                var li = new ListItem()
+                {
+                    Text = campuses[0].Name,
+                    Value = campuses[0].Id.ToString(),
+                    Selected = true
+                };
+
                 Items.Add( li );
+
+                 // Render the control but don't show it.
+                this.FormGroupCssClass = this.FormGroupCssClass.Contains( "hidden" ) ? this.FormGroupCssClass : this.FormGroupCssClass + " hidden ";
+            }
+            else
+            {
+                // If another campus appears then we want to show the control
+                this.FormGroupCssClass = this.FormGroupCssClass.Replace("hidden", string.Empty);
+
+                var selectedItems = Items.Cast<ListItem>()
+                    .Where( i => i.Selected )
+                    .Select( i => i.Value ).AsIntegerList();
+
+                // add Empty option first
+                string firstItemText = Items.Count > 0 && Items[0].Value == string.Empty ? Items[0].Text : string.Empty;
+                Items.Add( new ListItem( firstItemText, string.Empty ) );
+                foreach ( CampusCache campus in campuses )
+                {
+                    var li = new ListItem( campus.Name, campus.Id.ToString() );
+                    li.Selected = selectedItems.Contains( campus.Id );
+                    Items.Add( li );
+                }
             }
         }
 

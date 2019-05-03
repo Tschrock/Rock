@@ -172,16 +172,10 @@ namespace Rock.Web.UI.Controls
         /// <param name="selectedValues">The selected values.</param>
         private void LoadItems( List<int> selectedValues )
         {
-            var selectedItems = Items.Cast<ListItem>()
-                .Where( i => i.Selected )
-                .Select( i => i.Value ).AsIntegerList();
-
             Items.Clear();
 
             var allCampuses = CampusCache.All();
-
             var campusIds = this.CampusIds ?? allCampuses.Select( a => a.Id ).ToList();
-
             var campuses = allCampuses
                 .Where( c =>
                     ( campusIds.Contains( c.Id ) && ( !c.IsActive.HasValue || c.IsActive.Value || IncludeInactive ) ) ||
@@ -189,11 +183,36 @@ namespace Rock.Web.UI.Controls
                 .OrderBy( c => c.Name )
                 .ToList();
 
-            foreach ( CampusCache campus in campuses )
+            if ( campuses.Count == 1 )
             {
-                var li = new ListItem( campus.Name, campus.Id.ToString() );
-                li.Selected = selectedItems.Contains( campus.Id );
+                // Single Campus, set it as selected
+                var li = new ListItem()
+                {
+                    Text = campuses[0].Name,
+                    Value = campuses[0].Id.ToString(),
+                    Selected = true
+                };
+
                 Items.Add( li );
+
+                 // Remder the control but don't show it by adding the hidden class if it does not already exist.
+                this.FormGroupCssClass = this.FormGroupCssClass.Contains( "hidden" ) ? this.FormGroupCssClass : this.FormGroupCssClass + " hidden ";
+            }
+            else
+            {
+                // If another campus appears then we want to show the control
+                this.FormGroupCssClass = this.FormGroupCssClass.Replace("hidden", string.Empty);
+
+                var selectedItems = Items.Cast<ListItem>()
+                    .Where( i => i.Selected )
+                    .Select( i => i.Value ).AsIntegerList();
+
+                foreach ( CampusCache campus in campuses )
+                {
+                    var li = new ListItem( campus.Name, campus.Id.ToString() );
+                    li.Selected = selectedItems.Contains( campus.Id );
+                    Items.Add( li );
+                }
             }
         }
     }
