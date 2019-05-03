@@ -124,9 +124,8 @@
                         <div class="col-xs-12">
                             <div class="grid grid-panel">
                                 <Rock:GridFilter ID="gfGridFilter" runat="server">
-                                    <Rock:DateRangePicker ID="drpDateRangePicker" runat="server" Label="Date Range" />
+                                    <Rock:RockTextBox ID="tbStepTypeName" runat="server" Label="Name"></Rock:RockTextBox>
                                 </Rock:GridFilter>
-
                                 <Rock:Grid ID="gStepList" runat="server" RowItemText="Step" AllowSorting="true">
                                     <Columns>
                                         <Rock:RockLiteralField HeaderText="Step Type" ID="lStepType" SortExpression="StepTypeName" OnDataBound="lStepType_DataBound" />

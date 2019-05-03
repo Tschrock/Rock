@@ -51,6 +51,11 @@ namespace RockWeb.Blocks.Steps
             public const string StepProgramId = "StepProgramId";
         }
 
+        private class FilterKeys
+        {
+            public const string StepTypeName = "StepTypeName";
+        }
+
         #region Events
 
         /// <summary>
@@ -60,6 +65,10 @@ namespace RockWeb.Blocks.Steps
         protected override void OnInit( EventArgs e )
         {
             base.OnInit( e );
+
+            gfGridFilter.ApplyFilterClick += gfGridFilter_ApplyFilterClick;
+            gfGridFilter.ClearFilterClick += gfGridFilter_ClearFilterClick;
+            gfGridFilter.DisplayFilterValue += gfGridFilter_DisplayFilterValue;
 
             gStepList.DataKeyNames = new[] { "id" };
             gStepList.GridRebind += gStepList_GridRebind;
@@ -253,6 +262,61 @@ namespace RockWeb.Blocks.Steps
 
         #endregion Events
 
+        #region GridFilter Events
+
+        /// <summary>
+        /// Handles the DisplayFilterValue event of the gfGridFilter control.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The <see cref="Rock.Web.UI.Controls.GridFilter.DisplayFilterValueArgs"/> instance containing the event data.</param>
+        protected void gfGridFilter_DisplayFilterValue( object sender, GridFilter.DisplayFilterValueArgs e )
+        {
+            // TODO - Keep adding filters. Some will need transformed here
+
+            /*
+            switch ( e.Key )
+            {
+                case FilterKeys.StepTypeName:
+                {
+                    
+                }
+            }
+            */
+        }
+
+        /// <summary>
+        /// Handles the ApplyFilterClick event of the gfGridFilter control.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The <see cref="EventArgs"/> instance containing the event data.</param>
+        protected void gfGridFilter_ApplyFilterClick( object sender, EventArgs e )
+        {
+            gfGridFilter.SaveUserPreference( FilterKeys.StepTypeName, tbStepTypeName.Text );            
+            RenderGridView();
+        }
+
+        /// <summary>
+        /// Handles the ClearFilterClick event of the gfGridFilter control.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The <see cref="EventArgs"/> instance containing the event data.</param>
+        protected void gfGridFilter_ClearFilterClick( object sender, EventArgs e )
+        {
+            gfGridFilter.DeleteUserPreferences();
+            BindFilter();
+        }
+
+        /// <summary>
+        /// Binds the filter.
+        /// </summary>
+        private void BindFilter()
+        {
+            var stepTypeNameFilter = gfGridFilter.GetUserPreference( FilterKeys.StepTypeName );
+            tbStepTypeName.Text = !string.IsNullOrWhiteSpace( stepTypeNameFilter ) ? stepTypeNameFilter : string.Empty;
+        }
+
+        #endregion GridFilter Events
+
         #region Model Helpers
 
         /// <summary>
@@ -284,24 +348,34 @@ namespace RockWeb.Blocks.Steps
         private StepProgram _stepProgram;
 
         /// <summary>
-        /// Gets the step types (model) in the order they should be displayed for this program
+        /// Gets the step types (model) for this program
         /// </summary>
         /// <returns></returns>
-        private IOrderedEnumerable<StepType> GetOrderedStepTypes()
+        private IEnumerable<StepType> GetStepTypes()
         {
-            if ( _orderedStepTypes == null )
+            if ( _stepTypes == null )
             {
                 var program = GetStepProgram();
 
                 if ( program != null )
                 {
-                    _orderedStepTypes = program.StepTypes.Where( st => st.IsActive ).OrderBy( st => st.Order ).ThenBy( st => st.Name );
+                    _stepTypes = program.StepTypes.Where( st => st.IsActive );
                 }                
             }
 
-            return _orderedStepTypes;
+            return _stepTypes;
         }
-        private IOrderedEnumerable<StepType> _orderedStepTypes;
+        private IEnumerable<StepType> _stepTypes;
+
+        /// <summary>
+        /// Apply standard ordering for step types to a step type query
+        /// </summary>
+        /// <param name="qry"></param>
+        /// <returns></returns>
+        private IOrderedEnumerable<StepType> OrderStepTypes( IEnumerable<StepType> qry )
+        {
+            return qry.OrderBy( st => st.Order ).ThenBy( st => st.Name );
+        }
 
         /// <summary>
         /// Gets the person model that should be displayed in the block
@@ -540,7 +614,7 @@ namespace RockWeb.Blocks.Steps
                 return;
             }
 
-            var stepTypes = GetOrderedStepTypes();
+            var stepTypes = OrderStepTypes( GetStepTypes() );
 
             if ( stepTypes == null )
             {
@@ -580,18 +654,27 @@ namespace RockWeb.Blocks.Steps
         /// </summary>
         private void RenderGridView()
         {
-            var stepTypes = GetOrderedStepTypes();
+            var stepTypesQry = GetStepTypes();
 
-            if ( stepTypes == null )
+            if ( stepTypesQry == null )
             {
                 ShowError( "The step types were not found" );
                 return;
             }
 
+            // Apply filters
+            var stepTypeNameFilter = gfGridFilter.GetUserPreference( FilterKeys.StepTypeName );
+            if ( !string.IsNullOrEmpty( stepTypeNameFilter ) )
+            {
+                stepTypesQry = stepTypesQry.Where( st => st.Name.Contains( stepTypeNameFilter ) );
+            }
+
+            // Order the step types
+            var orderedStepTypes = OrderStepTypes( stepTypesQry );
             var rows = new List<StepGridRow>();
             var addButtons = new List<AddStepButton>();
 
-            foreach ( var stepType in stepTypes )
+            foreach ( var stepType in stepTypesQry )
             {
                 var personStepsOfType = GetPersonStepsOfType( stepType.Id );
                 rows.AddRange( personStepsOfType.Select( s => new StepGridRow
