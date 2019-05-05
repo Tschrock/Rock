@@ -278,6 +278,7 @@
     <Compile Include="Attribute\CheckListFieldAttribute.cs" />
     <Compile Include="Attribute\ColorFieldAttribute.cs" />
     <Compile Include="Attribute\ComparisonFieldAttribute.cs" />
+    <Compile Include="Attribute\StepProgramFieldAttribute.cs" />
     <Compile Include="Attribute\ContentChannelTypeFieldAttribute.cs" />
     <Compile Include="Attribute\ContentChannelItemFieldAttribute.cs" />
     <Compile Include="Attribute\BackgroundCheckFieldAttribute.cs" />
@@ -398,6 +399,8 @@
     <Compile Include="Field\FieldVisibilityRules.cs" />
     <Compile Include="Field\Types\AssetFieldType.cs" />
     <Compile Include="Field\Types\AssetStorageProviderFieldType.cs" />
+    <Compile Include="Field\EntitySingleSelectionListFieldTypeBase.cs" />
+    <Compile Include="Field\Types\StepProgramFieldType.cs" />
     <Compile Include="Field\Types\RegistryEntryFieldType.cs" />
     <Compile Include="Field\Types\ValueFilterFieldType.cs" />
     <Compile Include="Financial\HostedPaymentInfoControlOptions.cs" />
