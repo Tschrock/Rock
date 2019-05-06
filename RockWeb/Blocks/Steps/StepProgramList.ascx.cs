@@ -240,7 +240,7 @@ namespace RockWeb.Blocks.Steps
         /// <param name="e">The <see cref="EventArgs" /> instance containing the event data.</param>
         protected void gStepProgram_Add( object sender, EventArgs e )
         {
-            NavigateToLinkedPage( AttributeKey.DetailPage, "StepProgramId", 0 );
+            NavigateToLinkedPage( AttributeKey.DetailPage, "ProgramId", 0 );
         }
 
         /// <summary>
@@ -250,7 +250,7 @@ namespace RockWeb.Blocks.Steps
         /// <param name="e">The <see cref="RowEventArgs" /> instance containing the event data.</param>
         protected void gStepProgram_Edit( object sender, RowEventArgs e )
         {
-            NavigateToLinkedPage( AttributeKey.DetailPage, "StepProgramId", e.RowKeyId );
+            NavigateToLinkedPage( AttributeKey.DetailPage, "ProgramId", e.RowKeyId );
         }
 
         /// <summary>
@@ -283,8 +283,6 @@ namespace RockWeb.Blocks.Steps
             stepProgramService.Delete( stepProgram );
 
             rockContext.SaveChanges();
-
-            mdGridWarning.Show( "Step Program deleted successfully.", ModalAlertType.Information );
 
             BindGrid();
         }
