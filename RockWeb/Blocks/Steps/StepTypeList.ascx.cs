@@ -141,6 +141,7 @@ namespace RockWeb.Blocks.Steps
 
             // Initialize Grid: Secured actions
             bool canAddEditDelete = IsUserAuthorized( Authorization.EDIT );
+            bool canAdministrate = IsUserAuthorized( Authorization.ADMINISTRATE );
 
             gStepType.Actions.ShowAdd = canAddEditDelete;
             gStepType.IsDeleteEnabled = canAddEditDelete;
@@ -153,6 +154,8 @@ namespace RockWeb.Blocks.Steps
             var securityField = gStepType.ColumnsOfType<SecurityField>().FirstOrDefault();
 
             securityField.EntityTypeId = EntityTypeCache.Get( typeof( Rock.Model.StepType ) ).Id;
+
+            securityField.Visible = canAdministrate;
 
             // Initialize Grid: Apply block configuration settings.
             this.ConfigureGridFromBlockSettings();
