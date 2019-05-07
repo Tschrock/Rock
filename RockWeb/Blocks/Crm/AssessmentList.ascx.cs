@@ -116,7 +116,7 @@ namespace Rockweb.Blocks.Crm
                             </div>
                         </div>
                     {% elseif assessmenttype.LastRequestObject.Status == 'Pending' %}
-                        <div class='panel panel-primary'>
+                        <div class='panel panel-warning'>
                             <div class='panel-heading'> {{ assessmenttype.Title }}</br>
                                 Requested: {{assessmenttype.LastRequestObject.Requester}} ({{ assessmenttype.LastRequestObject.RequestedDate | Date:'M/d/yyyy'}})</br>
                                 <a href='{{ assessmenttype.AssessmentPath}}'>Start Assessment</a>
@@ -190,7 +190,7 @@ namespace Rockweb.Blocks.Crm
         private void BindData()
         {
             lAssessments.Visible = true;
-            
+
             // Gets Assessment types and assessments for each
             RockContext rockContext = new RockContext();
             AssessmentTypeService assessmentTypeService = new AssessmentTypeService( rockContext );
@@ -231,7 +231,7 @@ namespace Rockweb.Blocks.Crm
                     areThereAnyPendingRequests = true;
                 }
             }
-            
+
             // Decide if anything is going to display
             bool hideIfNoActiveRequests = GetAttributeValue( AttributeKey.HideIfNoActiveRequests ).AsBoolean();
             bool hidIfNoRequests = GetAttributeValue( AttributeKey.HideIfNoRequests ).AsBoolean();
