@@ -57,16 +57,16 @@ namespace Rock.Migrations
         private void MigrateSystemEmailsUp()
         {
 		            // Assessment Request
-            RockMigrationHelper.UpdateSystemEmail( "System", "Assessment Request", "", "", "", "", "", "Assessments Are Ready To Take", @"{% capture assessmentsLink %}{{ 'Global' | Attribute:'PublicApplicationRoot' }}assessments{% endcapture %}
+            RockMigrationHelper.UpdateSystemEmail( "System", "Assessment Request", "", "", "", "", "", "Assessments Are Ready To Take", @"{% capture assessmentsLink %}{{ 'Global' | Attribute:'PublicApplicationRoot' }}Assessments{% endcapture %}
 
 {{ 'Global' | Attribute:'EmailHeader' }}
 {{ Person.NickName }},
 
 <p>
-    This is the paragraph that will get updated verbage... Lorem ipsum dolor sit amet, legere feugiat molestie no cum, ea labitur scribentur comprehensam ius. Sint torquatos vituperatoribus his at. Ei docendi expetenda sea. Eu duo unum accusam, iudico copiosae ea has. Cu vel vivendum petentium iracundia. Vim ut iisque offendit phaedrum.
+    We're each a unique creation. We'd love to learn more about you through a simple and quick online personality profile. The results of the assessment will help us tailor our ministry to you and can also be used for building healthier teams and groups.
 </p>
 <p>
-    Id est putent qualisque accusamus, pro primis voluptatibus te. Homero soleat an mea, vix et volumus democritum mnesarchum, eruditi laboramus maiestatis sea in. No nemore scribentur pro. Eu quo doming possim. Dicit delicata theophrastus has ne, at mea tamquam euripidis gloriatur. Id qui vide graeco oporteat, stet iusto ne est. Habeo aliquam gloriatur ea eum, quo facilisi recteque gubergren te, at sea efficiendi referrentur.
+    The assessment takes less than ten minutes and will go a long way toward helping us get to know you better. Thanks in advance!
 </p>
 <p>
     These assessments are ready for you to take:
@@ -161,6 +161,7 @@ namespace Rock.Migrations
             RockMigrationHelper.UpdateEntityType("Rock.Workflow.Action.CompleteWorkflow","EEDA4318-F014-4A46-9C76-4C052EF81AA1",false,true);
             RockMigrationHelper.UpdateEntityType("Rock.Workflow.Action.CreateAssessmentRequest","7EDCCA06-C539-4B5B-B6E4-400A19655898",false,true);
             RockMigrationHelper.UpdateEntityType("Rock.Workflow.Action.RunSQL","A41216D6-6FB0-4019-B222-2C29B4519CF4",false,true);
+            RockMigrationHelper.UpdateEntityType("Rock.Workflow.Action.SendEmail","66197B01-D1F0-4924-A315-47AD54E030DE",false,true);
             RockMigrationHelper.UpdateEntityType("Rock.Workflow.Action.SendSystemEmail","4487702A-BEAF-4E5A-92AD-71A1AD48DFCE",false,true);
             RockMigrationHelper.UpdateEntityType("Rock.Workflow.Action.SetAttributeFromEntity","972F19B9-598B-474B-97A4-50E56E7B59D2",false,true);
             RockMigrationHelper.UpdateEntityType("Rock.Workflow.Action.SetAttributeToCurrentPerson","24B7D5E6-C30F-48F4-9D7E-AF45A342CF3A",false,true);
@@ -176,6 +177,17 @@ namespace Rock.Migrations
             RockMigrationHelper.UpdateWorkflowActionEntityAttribute("4487702A-BEAF-4E5A-92AD-71A1AD48DFCE","A75DFC58-7A1B-4799-BF31-451B2BBE38FF","Order","Order","The order that this service should be used (priority)",0,@"","A52C2EBD-D1CC-469F-803C-FF4C5326D456"); // Rock.Workflow.Action.SendSystemEmail:Order
             RockMigrationHelper.UpdateWorkflowActionEntityAttribute("486DC4FA-FCBC-425F-90B0-E606DA8A9F68","1EDAFDED-DFE6-4334-B019-6EECBA89E05A","Active","Active","Should Service be used?",0,@"False","234910F2-A0DB-4D7D-BAF7-83C880EF30AE"); // Rock.Workflow.Action.UserEntryForm:Active
             RockMigrationHelper.UpdateWorkflowActionEntityAttribute("486DC4FA-FCBC-425F-90B0-E606DA8A9F68","A75DFC58-7A1B-4799-BF31-451B2BBE38FF","Order","Order","The order that this service should be used (priority)",0,@"","C178113D-7C86-4229-8424-C6D0CF4A7E23"); // Rock.Workflow.Action.UserEntryForm:Order
+            RockMigrationHelper.UpdateWorkflowActionEntityAttribute("66197B01-D1F0-4924-A315-47AD54E030DE","1D0D3794-C210-48A8-8C68-3FBEC08A6BA5","Body","Body","The body of the email that should be sent. <span class='tip tip-lava'></span> <span class='tip tip-html'></span>",4,@"","4D245B9E-6B03-46E7-8482-A51FBA190E4D"); // Rock.Workflow.Action.SendEmail:Body
+            RockMigrationHelper.UpdateWorkflowActionEntityAttribute("66197B01-D1F0-4924-A315-47AD54E030DE","1EDAFDED-DFE6-4334-B019-6EECBA89E05A","Active","Active","Should Service be used?",0,@"False","36197160-7D3D-490D-AB42-7E29105AFE91"); // Rock.Workflow.Action.SendEmail:Active
+            RockMigrationHelper.UpdateWorkflowActionEntityAttribute("66197B01-D1F0-4924-A315-47AD54E030DE","1EDAFDED-DFE6-4334-B019-6EECBA89E05A","Save Communication History","SaveCommunicationHistory","Should a record of this communication be saved to the recipient's profile",8,@"False","65E69B78-37D8-4A88-B8AC-71893D2F75EF"); // Rock.Workflow.Action.SendEmail:Save Communication History
+            RockMigrationHelper.UpdateWorkflowActionEntityAttribute("66197B01-D1F0-4924-A315-47AD54E030DE","33E6DF69-BDFA-407A-9744-C175B60643AE","Attachment One","AttachmentOne","Workflow attribute that contains the email attachment. Note file size that can be sent is limited by both the sending and receiving email services typically 10 - 25 MB.",5,@"","C2C7DA55-3018-4645-B9EE-4BCD11855F2C"); // Rock.Workflow.Action.SendEmail:Attachment One
+            RockMigrationHelper.UpdateWorkflowActionEntityAttribute("66197B01-D1F0-4924-A315-47AD54E030DE","33E6DF69-BDFA-407A-9744-C175B60643AE","Attachment Three","AttachmentThree","Workflow attribute that contains the email attachment. Note file size that can be sent is limited by both the sending and receiving email services typically 10 - 25 MB.",7,@"","A059767A-5592-4926-948A-1065AF4E9748"); // Rock.Workflow.Action.SendEmail:Attachment Three
+            RockMigrationHelper.UpdateWorkflowActionEntityAttribute("66197B01-D1F0-4924-A315-47AD54E030DE","33E6DF69-BDFA-407A-9744-C175B60643AE","Attachment Two","AttachmentTwo","Workflow attribute that contains the email attachment. Note file size that can be sent is limited by both the sending and receiving email services typically 10 - 25 MB.",6,@"","FFD9193A-451F-40E6-9776-74D5DCAC1450"); // Rock.Workflow.Action.SendEmail:Attachment Two
+            RockMigrationHelper.UpdateWorkflowActionEntityAttribute("66197B01-D1F0-4924-A315-47AD54E030DE","33E6DF69-BDFA-407A-9744-C175B60643AE","Send to Group Role","GroupRole","An optional Group Role attribute to limit recipients to if the 'Send to Email Address' is a group or security role.",2,@"","D43C2686-7E02-4A70-8D99-3BCD8ECAFB2F"); // Rock.Workflow.Action.SendEmail:Send to Group Role
+            RockMigrationHelper.UpdateWorkflowActionEntityAttribute("66197B01-D1F0-4924-A315-47AD54E030DE","3B1D93D7-9414-48F9-80E5-6A3FC8F94C20","From Email Address|Attribute Value","From","The email address or an attribute that contains the person or email address that email should be sent from (will default to organization email). <span class='tip tip-lava'></span>",0,@"","9F5F7CEC-F369-4FDF-802A-99074CE7A7FC"); // Rock.Workflow.Action.SendEmail:From Email Address|Attribute Value
+            RockMigrationHelper.UpdateWorkflowActionEntityAttribute("66197B01-D1F0-4924-A315-47AD54E030DE","3B1D93D7-9414-48F9-80E5-6A3FC8F94C20","Send To Email Addresses|Attribute Value","To","The email addresses or an attribute that contains the person or email address that email should be sent to. <span class='tip tip-lava'></span>",1,@"","0C4C13B8-7076-4872-925A-F950886B5E16"); // Rock.Workflow.Action.SendEmail:Send To Email Addresses|Attribute Value
+            RockMigrationHelper.UpdateWorkflowActionEntityAttribute("66197B01-D1F0-4924-A315-47AD54E030DE","9C204CD0-1233-41C5-818A-C5DA439445AA","Subject","Subject","The subject that should be used when sending email. <span class='tip tip-lava'></span>",3,@"","5D9B13B6-CD96-4C7C-86FA-4512B9D28386"); // Rock.Workflow.Action.SendEmail:Subject
+            RockMigrationHelper.UpdateWorkflowActionEntityAttribute("66197B01-D1F0-4924-A315-47AD54E030DE","A75DFC58-7A1B-4799-BF31-451B2BBE38FF","Order","Order","The order that this service should be used (priority)",0,@"","D1269254-C15A-40BD-B784-ADCC231D3950"); // Rock.Workflow.Action.SendEmail:Order
             RockMigrationHelper.UpdateWorkflowActionEntityAttribute("7EDCCA06-C539-4B5B-B6E4-400A19655898","1EDAFDED-DFE6-4334-B019-6EECBA89E05A","Active","Active","Should Service be used?",0,@"False","D686BDFF-03C8-4F7C-A3FC-89C42DF74714"); // Rock.Workflow.Action.CreateAssessmentRequest:Active
             RockMigrationHelper.UpdateWorkflowActionEntityAttribute("7EDCCA06-C539-4B5B-B6E4-400A19655898","33E6DF69-BDFA-407A-9744-C175B60643AE","Assessment Types","AssessmentTypesKey","The attribute that contains the selected list of assessments being requested.",0,@"","B672E4D0-14DE-424A-BC38-7A91F5385A18"); // Rock.Workflow.Action.CreateAssessmentRequest:Assessment Types
             RockMigrationHelper.UpdateWorkflowActionEntityAttribute("7EDCCA06-C539-4B5B-B6E4-400A19655898","33E6DF69-BDFA-407A-9744-C175B60643AE","Due Date","DueDate","The attribute that contains the Due Date (if any) for the requests.",2,@"","1010F5DA-565B-4A86-B5C6-E5CE4C26F330"); // Rock.Workflow.Action.CreateAssessmentRequest:Due Date
@@ -221,22 +233,22 @@ namespace Rock.Migrations
             RockMigrationHelper.UpdateWorkflowTypeAttribute("31DDC001-C91A-4418-B375-CAB1475F7A62","C28C7BF3-A552-4D77-9408-DEDCF760CED0","Custom Message","CustomMessage","A custom message you would like to include in the request.  Otherwise the default will be used.",5,@"We're each a unique creation. We'd love to learn more about you through a simple and quick online personality profile. The results of the assessment will help us tailor our ministry to you and can also be used for building healthier teams and groups.
 
 The assessment takes less than ten minutes and will go a long way toward helping us get to know you better. Thanks in advance!","DBFB3F53-7AE1-4923-A286-3D69B60BA639", false); // Request Assessment:Custom Message
-            RockMigrationHelper.AddAttributeQualifier("69E8513A-D9E4-4C98-B938-48B1B24F9C08","includeInactive",@"False","CD5A4A14-0E8E-4E5C-A57A-E3109739EC71"); // Request Assessment:Assessments To Take:includeInactive
-            RockMigrationHelper.AddAttributeQualifier("69E8513A-D9E4-4C98-B938-48B1B24F9C08","repeatColumns",@"","27F1369F-B8AE-4E20-925B-956A143164B7"); // Request Assessment:Assessments To Take:repeatColumns
-            RockMigrationHelper.AddAttributeQualifier("A201EB57-0AD0-4B98-AD44-9D3A7C0F16BA","EnableSelfSelection",@"False","CC6DF91E-0C11-4F29-83DF-64FD46E06A49"); // Request Assessment:Person:EnableSelfSelection
-            RockMigrationHelper.AddAttributeQualifier("66B8DEC5-1B55-4AD1-8E4B-C719279A1947","EnableSelfSelection",@"False","87B25039-7E18-4099-AEB1-5384BF4AE58B"); // Request Assessment:Requested By:EnableSelfSelection
-            RockMigrationHelper.AddAttributeQualifier("7FB54D8C-B6FC-4864-9F14-EEC155CF6D4C","datePickerControlType",@"Date Picker","F0F20F36-EA84-4E90-BB83-EA3949C7E323"); // Request Assessment:Due Date:datePickerControlType
-            RockMigrationHelper.AddAttributeQualifier("7FB54D8C-B6FC-4864-9F14-EEC155CF6D4C","displayCurrentOption",@"False","79C6609B-0E27-4B6E-93E5-FAF85AD4B442"); // Request Assessment:Due Date:displayCurrentOption
-            RockMigrationHelper.AddAttributeQualifier("7FB54D8C-B6FC-4864-9F14-EEC155CF6D4C","displayDiff",@"False","55ECC4BD-4557-4FB1-A6A2-C2CDE3F68A63"); // Request Assessment:Due Date:displayDiff
-            RockMigrationHelper.AddAttributeQualifier("7FB54D8C-B6FC-4864-9F14-EEC155CF6D4C","format",@"","19684CA4-B872-4235-93C4-09DE9A062F37"); // Request Assessment:Due Date:format
-            RockMigrationHelper.AddAttributeQualifier("7FB54D8C-B6FC-4864-9F14-EEC155CF6D4C","futureYearCount",@"","9064D5B4-9EC8-4DFA-8C6F-A28D1B671DCF"); // Request Assessment:Due Date:futureYearCount
-            RockMigrationHelper.AddAttributeQualifier("B13D6F19-1436-4689-B644-FB70805C255B","ispassword",@"False","BC0823A4-7533-4729-9ED2-2E1E116A9DE2"); // Request Assessment:No Email Warning:ispassword
-            RockMigrationHelper.AddAttributeQualifier("B13D6F19-1436-4689-B644-FB70805C255B","maxcharacters",@"","33D08D4B-8369-4038-8022-234670A234B0"); // Request Assessment:No Email Warning:maxcharacters
-            RockMigrationHelper.AddAttributeQualifier("B13D6F19-1436-4689-B644-FB70805C255B","showcountdown",@"False","8ACA3598-5B1A-4EA5-A51B-9EA3AB04C9C6"); // Request Assessment:No Email Warning:showcountdown
-            RockMigrationHelper.AddAttributeQualifier("DBFB3F53-7AE1-4923-A286-3D69B60BA639","allowhtml",@"False","7645DC55-8CD7-4D7E-B996-BC9830B8F6CD"); // Request Assessment:Custom Message:allowhtml
-            RockMigrationHelper.AddAttributeQualifier("DBFB3F53-7AE1-4923-A286-3D69B60BA639","maxcharacters",@"","EE5C5FB5-FA59-4921-B78D-6E992BAD26F4"); // Request Assessment:Custom Message:maxcharacters
-            RockMigrationHelper.AddAttributeQualifier("DBFB3F53-7AE1-4923-A286-3D69B60BA639","numberofrows",@"6","F68A955D-83DB-4276-B10C-8C75B3E0BCAB"); // Request Assessment:Custom Message:numberofrows
-            RockMigrationHelper.AddAttributeQualifier("DBFB3F53-7AE1-4923-A286-3D69B60BA639","showcountdown",@"False","DC619F4B-7EE2-4E9F-BD59-619B832ED72A"); // Request Assessment:Custom Message:showcountdown
+            RockMigrationHelper.AddAttributeQualifier("69E8513A-D9E4-4C98-B938-48B1B24F9C08","includeInactive",@"False","8FD003E0-9FBD-407F-86A8-FC72E5BAE552"); // Request Assessment:Assessments To Take:includeInactive
+            RockMigrationHelper.AddAttributeQualifier("69E8513A-D9E4-4C98-B938-48B1B24F9C08","repeatColumns",@"","B0FDE78C-7E2D-42B2-857E-FF96D3AE1C3C"); // Request Assessment:Assessments To Take:repeatColumns
+            RockMigrationHelper.AddAttributeQualifier("A201EB57-0AD0-4B98-AD44-9D3A7C0F16BA","EnableSelfSelection",@"False","80BC8D0A-A585-457E-89C9-FB171C464060"); // Request Assessment:Person:EnableSelfSelection
+            RockMigrationHelper.AddAttributeQualifier("66B8DEC5-1B55-4AD1-8E4B-C719279A1947","EnableSelfSelection",@"False","0E1769ED-811C-49A2-BE9C-E7A1D6772F3B"); // Request Assessment:Requested By:EnableSelfSelection
+            RockMigrationHelper.AddAttributeQualifier("7FB54D8C-B6FC-4864-9F14-EEC155CF6D4C","datePickerControlType",@"Date Picker","D47E8D70-47E1-46B1-B319-0C0BFBF5CD62"); // Request Assessment:Due Date:datePickerControlType
+            RockMigrationHelper.AddAttributeQualifier("7FB54D8C-B6FC-4864-9F14-EEC155CF6D4C","displayCurrentOption",@"False","7F4653B4-1155-4BF4-A1B6-1F3B0B6F49A5"); // Request Assessment:Due Date:displayCurrentOption
+            RockMigrationHelper.AddAttributeQualifier("7FB54D8C-B6FC-4864-9F14-EEC155CF6D4C","displayDiff",@"False","228A9BD3-1BE5-4873-92D3-AB44591F2414"); // Request Assessment:Due Date:displayDiff
+            RockMigrationHelper.AddAttributeQualifier("7FB54D8C-B6FC-4864-9F14-EEC155CF6D4C","format",@"","2ECC60A7-6D8C-4268-BC37-3C6A85E9F182"); // Request Assessment:Due Date:format
+            RockMigrationHelper.AddAttributeQualifier("7FB54D8C-B6FC-4864-9F14-EEC155CF6D4C","futureYearCount",@"","0EFFF1E6-D874-4F00-BB90-1E49EA5B0411"); // Request Assessment:Due Date:futureYearCount
+            RockMigrationHelper.AddAttributeQualifier("B13D6F19-1436-4689-B644-FB70805C255B","ispassword",@"False","5D5AA32F-C81E-4A26-9C25-ADA8653A9A47"); // Request Assessment:No Email Warning:ispassword
+            RockMigrationHelper.AddAttributeQualifier("B13D6F19-1436-4689-B644-FB70805C255B","maxcharacters",@"","836050D6-3053-47EA-9E53-59AE03D967C9"); // Request Assessment:No Email Warning:maxcharacters
+            RockMigrationHelper.AddAttributeQualifier("B13D6F19-1436-4689-B644-FB70805C255B","showcountdown",@"False","D6933BFF-E9A9-45EF-B59D-0CFCAEC331E3"); // Request Assessment:No Email Warning:showcountdown
+            RockMigrationHelper.AddAttributeQualifier("DBFB3F53-7AE1-4923-A286-3D69B60BA639","allowhtml",@"False","6E365CCA-06EF-4165-925B-3EFB94F5472B"); // Request Assessment:Custom Message:allowhtml
+            RockMigrationHelper.AddAttributeQualifier("DBFB3F53-7AE1-4923-A286-3D69B60BA639","maxcharacters",@"","11E73FDC-AD71-4C62-8CB2-F380D3E153BC"); // Request Assessment:Custom Message:maxcharacters
+            RockMigrationHelper.AddAttributeQualifier("DBFB3F53-7AE1-4923-A286-3D69B60BA639","numberofrows",@"6","24411F53-15A6-4E70-8BD6-13CC6FB2A7C8"); // Request Assessment:Custom Message:numberofrows
+            RockMigrationHelper.AddAttributeQualifier("DBFB3F53-7AE1-4923-A286-3D69B60BA639","showcountdown",@"False","C04C3BCB-B37C-4120-A5F1-188BEBE81C5D"); // Request Assessment:Custom Message:showcountdown
             RockMigrationHelper.UpdateWorkflowActivityType("31DDC001-C91A-4418-B375-CAB1475F7A62",true,"Launch From Person Profile","When this workflow is initiated from the Person Profile page, the \"Entity\" will have a value so the first action will run successfully, and the workflow will then be persisted.",true,0,"41C1D8A6-570C-49D2-A818-08F631FCDBAD"); // Request Assessment:Launch From Person Profile
             RockMigrationHelper.UpdateWorkflowActivityType("31DDC001-C91A-4418-B375-CAB1475F7A62",true,"Save And Send","",false,1,"88373EA3-CF09-4B5C-8582-73F331CD1FB4"); // Request Assessment:Save And Send
             RockMigrationHelper.UpdateWorkflowActionForm(@"{{ Workflow | Attribute:'NoEmailWarning' }}
@@ -254,8 +266,9 @@ Assign assessments to {{ Workflow | Attribute: 'Person' }}.",@"","Send^fdc397cd-
             RockMigrationHelper.UpdateWorkflowActionType("41C1D8A6-570C-49D2-A818-08F631FCDBAD","Set No Email Warning Message",3,"C789E457-0783-44B3-9D8F-2EBAB5F11110",true,false,"","B13D6F19-1436-4689-B644-FB70805C255B",1,"False","215FC2CD-AC85-46C7-9B03-826DDF72923D"); // Request Assessment:Launch From Person Profile:Set No Email Warning Message
             RockMigrationHelper.UpdateWorkflowActionType("41C1D8A6-570C-49D2-A818-08F631FCDBAD","User Entry",4,"486DC4FA-FCBC-425F-90B0-E606DA8A9F68",true,true,"A56DA6B0-60A1-4998-B3F0-6BFA6F342167","",1,"","E9C27804-A31D-4121-A963-9F52BEAE7404"); // Request Assessment:Launch From Person Profile:User Entry
             RockMigrationHelper.UpdateWorkflowActionType("88373EA3-CF09-4B5C-8582-73F331CD1FB4","Save Assessment Requests",0,"7EDCCA06-C539-4B5B-B6E4-400A19655898",true,false,"","",1,"","E871D1D7-04DB-472D-9DF4-6C0389FE2FFC"); // Request Assessment:Save And Send:Save Assessment Requests
-            RockMigrationHelper.UpdateWorkflowActionType("88373EA3-CF09-4B5C-8582-73F331CD1FB4","Send Assessment Email",1,"4487702A-BEAF-4E5A-92AD-71A1AD48DFCE",true,false,"","",1,"","41E75458-C86C-430C-B7C8-4189419D69C6"); // Request Assessment:Save And Send:Send Assessment Email
-            RockMigrationHelper.UpdateWorkflowActionType("88373EA3-CF09-4B5C-8582-73F331CD1FB4","Workflow Complete",2,"EEDA4318-F014-4A46-9C76-4C052EF81AA1",true,true,"","",1,"","8F2AC810-83E1-48D2-B306-8F396539343D"); // Request Assessment:Save And Send:Workflow Complete
+            RockMigrationHelper.UpdateWorkflowActionType("88373EA3-CF09-4B5C-8582-73F331CD1FB4","Send Assessment System Email",1,"4487702A-BEAF-4E5A-92AD-71A1AD48DFCE",true,false,"","DBFB3F53-7AE1-4923-A286-3D69B60BA639",32,"","41E75458-C86C-430C-B7C8-4189419D69C6"); // Request Assessment:Save And Send:Send Assessment System Email
+            RockMigrationHelper.UpdateWorkflowActionType("88373EA3-CF09-4B5C-8582-73F331CD1FB4","Send Assessment Custom Message Email",2,"66197B01-D1F0-4924-A315-47AD54E030DE",true,false,"","DBFB3F53-7AE1-4923-A286-3D69B60BA639",64,"","C8DE19DB-106A-4AFA-9069-C420B45B976C"); // Request Assessment:Save And Send:Send Assessment Custom Message Email
+            RockMigrationHelper.UpdateWorkflowActionType("88373EA3-CF09-4B5C-8582-73F331CD1FB4","Workflow Complete",3,"EEDA4318-F014-4A46-9C76-4C052EF81AA1",true,true,"","",1,"","8F2AC810-83E1-48D2-B306-8F396539343D"); // Request Assessment:Save And Send:Workflow Complete
             RockMigrationHelper.AddActionTypeAttributeValue("B5ED3032-8B0B-4ADC-A2A1-522F8C0086CF","9392E3D7-A28B-4CD8-8B03-5E147B102EF1",@"False"); // Request Assessment:Launch From Person Profile:Set Person:Active
             RockMigrationHelper.AddActionTypeAttributeValue("B5ED3032-8B0B-4ADC-A2A1-522F8C0086CF","61E6E1BC-E657-4F00-B2E9-769AAA25B9F7",@"a201eb57-0ad0-4b98-ad44-9d3a7c0f16ba"); // Request Assessment:Launch From Person Profile:Set Person:Attribute
             RockMigrationHelper.AddActionTypeAttributeValue("B5ED3032-8B0B-4ADC-A2A1-522F8C0086CF","DDEFB300-0A4F-4086-99BE-A32761928F5E",@"True"); // Request Assessment:Launch From Person Profile:Set Person:Entity Is Required
@@ -284,30 +297,42 @@ SELECT  CASE
             RockMigrationHelper.AddActionTypeAttributeValue("E871D1D7-04DB-472D-9DF4-6C0389FE2FFC","9E2360BE-4C22-4817-8D2B-5796426D6192",@"a201eb57-0ad0-4b98-ad44-9d3a7c0f16ba"); // Request Assessment:Save And Send:Save Assessment Requests:Person
             RockMigrationHelper.AddActionTypeAttributeValue("E871D1D7-04DB-472D-9DF4-6C0389FE2FFC","5494809A-B0CC-44D9-BFD9-B60D514D020F",@"66b8dec5-1b55-4ad1-8e4b-c719279a1947"); // Request Assessment:Save And Send:Save Assessment Requests:Requested By
             RockMigrationHelper.AddActionTypeAttributeValue("E871D1D7-04DB-472D-9DF4-6C0389FE2FFC","1010F5DA-565B-4A86-B5C6-E5CE4C26F330",@"7fb54d8c-b6fc-4864-9f14-eec155cf6d4c"); // Request Assessment:Save And Send:Save Assessment Requests:Due Date
-            RockMigrationHelper.AddActionTypeAttributeValue("41E75458-C86C-430C-B7C8-4189419D69C6","C879B8B4-574C-4BCE-BC4D-0C7245AF19D4",@"41ff4269-7b48-40cd-81d4-c11370a13ded"); // Request Assessment:Save And Send:Send Assessment Email:System Email
-            RockMigrationHelper.AddActionTypeAttributeValue("41E75458-C86C-430C-B7C8-4189419D69C6","BD6978CE-EDBF-45A9-A548-96630DFF52C1",@"False"); // Request Assessment:Save And Send:Send Assessment Email:Active
-            RockMigrationHelper.AddActionTypeAttributeValue("41E75458-C86C-430C-B7C8-4189419D69C6","E58E9280-77CF-4DBB-BF66-87F29D0BF707",@"a201eb57-0ad0-4b98-ad44-9d3a7c0f16ba"); // Request Assessment:Save And Send:Send Assessment Email:Send To Email Addresses|Attribute Value
-            RockMigrationHelper.AddActionTypeAttributeValue("41E75458-C86C-430C-B7C8-4189419D69C6","9C5436E6-7EF2-4BD4-B87A-D3E980E55DE3",@"False"); // Request Assessment:Save And Send:Send Assessment Email:Save Communication History
+            RockMigrationHelper.AddActionTypeAttributeValue("41E75458-C86C-430C-B7C8-4189419D69C6","C879B8B4-574C-4BCE-BC4D-0C7245AF19D4",@"41ff4269-7b48-40cd-81d4-c11370a13ded"); // Request Assessment:Save And Send:Send Assessment System Email:System Email
+            RockMigrationHelper.AddActionTypeAttributeValue("41E75458-C86C-430C-B7C8-4189419D69C6","BD6978CE-EDBF-45A9-A548-96630DFF52C1",@"False"); // Request Assessment:Save And Send:Send Assessment System Email:Active
+            RockMigrationHelper.AddActionTypeAttributeValue("41E75458-C86C-430C-B7C8-4189419D69C6","E58E9280-77CF-4DBB-BF66-87F29D0BF707",@"a201eb57-0ad0-4b98-ad44-9d3a7c0f16ba"); // Request Assessment:Save And Send:Send Assessment System Email:Send To Email Addresses|Attribute Value
+            RockMigrationHelper.AddActionTypeAttributeValue("41E75458-C86C-430C-B7C8-4189419D69C6","9C5436E6-7EF2-4BD4-B87A-D3E980E55DE3",@"False"); // Request Assessment:Save And Send:Send Assessment System Email:Save Communication History
+            RockMigrationHelper.AddActionTypeAttributeValue("C8DE19DB-106A-4AFA-9069-C420B45B976C","36197160-7D3D-490D-AB42-7E29105AFE91",@"False"); // Request Assessment:Save And Send:Send Assessment Custom Message Email:Active
+            RockMigrationHelper.AddActionTypeAttributeValue("C8DE19DB-106A-4AFA-9069-C420B45B976C","0C4C13B8-7076-4872-925A-F950886B5E16",@"a201eb57-0ad0-4b98-ad44-9d3a7c0f16ba"); // Request Assessment:Save And Send:Send Assessment Custom Message Email:Send To Email Addresses|Attribute Value
+            RockMigrationHelper.AddActionTypeAttributeValue("C8DE19DB-106A-4AFA-9069-C420B45B976C","5D9B13B6-CD96-4C7C-86FA-4512B9D28386",@"Assessments Are Ready To Take"); // Request Assessment:Save And Send:Send Assessment Custom Message Email:Subject
+            RockMigrationHelper.AddActionTypeAttributeValue("C8DE19DB-106A-4AFA-9069-C420B45B976C","4D245B9E-6B03-46E7-8482-A51FBA190E4D",@"{% capture assessmentsLink %}{{ 'Global' | Attribute:'PublicApplicationRoot' }}assessments{% endcapture %}
+
+{{ 'Global' | Attribute:'EmailHeader' }}
+{{ Person.NickName }},
+
+<p>{{ Workflow | Attribute:'CustomMessage' | NewlineToBr }}</p>
+<p>
+    These assessments are ready for you to take:
+</p>
+<p>
+	<div><!--[if mso]>
+	  <v:roundrect xmlns:v=""urn:schemas-microsoft-com:vml"" xmlns:w=""urn:schemas-microsoft-com:office:word"" href=""{{ assessmentsLink }}"" style=""height:38px;v-text-anchor:middle;width:175px;"" arcsize=""11%"" strokecolor=""#e76812"" fillcolor=""#ee7624"">
+		<w:anchorlock/>
+		<center style=""color:#ffffff;font-family:sans-serif;font-size:13px;font-weight:normal;"">Take Assessment</center>
+	  </v:roundrect>
+	<![endif]--><a href=""{{ assessmentsLink }}""
+	style=""background-color:#ee7624;border:1px solid #e76812;border-radius:4px;color:#ffffff;display:inline-block;font-family:sans-serif;font-size:13px;font-weight:normal;line-height:38px;text-align:center;text-decoration:none;width:175px;-webkit-text-size-adjust:none;mso-hide:all;"">Take Assessment</a></div>
+</p>
+<br />
+<br />
+{{ 'Global' | Attribute:'EmailFooter' }}"); // Request Assessment:Save And Send:Send Assessment Custom Message Email:Body
+            RockMigrationHelper.AddActionTypeAttributeValue("C8DE19DB-106A-4AFA-9069-C420B45B976C","65E69B78-37D8-4A88-B8AC-71893D2F75EF",@"False"); // Request Assessment:Save And Send:Send Assessment Custom Message Email:Save Communication History
             RockMigrationHelper.AddActionTypeAttributeValue("8F2AC810-83E1-48D2-B306-8F396539343D","0CA0DDEF-48EF-4ABC-9822-A05E225DE26C",@"False"); // Request Assessment:Save And Send:Workflow Complete:Active
             RockMigrationHelper.AddActionTypeAttributeValue("8F2AC810-83E1-48D2-B306-8F396539343D","07CB7DBC-236D-4D38-92A4-47EE448BA89A",@"Completed"); // Request Assessment:Save And Send:Workflow Complete:Status|Status Attribute
 
             #endregion
 
-            #region DefinedValue AttributeType qualifier helper
+            #region Add to bio block list of workflow actions
 
-            Sql( @"
-			UPDATE [aq] SET [key] = 'definedtype', [Value] = CAST( [dt].[Id] as varchar(5) )
-			FROM [AttributeQualifier] [aq]
-			INNER JOIN [Attribute] [a] ON [a].[Id] = [aq].[AttributeId]
-			INNER JOIN [FieldType] [ft] ON [ft].[Id] = [a].[FieldTypeId]
-			INNER JOIN [DefinedType] [dt] ON CAST([dt].[guid] AS varchar(50) ) = [aq].[value]
-			WHERE [ft].[class] = 'Rock.Field.Types.DefinedValueFieldType'
-			AND [aq].[key] = 'definedtypeguid'
-		" );
-
-            #endregion
-
-            // Add to bio block list of workflow actions
             Sql( @"
                 DECLARE @bioWFActionsAttributeValueId INT = 
                 (SELECT v.[Id]
@@ -325,6 +350,8 @@ SELECT  CASE
                     SET [Value] = [Value] + ',31DDC001-C91A-4418-B375-CAB1475F7A62'
                     WHERE [Id] = @bioWFActionsAttributeValueId
                 END" );
+
+            #endregion Add to bio block list of workflow actions
         }
 
         /// <summary>
@@ -337,7 +364,7 @@ SELECT  CASE
             RockMigrationHelper.AddPage( true, "EBAA5140-4B8F-44B8-B1E8-C73B654E4B22","BE15B7BC-6D64-4880-991D-FDE962F91196","Conflict Profile Assessment","","37F17AD8-8103-4F85-865C-94E76B4470BB",""); // Site:External Website
             RockMigrationHelper.AddPage( true, "EBAA5140-4B8F-44B8-B1E8-C73B654E4B22","BE15B7BC-6D64-4880-991D-FDE962F91196","Emotional Intelligence Assessment","","BE5F3984-C25E-47CA-A602-EE1CED99E9AC",""); // Site:External Website
             RockMigrationHelper.AddPage( true, "EBAA5140-4B8F-44B8-B1E8-C73B654E4B22","BE15B7BC-6D64-4880-991D-FDE962F91196","Motivators Assessment","","F44A6424-8B9C-4B44-91A8-4BB6F683D4B6",""); // Site:External Website
-            RockMigrationHelper.AddPageRoute("FCF44690-D74C-4FB7-A01B-0EFCA6EA9E1E","assessments","F2873F65-617C-4BD3-94E0-48E2408EBDBD");// for Page:Assessments
+            RockMigrationHelper.AddPageRoute("FCF44690-D74C-4FB7-A01B-0EFCA6EA9E1E","Assessments","F2873F65-617C-4BD3-94E0-48E2408EBDBD");// for Page:Assessments
             RockMigrationHelper.AddPageRoute("37F17AD8-8103-4F85-865C-94E76B4470BB","ConflictProfile","B843AFE4-9198-49DE-904B-8D6440158DAC");// for Page:Conflict Profile Assessment
             RockMigrationHelper.AddPageRoute("37F17AD8-8103-4F85-865C-94E76B4470BB","ConflictProfile/{rckipid}","AFD90575-B363-4862-B4A6-1283D5C00AD9");// for Page:Conflict Profile Assessment
             RockMigrationHelper.AddPageRoute("BE5F3984-C25E-47CA-A602-EE1CED99E9AC","EmotionalIntelligence","8C5F1CF8-8AC1-4123-B7FD-E57EA36CFBBF");// for Page:Emotional Intelligence Assessment
