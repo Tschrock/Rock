@@ -34,6 +34,7 @@ namespace Rock.Migrations
             AssessmentRemindersServiceJobUp();
             CreateRequestAssessmentWorkflow();
             PagesBlocksAndAttributesUp();
+            UpdateSpirtualGiftsResultsMessageBlockAttribute();
         }
         
         /// <summary>
@@ -43,12 +44,9 @@ namespace Rock.Migrations
         {
             PagesBlocksAndAttributesDown();
             AssessmentRemindersServiceJobDown();
-            // Assessment Request
-            RockMigrationHelper.DeleteSystemEmail("41FF4269-7B48-40CD-81D4-C11370A13DED");
-            
+            RockMigrationHelper.DeleteSystemEmail("41FF4269-7B48-40CD-81D4-C11370A13DED"); // Assessment Request System Eamil
             AlterColumn("dbo.AssessmentType", "Description", c => c.String(nullable: false));
         }
-
         
         /// <summary>
         /// Migrates new system emails up.
@@ -331,8 +329,9 @@ SELECT  CASE
 
             #endregion
 
-            #region Add to bio block list of workflow actions
+            #region Edit bio block list of workflow actions
 
+            // Add Request Assessment
             Sql( @"
                 DECLARE @bioWFActionsAttributeValueId INT = 
                 (SELECT v.[Id]
@@ -351,81 +350,179 @@ SELECT  CASE
                     WHERE [Id] = @bioWFActionsAttributeValueId
                 END" );
 
-            #endregion Add to bio block list of workflow actions
+            // Remove legacy DISC Request
+            Sql( @"
+                DECLARE @bioWFActionsAttributeValueId INT = 
+                (SELECT v.[Id]
+                FROM [dbo].[attribute] a
+                JOIN [AttributeValue] v ON a.id = v.AttributeId
+                WHERE a.[EntityTypeId] = 9
+                    AND a.[EntityTypeQualifierColumn] = 'BlockTypeId'
+                    AND a.[Key] = 'WorkflowActions'
+                    AND a.[EntityTypeQualifierValue] = (SELECT [Id] FROM [dbo].[BlockType] WHERE [Name] = 'person bio')
+                    AND v.[Value] LIKE '%885CBA61-44EA-4B4A-B6E1-289041B6A195%')
+
+                IF (@bioWFActionsAttributeValueId IS NOT NULL)
+                BEGIN
+                    UPDATE [dbo].[AttributeValue]
+                    SET [Value] = REPLACE([Value], ',885CBA61-44EA-4B4A-B6E1-289041B6A195', '')
+                    WHERE [Id] = @bioWFActionsAttributeValueId
+                END" );
+
+            #endregion Edit bio block list of workflow actions
+
+            // Set old DISC workflow to inactive.
+            Sql( @"
+                UPDATE [dbo].[WorkflowType]
+                SET [IsActive] = 0
+                WHERE [Guid] = '885CBA61-44EA-4B4A-B6E1-289041B6A195'" );
         }
 
         /// <summary>
-        /// Creates the pages, blocks, and attributes for assessments.
+        /// Updates the spirtual gifts results message block attribute.
         /// </summary>
-        private void PagesBlocksAndAttributesUp()
+        private void UpdateSpirtualGiftsResultsMessageBlockAttribute()
         {
-            RockMigrationHelper.AddLayout( "F3F82256-2D66-432B-9D67-3552CD2F4C2B", "FullWidthNarrow", "Full Width Narrow", "", "BE15B7BC-6D64-4880-991D-FDE962F91196" ); // Site:External Website
+            RockMigrationHelper.UpdateBlockTypeAttribute( "A7E86792-F0ED-46F2-988D-25EBFCD1DC96", "1D0D3794-C210-48A8-8C68-3FBEC08A6BA5", "Results Message", "ResultsMessage", "", @"The text (HTML) to display at the top of the results section.<span class='tip tip-lava'></span><span class='tip tip-html'></span>", 0, @"
+<div class='row'>
+    <div class='col-md-12'>
+    <h2 class='h2'> Dominant Gifts</h2>
+    </div>
+    <div class='col-md-9'>
+    <table class='table table-bordered table-responsive'>
+    <thead>
+        <tr>
+            <th>
+                Spiritual Gift
+            </th>
+            <th>
+                You are uniquely wired to:
+            </th>
+        </tr>
+    </thead>
+    <tbody>
+        {% if DominantGifts != empty %}
+            {% for dominantGift in DominantGifts %}
+                <tr>
+                    <td>
+                        {{ dominantGift.Value }}
+                    </td>
+                    <td>
+                        {{ dominantGift.Description }}    
+                    </td>
+                </tr>
+            {% endfor %}
+        {% else %}
+            <tr>
+                <td colspan='2'>
+                    You did not have any Dominant Gifts
+                </td>
+            </tr>
+        {% endif %}
+    </tbody>
+    </table>
+    </div>
+</div>
+    
+<div class='row'>
+    <div class='col-md-12'>
+        <h2 class='h2'> Supportive Gifts</h2>
+    </div>
+    <div class='col-md-9'>
+        <table class='table table-bordered table-responsive'>
+            <thead>
+                <tr>
+                   <th>
+                    Spiritual Gift
+                    </th>
+                    <th>
+                    You are uniquely wired to:
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if SupportiveGifts != empty %}
+                    {% for supportiveGift in SupportiveGifts %}
+                        <tr>
+                            <td>
+                                {{ supportiveGift.Value }}
+                            </td>
+                            <td>
+                                {{ supportiveGift.Description }}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td colspan='2'>
+                            You did not have any Supportive Gifts
+                        </td>
+                    </tr>
+                {% endif %}
+            </tbody>
+        </table>
+    </div>
+</div?
+<div class='row'>
+    <div class='col-md-12'>
+        <h2 class='h2'> Other Gifts</h2>
+    </div>
+    <div class='col-md-9'>
+        <table class='table table-bordered table-responsive'>
+            <thead>
+                <tr>
+                   <th>
+                    Spiritual Gift
+                    </th>
+                    <th>
+                    You are uniquely wired to:
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+                {% if OtherGifts != empty %}
+                    {% for otherGift in OtherGifts %}
+                        <tr>
+                            <td>
+                                {{ otherGift.Value }}
+                            </td>
+                            <td>
+                                {{ otherGift.Description }}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td colspan='2'>
+                            You did not have any Other Gifts
+                        </td>
+                    </tr>
+                {% endif %}
+           </tbody>
+        </table>
+    </div>
+</div>", "85256610-56EB-4E6F-B62B-A5517B54B39E" );
+        }
+
+        /// <summary>
+        /// Assessments the list page block attributes.
+        /// </summary>
+        private void AssessmentListPageBlockAttributes()
+        {
+            // Assessments list page, this is where the link in the emails will go.
             RockMigrationHelper.AddPage( true, "EBAA5140-4B8F-44B8-B1E8-C73B654E4B22","5FEAF34C-7FB6-4A11-8A1E-C452EC7849BD","Assessments","","FCF44690-D74C-4FB7-A01B-0EFCA6EA9E1E","fa fa-bar-chart"); // Site:External Website
-            RockMigrationHelper.AddPage( true, "EBAA5140-4B8F-44B8-B1E8-C73B654E4B22","BE15B7BC-6D64-4880-991D-FDE962F91196","Conflict Profile Assessment","","37F17AD8-8103-4F85-865C-94E76B4470BB",""); // Site:External Website
-            RockMigrationHelper.AddPage( true, "EBAA5140-4B8F-44B8-B1E8-C73B654E4B22","BE15B7BC-6D64-4880-991D-FDE962F91196","Emotional Intelligence Assessment","","BE5F3984-C25E-47CA-A602-EE1CED99E9AC",""); // Site:External Website
-            RockMigrationHelper.AddPage( true, "EBAA5140-4B8F-44B8-B1E8-C73B654E4B22","BE15B7BC-6D64-4880-991D-FDE962F91196","Motivators Assessment","","F44A6424-8B9C-4B44-91A8-4BB6F683D4B6",""); // Site:External Website
             RockMigrationHelper.AddPageRoute("FCF44690-D74C-4FB7-A01B-0EFCA6EA9E1E","Assessments","F2873F65-617C-4BD3-94E0-48E2408EBDBD");// for Page:Assessments
-            RockMigrationHelper.AddPageRoute("37F17AD8-8103-4F85-865C-94E76B4470BB","ConflictProfile","B843AFE4-9198-49DE-904B-8D6440158DAC");// for Page:Conflict Profile Assessment
-            RockMigrationHelper.AddPageRoute("37F17AD8-8103-4F85-865C-94E76B4470BB","ConflictProfile/{rckipid}","AFD90575-B363-4862-B4A6-1283D5C00AD9");// for Page:Conflict Profile Assessment
-            RockMigrationHelper.AddPageRoute("BE5F3984-C25E-47CA-A602-EE1CED99E9AC","EmotionalIntelligence","8C5F1CF8-8AC1-4123-B7FD-E57EA36CFBBF");// for Page:Emotional Intelligence Assessment
-            RockMigrationHelper.AddPageRoute("BE5F3984-C25E-47CA-A602-EE1CED99E9AC","EmotionalIntelligence/{rckipid}","C97D4D5A-F082-4F2B-A873-71F734B539CC");// for Page:Emotional Intelligence Assessment
-            RockMigrationHelper.AddPageRoute("F44A6424-8B9C-4B44-91A8-4BB6F683D4B6","Motivators","7D00FD4E-9E6C-42B1-BB25-7F417DF25CA4");// for Page:Motivators Assessment
-            RockMigrationHelper.AddPageRoute("F44A6424-8B9C-4B44-91A8-4BB6F683D4B6","Motivators/{rckipid}","9299B437-38C6-421F-B705-B0F2BCEC2CD0");// for Page:Motivators Assessment
             RockMigrationHelper.UpdateBlockType("Assessment List","Allows you to view and take any available assessments.","~/Blocks/Crm/AssessmentList.ascx","CRM","0AD1D108-4ABF-4AED-B3B7-4AAEA16D10E4");
-            RockMigrationHelper.UpdateBlockType("Conflict Profile","Allows you to take a conflict profile test and saves your conflict profile score.","~/Blocks/Crm/ConflictProfile.ascx","CRM","91473D2F-607D-4260-9C6A-DD3762FE472D");
-            RockMigrationHelper.UpdateBlockType("EQ Assessment","Allows you to take a EQ Inventory test and saves your EQ Inventory score.","~/Blocks/Crm/EQInventory.ascx","CRM","040CFD6D-5155-4BC9-BAEE-A53219A7BECE");
-            RockMigrationHelper.UpdateBlockType("Motivators Assessment","Allows you to take a EQ Inventory test and saves your EQ Inventory score.","~/Blocks/Crm/Motivators.ascx","CRM","5D4E11DA-DEED-4157-A5FD-D16B3E562157");
-            // Add Block to Page: My Account Site: External Website
+            RockMigrationHelper.AddBlock( true, "FCF44690-D74C-4FB7-A01B-0EFCA6EA9E1E".AsGuid(),null,"F3F82256-2D66-432B-9D67-3552CD2F4C2B".AsGuid(),"0AD1D108-4ABF-4AED-B3B7-4AAEA16D10E4".AsGuid(), "Assessment List","Main",@"",@"",0,"0E22E6CB-1634-41CA-83EF-4BC7CE52F314"); // Add Block to Page: Assessments Site: External Website
             RockMigrationHelper.AddBlock( true, "C0854F84-2E8B-479C-A3FB-6B47BE89B795".AsGuid(),null,"F3F82256-2D66-432B-9D67-3552CD2F4C2B".AsGuid(),"0AD1D108-4ABF-4AED-B3B7-4AAEA16D10E4".AsGuid(), "Assessment List","Sidebar1",@"",@"",2,"37D4A991-9F9A-47CE-9084-04466F166B6A"); 
-            // Add Block to Page: Assessments Site: External Website
-            RockMigrationHelper.AddBlock( true, "FCF44690-D74C-4FB7-A01B-0EFCA6EA9E1E".AsGuid(),null,"F3F82256-2D66-432B-9D67-3552CD2F4C2B".AsGuid(),"0AD1D108-4ABF-4AED-B3B7-4AAEA16D10E4".AsGuid(), "Assessment List","Main",@"",@"",0,"0E22E6CB-1634-41CA-83EF-4BC7CE52F314"); 
-            // Add Block to Page: Conflict Profile Assessment Site: External Website
-            RockMigrationHelper.AddBlock( true, "37F17AD8-8103-4F85-865C-94E76B4470BB".AsGuid(),null,"F3F82256-2D66-432B-9D67-3552CD2F4C2B".AsGuid(),"91473D2F-607D-4260-9C6A-DD3762FE472D".AsGuid(), "Conflict Profile","Main",@"",@"",0,"D005E292-25F8-45D4-A713-2A5C811F0219"); 
-            // Add Block to Page: Emotional Intelligence Assessment Site: External Website
-            RockMigrationHelper.AddBlock( true, "BE5F3984-C25E-47CA-A602-EE1CED99E9AC".AsGuid(),null,"F3F82256-2D66-432B-9D67-3552CD2F4C2B".AsGuid(),"040CFD6D-5155-4BC9-BAEE-A53219A7BECE".AsGuid(), "EQ Assessment","Main",@"",@"",0,"71BE6A7A-7D51-4149-AFB1-3307DF04B2DF"); 
-            // Add Block to Page: Motivators Assessment Site: External Website
-            RockMigrationHelper.AddBlock( true, "F44A6424-8B9C-4B44-91A8-4BB6F683D4B6".AsGuid(),null,"F3F82256-2D66-432B-9D67-3552CD2F4C2B".AsGuid(),"5D4E11DA-DEED-4157-A5FD-D16B3E562157".AsGuid(), "Motivators Assessment","Main",@"",@"",0,"2A4D0861-2E44-47C0-AD77-867451602ABC"); 
-            // update block order for pages with new blocks if the page,zone has multiple blocks
-            Sql(@"UPDATE [Block] SET [Order] = 0 WHERE [Guid] = '87068AAB-16A7-42CC-8A31-5A957D6C4DD5'");  // Page: My Account,  Zone: Sidebar1,  Block: Actions
-            Sql(@"UPDATE [Block] SET [Order] = 1 WHERE [Guid] = '8C513CAC-FB3F-40A2-A0F6-D4C50FF72EC8'");  // Page: My Account,  Zone: Sidebar1,  Block: Group List Personalized Lava
-            Sql(@"UPDATE [Block] SET [Order] = 2 WHERE [Guid] = '37D4A991-9F9A-47CE-9084-04466F166B6A'");  // Page: My Account,  Zone: Sidebar1,  Block: Assessment List
-            Sql(@"UPDATE [Block] SET [Order] = 3 WHERE [Guid] = 'E5596525-B176-4753-A337-25F1F9B83FCE'");  // Page: My Account,  Zone: Sidebar1,  Block: Recent Registrations
-            // Attrib for BlockType: Conflict Profile:Set Page Title
-            RockMigrationHelper.UpdateBlockTypeAttribute("91473D2F-607D-4260-9C6A-DD3762FE472D","9C204CD0-1233-41C5-818A-C5DA439445AA","Set Page Title","SetPageTitle","",@"The text to display as the heading.",0,@"Conflict Profile","C5698564-7178-43BA-B4A3-58B13DDC3AF0");
-            // Attrib for BlockType: Conflict Profile:Set Page Icon
-            RockMigrationHelper.UpdateBlockTypeAttribute("91473D2F-607D-4260-9C6A-DD3762FE472D","9C204CD0-1233-41C5-818A-C5DA439445AA","Set Page Icon","SetPageIcon","",@"The css class name to use for the heading icon.",1,@"fa fa-gift","D5ABBD1A-61F1-4C48-8AD9-C26AC7F5CAEF");
-            // Attrib for BlockType: EQ Assessment:Set Page Title
-            RockMigrationHelper.UpdateBlockTypeAttribute("040CFD6D-5155-4BC9-BAEE-A53219A7BECE","9C204CD0-1233-41C5-818A-C5DA439445AA","Set Page Title","SetPageTitle","",@"The text to display as the heading.",0,@"EQ Inventory Assessment","E99F01A7-AF8F-4010-A456-3A9048347859");
-            // Attrib for BlockType: EQ Assessment:Set Page Icon
-            RockMigrationHelper.UpdateBlockTypeAttribute("040CFD6D-5155-4BC9-BAEE-A53219A7BECE","9C204CD0-1233-41C5-818A-C5DA439445AA","Set Page Icon","SetPageIcon","",@"The css class name to use for the heading icon.",1,@"fa fa-gift","D5CF91C1-2CC8-46BF-8CC6-DD6AD8B07518");
-            // Attrib for BlockType: Motivators Assessment:Set Page Title
-            RockMigrationHelper.UpdateBlockTypeAttribute("5D4E11DA-DEED-4157-A5FD-D16B3E562157","9C204CD0-1233-41C5-818A-C5DA439445AA","Set Page Title","SetPageTitle","",@"The text to display as the heading.",0,@"EQ Inventory Assessment","FDD86FC4-09AB-45F7-A017-3F801E027A05");
-            // Attrib for BlockType: Motivators Assessment:Set Page Icon
-            RockMigrationHelper.UpdateBlockTypeAttribute("5D4E11DA-DEED-4157-A5FD-D16B3E562157","9C204CD0-1233-41C5-818A-C5DA439445AA","Set Page Icon","SetPageIcon","",@"The css class name to use for the heading icon.",1,@"fa fa-gift","917A9444-C3AB-43FE-9D82-05E57F0F48E7");
+            
             // Attrib for BlockType: Assessment List:Only Show Requested
             RockMigrationHelper.UpdateBlockTypeAttribute("0AD1D108-4ABF-4AED-B3B7-4AAEA16D10E4","1EDAFDED-DFE6-4334-B019-6EECBA89E05A","Only Show Requested","OnlyShowRequested","",@"If enabled, limits the list to show only assessments that have been requested or completed.",0,@"True","7A10C446-B0F3-43F0-9FEB-78B689593736");
             // Attrib for BlockType: Assessment List:Hide If No Requests
             RockMigrationHelper.UpdateBlockTypeAttribute("0AD1D108-4ABF-4AED-B3B7-4AAEA16D10E4","1EDAFDED-DFE6-4334-B019-6EECBA89E05A","Hide If No Requests","HideIfNoRequests","",@"If enabled, nothing will be shown where there are no requests (pending or completed).",2,@"False","1E5EE52F-DFD5-4406-A517-4B76E2800D2A");
             // Attrib for BlockType: Assessment List:Hide If No Active Requests
             RockMigrationHelper.UpdateBlockTypeAttribute("0AD1D108-4ABF-4AED-B3B7-4AAEA16D10E4","1EDAFDED-DFE6-4334-B019-6EECBA89E05A","Hide If No Active Requests","HideIfNoActiveRequests","",@"If enabled, nothing will be shown if there are not pending (waiting to be taken) assessment requests.",1,@"False","305AD0A5-6E35-402A-A6A2-50474733368A");
-            // Attrib for BlockType: Conflict Profile:Allow Retakes
-            RockMigrationHelper.UpdateBlockTypeAttribute("91473D2F-607D-4260-9C6A-DD3762FE472D","1EDAFDED-DFE6-4334-B019-6EECBA89E05A","Allow Retakes","AllowRetakes","",@"If enabled, the person can retake the test after the minimum days passes.",3,@"True","E3965E46-603C-40E5-AB28-1B53E44561DE");
-            // Attrib for BlockType: EQ Assessment:Allow Retakes
-            RockMigrationHelper.UpdateBlockTypeAttribute("040CFD6D-5155-4BC9-BAEE-A53219A7BECE","1EDAFDED-DFE6-4334-B019-6EECBA89E05A","Allow Retakes","AllowRetakes","",@"If enabled, the person can retake the test after the minimum days passes.",3,@"True","A0905767-79C9-4567-BA76-A3FFEE71E0B3");
-            // Attrib for BlockType: Motivators Assessment:Allow Retakes
-            RockMigrationHelper.UpdateBlockTypeAttribute("5D4E11DA-DEED-4157-A5FD-D16B3E562157","1EDAFDED-DFE6-4334-B019-6EECBA89E05A","Allow Retakes","AllowRetakes","",@"If enabled, the person can retake the test after the minimum days passes.",3,@"True","86DC0536-A1D6-4455-9AE7-20C9EC5262CE");
-            // Attrib for BlockType: Conflict Profile:Min Days To Retake
-            RockMigrationHelper.UpdateBlockTypeAttribute("91473D2F-607D-4260-9C6A-DD3762FE472D","A75DFC58-7A1B-4799-BF31-451B2BBE38FF","Min Days To Retake","MinDaysToRetake","",@"The number of days that must pass before the test can be taken again. Leave blank to use the Assessment Type's minimum.",4,@"","E8147587-812D-4118-995D-E5B7A3189979");
-            // Attrib for BlockType: Conflict Profile:Number of Questions
-            RockMigrationHelper.UpdateBlockTypeAttribute("91473D2F-607D-4260-9C6A-DD3762FE472D","A75DFC58-7A1B-4799-BF31-451B2BBE38FF","Number of Questions","NumberofQuestions","",@"The number of questions to show per page while taking the test",2,@"7","6CBCA505-E5BA-4FE9-9DD8-7F3C507B12B8");
-            // Attrib for BlockType: EQ Assessment:Number of Questions
-            RockMigrationHelper.UpdateBlockTypeAttribute("040CFD6D-5155-4BC9-BAEE-A53219A7BECE","A75DFC58-7A1B-4799-BF31-451B2BBE38FF","Number of Questions","NumberofQuestions","",@"The number of questions to show per page while taking the test",2,@"7","8D2C5502-0AAB-4FE6-ABE9-05900439827D");
-            // Attrib for BlockType: EQ Assessment:Min Days To Retake
-            RockMigrationHelper.UpdateBlockTypeAttribute("040CFD6D-5155-4BC9-BAEE-A53219A7BECE","A75DFC58-7A1B-4799-BF31-451B2BBE38FF","Min Days To Retake","MinDaysToRetake","",@"The number of days that must pass before the test can be taken again. Leave blank to use the Assessment Type's minimum.",4,@"","B47E54AC-A66B-4EC6-B4FC-F9A7B1175E27");
-            // Attrib for BlockType: Motivators Assessment:Min Days To Retake
-            RockMigrationHelper.UpdateBlockTypeAttribute("5D4E11DA-DEED-4157-A5FD-D16B3E562157","A75DFC58-7A1B-4799-BF31-451B2BBE38FF","Min Days To Retake","MinDaysToRetake","",@"The number of days that must pass before the test can be taken again. Leave blank to use the Assessment Type's minimum.",4,@"","D87793A5-C326-451E-9EE9-249A6894EE32");
-            // Attrib for BlockType: Motivators Assessment:Number of Questions
-            RockMigrationHelper.UpdateBlockTypeAttribute("5D4E11DA-DEED-4157-A5FD-D16B3E562157","A75DFC58-7A1B-4799-BF31-451B2BBE38FF","Number of Questions","NumberofQuestions","",@"The number of questions to show per page while taking the test",2,@"7","A42DE0DC-83E1-42F3-9F2D-21147CAF0932");
+
             // Attrib for BlockType: Assessment List:Lava Template
             RockMigrationHelper.UpdateBlockTypeAttribute("0AD1D108-4ABF-4AED-B3B7-4AAEA16D10E4","1D0D3794-C210-48A8-8C68-3FBEC08A6BA5","Lava Template","LavaTemplate","",@"The lava template to use to format the entire block.  <span class='tip tip-lava'></span> <span class='tip tip-html'></span>",0,@"<div class='panel panel-default'>
     <div class='panel-heading'>Assessments</div>
@@ -458,6 +555,108 @@ SELECT  CASE
             {% endfor %}
     </div>
 </div>","044D444A-ECDC-4B7A-8987-91577AAB227C");
+
+            // Attrib Value for Block:Assessment List, Attribute:Only Show Requested Page: Assessments, Site: External Website
+            RockMigrationHelper.AddBlockAttributeValue("0E22E6CB-1634-41CA-83EF-4BC7CE52F314","7A10C446-B0F3-43F0-9FEB-78B689593736",@"False");
+            // Attrib Value for Block:Assessment List, Attribute:Hide If No Requests Page: Assessments, Site: External Website
+            RockMigrationHelper.AddBlockAttributeValue("0E22E6CB-1634-41CA-83EF-4BC7CE52F314","1E5EE52F-DFD5-4406-A517-4B76E2800D2A",@"False");
+            // Attrib Value for Block:Assessment List, Attribute:Lava Template Page: Assessments, Site: External Website
+            RockMigrationHelper.AddBlockAttributeValue("0E22E6CB-1634-41CA-83EF-4BC7CE52F314","044D444A-ECDC-4B7A-8987-91577AAB227C",@"<div class='panel panel-default'>
+    <div class='panel-heading'>Assessments</div>
+    <div class='panel-body'>
+            {% for assessmenttype in AssessmentTypes %}
+                {% if assessmenttype.LastRequestObject %}
+                    {% if assessmenttype.LastRequestObject.Status == 'Complete' %}
+                        <div class='panel panel-success'>
+                            <div class='panel-heading'>{{ assessmenttype.Title }}</br>
+                                Completed: {{ assessmenttype.LastRequestObject.CompletedDate | Date:'M/d/yyyy'}} </br>
+                                <a href='{{ assessmenttype.AssessmentResultsPath}}'>View Results</a>
+                            </div>
+                        </div>
+                    {% elseif assessmenttype.LastRequestObject.Status == 'Pending' %}
+                        <div class='panel panel-primary'>
+                            <div class='panel-heading'> {{ assessmenttype.Title }}</br>
+                                Requested: {{assessmenttype.LastRequestObject.Requester}} ({{ assessmenttype.LastRequestObject.RequestedDate | Date:'M/d/yyyy'}})</br>
+                                <a href='{{ assessmenttype.AssessmentPath}}'>Start Assessment</a>
+                            </div>
+                        </div>
+                    {% endif %}
+                    {% else %}
+                        <div class='panel panel-default'>
+                            <div class='panel-heading'> {{ assessmenttype.Title }}</br>
+                                Available</br>
+                                <a href='{{ assessmenttype.AssessmentPath}}'>Start Assessment</a>
+                            </div>
+                        </div>
+                {% endif %}
+            {% endfor %}
+    </div>
+</div>");
+            // Attrib Value for Block:Assessment List, Attribute:Hide If No Active Requests Page: Assessments, Site: External Website
+            RockMigrationHelper.AddBlockAttributeValue("0E22E6CB-1634-41CA-83EF-4BC7CE52F314","305AD0A5-6E35-402A-A6A2-50474733368A",@"False");
+            // Attrib Value for Block:Assessment List, Attribute:Hide If No Active Requests Page: My Account, Site: External Website
+            RockMigrationHelper.AddBlockAttributeValue("37D4A991-9F9A-47CE-9084-04466F166B6A","305AD0A5-6E35-402A-A6A2-50474733368A",@"False");
+            // Attrib Value for Block:Assessment List, Attribute:Hide If No Requests Page: My Account, Site: External Website
+            RockMigrationHelper.AddBlockAttributeValue("37D4A991-9F9A-47CE-9084-04466F166B6A","1E5EE52F-DFD5-4406-A517-4B76E2800D2A",@"False");
+            // Attrib Value for Block:Assessment List, Attribute:Lava Template Page: My Account, Site: External Website
+            RockMigrationHelper.AddBlockAttributeValue("37D4A991-9F9A-47CE-9084-04466F166B6A","044D444A-ECDC-4B7A-8987-91577AAB227C",@"<div class='panel panel-default'>
+    <div class='panel-heading'>Assessments</div>
+    <div class='panel-body'>
+            {% for assessmenttype in AssessmentTypes %}
+                {% if assessmenttype.LastRequestObject %}
+                    {% if assessmenttype.LastRequestObject.Status == 'Complete' %}
+                        <div class='panel panel-success'>
+                            <div class='panel-heading'>{{ assessmenttype.Title }}</br>
+                                Completed: {{ assessmenttype.LastRequestObject.CompletedDate | Date:'M/d/yyyy'}} </br>
+                                <a href='{{ assessmenttype.AssessmentResultsPath}}'>View Results</a>
+                            </div>
+                        </div>
+                    {% elseif assessmenttype.LastRequestObject.Status == 'Pending' %}
+                        <div class='panel panel-primary'>
+                            <div class='panel-heading'> {{ assessmenttype.Title }}</br>
+                                Requested: {{assessmenttype.LastRequestObject.Requester}} ({{ assessmenttype.LastRequestObject.RequestedDate | Date:'M/d/yyyy'}})</br>
+                                <a href='{{ assessmenttype.AssessmentPath}}'>Start Assessment</a>
+                            </div>
+                        </div>
+                    {% endif %}
+                    {% else %}
+                        <div class='panel panel-default'>
+                            <div class='panel-heading'> {{ assessmenttype.Title }}</br>
+                                Available</br>
+                                <a href='{{ assessmenttype.AssessmentPath}}'>Start Assessment</a>
+                            </div>
+                        </div>
+                {% endif %}
+            {% endfor %}
+    </div>
+</div>");
+            // Attrib Value for Block:Assessment List, Attribute:Only Show Requested Page: My Account, Site: External Website
+            RockMigrationHelper.AddBlockAttributeValue("37D4A991-9F9A-47CE-9084-04466F166B6A","7A10C446-B0F3-43F0-9FEB-78B689593736",@"False");
+
+            // update block order for pages with new blocks if the page,zone has multiple blocks
+            Sql(@"UPDATE [Block] SET [Order] = 0 WHERE [Guid] = '87068AAB-16A7-42CC-8A31-5A957D6C4DD5'");  // Page: My Account,  Zone: Sidebar1,  Block: Actions
+            Sql(@"UPDATE [Block] SET [Order] = 1 WHERE [Guid] = '8C513CAC-FB3F-40A2-A0F6-D4C50FF72EC8'");  // Page: My Account,  Zone: Sidebar1,  Block: Group List Personalized Lava
+            Sql(@"UPDATE [Block] SET [Order] = 2 WHERE [Guid] = '37D4A991-9F9A-47CE-9084-04466F166B6A'");  // Page: My Account,  Zone: Sidebar1,  Block: Assessment List
+            Sql(@"UPDATE [Block] SET [Order] = 3 WHERE [Guid] = 'E5596525-B176-4753-A337-25F1F9B83FCE'");  // Page: My Account,  Zone: Sidebar1,  Block: Recent Registrations
+        }
+
+        /// <summary>
+        /// Conflicts the profile assessment page block attributes.
+        /// </summary>
+        private void ConflictProfileAssessmentPageBlockAttributes()
+        {
+            // Conflict Profile Assessment
+            RockMigrationHelper.AddPage( true, "4F83D32A-E02E-42B8-872D-F954E4A39B32","BE15B7BC-6D64-4880-991D-FDE962F91196","Conflict Profile Assessment","","37F17AD8-8103-4F85-865C-94E76B4470BB",""); // Site:External Website
+            RockMigrationHelper.AddPageRoute("37F17AD8-8103-4F85-865C-94E76B4470BB","ConflictProfile","B843AFE4-9198-49DE-904B-8D6440158DAC");// for Page:Conflict Profile Assessment
+            RockMigrationHelper.AddPageRoute("37F17AD8-8103-4F85-865C-94E76B4470BB","ConflictProfile/{rckipid}","AFD90575-B363-4862-B4A6-1283D5C00AD9");// for Page:Conflict Profile Assessment
+            RockMigrationHelper.UpdateBlockType("Conflict Profile","Allows you to take a conflict profile test and saves your conflict profile score.","~/Blocks/Crm/ConflictProfile.ascx","CRM","91473D2F-607D-4260-9C6A-DD3762FE472D");
+            RockMigrationHelper.AddBlock( true, "37F17AD8-8103-4F85-865C-94E76B4470BB".AsGuid(),null,"F3F82256-2D66-432B-9D67-3552CD2F4C2B".AsGuid(),"91473D2F-607D-4260-9C6A-DD3762FE472D".AsGuid(), "Conflict Profile","Main",@"",@"",0,"D005E292-25F8-45D4-A713-2A5C811F0219"); // Add Block to Page: Conflict Profile Assessment Site: External Website
+            RockMigrationHelper.UpdateBlockTypeAttribute("91473D2F-607D-4260-9C6A-DD3762FE472D","9C204CD0-1233-41C5-818A-C5DA439445AA","Set Page Title","SetPageTitle","",@"The text to display as the heading.",0,@"Conflict Profile","C5698564-7178-43BA-B4A3-58B13DDC3AF0"); // Attrib for BlockType: Conflict Profile:Set Page Title
+            RockMigrationHelper.UpdateBlockTypeAttribute("91473D2F-607D-4260-9C6A-DD3762FE472D","9C204CD0-1233-41C5-818A-C5DA439445AA","Set Page Icon","SetPageIcon","",@"The css class name to use for the heading icon.",1,@"fa fa-gift","D5ABBD1A-61F1-4C48-8AD9-C26AC7F5CAEF"); // Attrib for BlockType: Conflict Profile:Set Page Icon
+            RockMigrationHelper.UpdateBlockTypeAttribute("91473D2F-607D-4260-9C6A-DD3762FE472D","1EDAFDED-DFE6-4334-B019-6EECBA89E05A","Allow Retakes","AllowRetakes","",@"If enabled, the person can retake the test after the minimum days passes.",3,@"True","E3965E46-603C-40E5-AB28-1B53E44561DE"); // Attrib for BlockType: Conflict Profile:Allow Retakes
+            RockMigrationHelper.UpdateBlockTypeAttribute("91473D2F-607D-4260-9C6A-DD3762FE472D","A75DFC58-7A1B-4799-BF31-451B2BBE38FF","Min Days To Retake","MinDaysToRetake","",@"The number of days that must pass before the test can be taken again. Leave blank to use the Assessment Type's minimum.",4,@"","E8147587-812D-4118-995D-E5B7A3189979"); // Attrib for BlockType: Conflict Profile:Min Days To Retake
+            RockMigrationHelper.UpdateBlockTypeAttribute("91473D2F-607D-4260-9C6A-DD3762FE472D","A75DFC58-7A1B-4799-BF31-451B2BBE38FF","Number of Questions","NumberofQuestions","",@"The number of questions to show per page while taking the test",2,@"7","6CBCA505-E5BA-4FE9-9DD8-7F3C507B12B8"); // Attrib for BlockType: Conflict Profile:Number of Questions
+            
             // Attrib for BlockType: Conflict Profile:Instructions
             RockMigrationHelper.UpdateBlockTypeAttribute("91473D2F-607D-4260-9C6A-DD3762FE472D","1D0D3794-C210-48A8-8C68-3FBEC08A6BA5","Instructions","Instructions","",@"The text (HTML) to display at the top of the instructions section.  <span class='tip tip-lava'></span> <span class='tip tip-html'></span>",0,@"
 <h2>Welcome to the Conflict Profile Assessment</h2>
@@ -472,6 +671,7 @@ SELECT  CASE
     calm your mind, and help you respond to each item as honestly as you can. Don't spend much time
     on each item. Your first instinct is probably your best response.
 </p>","2E455190-2BAE-4E9F-8505-F393BCE52342");
+
             // Attrib for BlockType: Conflict Profile:Results Message
             RockMigrationHelper.UpdateBlockTypeAttribute("91473D2F-607D-4260-9C6A-DD3762FE472D","1D0D3794-C210-48A8-8C68-3FBEC08A6BA5","Results Message","ResultsMessage","",@"The text (HTML) to display at the top of the results section.<span class='tip tip-lava'></span><span class='tip tip-html'></span>",0,@"
 <p>
@@ -511,7 +711,26 @@ SELECT  CASE
     <b>YIELDING</b> is neglecting your own interests and giving in to those of the other person. This is self-sacrifice and may be charity, serving or choosing to obey another when you prefer not to.
 </p>
 ","1A855117-6489-4A15-846A-5A99F54E9747");
-            // Attrib for BlockType: EQ Assessment:Results Message
+        }
+
+        /// <summary>
+        /// Emotionals the intelligence assessment page block attributes.
+        /// </summary>
+        private void EmotionalIntelligenceAssessmentPageBlockAttributes()
+        {
+             
+            // Emotional Intelligence Assessment
+            RockMigrationHelper.AddPage( true, "4F83D32A-E02E-42B8-872D-F954E4A39B32","BE15B7BC-6D64-4880-991D-FDE962F91196","Emotional Intelligence Assessment","","BE5F3984-C25E-47CA-A602-EE1CED99E9AC",""); // Site:External Website
+            RockMigrationHelper.AddPageRoute("BE5F3984-C25E-47CA-A602-EE1CED99E9AC","EmotionalIntelligence","8C5F1CF8-8AC1-4123-B7FD-E57EA36CFBBF");// for Page:Emotional Intelligence Assessment
+            RockMigrationHelper.AddPageRoute("BE5F3984-C25E-47CA-A602-EE1CED99E9AC","EmotionalIntelligence/{rckipid}","C97D4D5A-F082-4F2B-A873-71F734B539CC");// for Page:Emotional Intelligence Assessment
+            RockMigrationHelper.UpdateBlockType("EQ Assessment","Allows you to take a EQ Inventory test and saves your EQ Inventory score.","~/Blocks/Crm/EQInventory.ascx","CRM","040CFD6D-5155-4BC9-BAEE-A53219A7BECE");
+            RockMigrationHelper.AddBlock( true, "BE5F3984-C25E-47CA-A602-EE1CED99E9AC".AsGuid(),null,"F3F82256-2D66-432B-9D67-3552CD2F4C2B".AsGuid(),"040CFD6D-5155-4BC9-BAEE-A53219A7BECE".AsGuid(), "EQ Assessment","Main",@"",@"",0,"71BE6A7A-7D51-4149-AFB1-3307DF04B2DF"); // Add Block to Page: Emotional Intelligence Assessment Site: External Website
+            RockMigrationHelper.UpdateBlockTypeAttribute("040CFD6D-5155-4BC9-BAEE-A53219A7BECE","9C204CD0-1233-41C5-818A-C5DA439445AA","Set Page Title","SetPageTitle","",@"The text to display as the heading.",0,@"EQ Inventory Assessment","E99F01A7-AF8F-4010-A456-3A9048347859"); // Attrib for BlockType: EQ Assessment:Set Page Title
+            RockMigrationHelper.UpdateBlockTypeAttribute("040CFD6D-5155-4BC9-BAEE-A53219A7BECE","9C204CD0-1233-41C5-818A-C5DA439445AA","Set Page Icon","SetPageIcon","",@"The css class name to use for the heading icon.",1,@"fa fa-gift","D5CF91C1-2CC8-46BF-8CC6-DD6AD8B07518"); // Attrib for BlockType: EQ Assessment:Set Page Icon
+            RockMigrationHelper.UpdateBlockTypeAttribute("040CFD6D-5155-4BC9-BAEE-A53219A7BECE","1EDAFDED-DFE6-4334-B019-6EECBA89E05A","Allow Retakes","AllowRetakes","",@"If enabled, the person can retake the test after the minimum days passes.",3,@"True","A0905767-79C9-4567-BA76-A3FFEE71E0B3"); // Attrib for BlockType: EQ Assessment:Allow Retakes
+            RockMigrationHelper.UpdateBlockTypeAttribute("040CFD6D-5155-4BC9-BAEE-A53219A7BECE","A75DFC58-7A1B-4799-BF31-451B2BBE38FF","Number of Questions","NumberofQuestions","",@"The number of questions to show per page while taking the test",2,@"7","8D2C5502-0AAB-4FE6-ABE9-05900439827D"); // Attrib for BlockType: EQ Assessment:Number of Questions
+            RockMigrationHelper.UpdateBlockTypeAttribute("040CFD6D-5155-4BC9-BAEE-A53219A7BECE","A75DFC58-7A1B-4799-BF31-451B2BBE38FF","Min Days To Retake","MinDaysToRetake","",@"The number of days that must pass before the test can be taken again. Leave blank to use the Assessment Type's minimum.",4,@"","B47E54AC-A66B-4EC6-B4FC-F9A7B1175E27"); // Attrib for BlockType: EQ Assessment:Min Days To Retake
+            #region Attrib for BlockType: EQ Assessment:Results Message
             RockMigrationHelper.UpdateBlockTypeAttribute("040CFD6D-5155-4BC9-BAEE-A53219A7BECE","1D0D3794-C210-48A8-8C68-3FBEC08A6BA5","Results Message","ResultsMessage","",@"The text (HTML) to display at the top of the results section.<span class='tip tip-lava'></span><span class='tip tip-html'></span>",0,@"
 
 <h2>EQ Inventory Assessment</h2>
@@ -658,7 +877,9 @@ SELECT  CASE
     of those who completed this instrument.
 </blockquote>
 ","5B6219CE-84B5-4F68-BE5B-C3187EDFF2A6");
-            // Attrib for BlockType: EQ Assessment:Instructions
+            #endregion Attrib for BlockType: EQ Assessment:Results Message
+
+            #region Attrib for BlockType: EQ Assessment:Instructions
             RockMigrationHelper.UpdateBlockTypeAttribute("040CFD6D-5155-4BC9-BAEE-A53219A7BECE","1D0D3794-C210-48A8-8C68-3FBEC08A6BA5","Instructions","Instructions","",@"The text (HTML) to display at the top of the instructions section.  <span class='tip tip-lava'></span> <span class='tip tip-html'></span>",0,@"
 <h2>Welcome to the EQ Inventory Assessment</h2>
 <p>
@@ -676,249 +897,28 @@ SELECT  CASE
     calm your mind, and help you respond to each item as honestly as you can. Don't spend much time
     on each item. Your first instinct is probably your best response.
 </p>","6C00C171-E6DC-4027-B587-0AB63AC939E3");
-            // Attrib for BlockType: Motivators Assessment:Instructions
-            RockMigrationHelper.UpdateBlockTypeAttribute("5D4E11DA-DEED-4157-A5FD-D16B3E562157","1D0D3794-C210-48A8-8C68-3FBEC08A6BA5","Instructions","Instructions","",@"The text (HTML) to display at the top of the instructions section.  <span class='tip tip-lava'></span> <span class='tip tip-html'></span>",0,@"
-<h2>Welcome to the EQ Inventory Assessment</h2>
-<p>
-    {{ Person.NickName }}, this assessment was developed and researched by Dr. Gregory A. Wiens.
-</p>
-<p>
- Our TrueWiring Emotional Intelligence Inventory (EQ-W) assesses your developed skills in two domains:
-   <ol>
-      <li> understanding your own emotions </li>
-      <li> understanding the emotions of others. This instrument identifies your ability to appropriately express your emotions while encouraging others to do the same. </li>
-   </ol>
-</p>
-<p>
-    Before you begin, please take a moment and pray that the Holy Spirit would guide your thoughts,
-    calm your mind, and help you respond to each item as honestly as you can. Don't spend much time
-    on each item. Your first instinct is probably your best response.
-</p>","38CA3E4F-4EEB-4A0F-BA80-73F9884A5766");
-            // Attrib for BlockType: Motivators Assessment:Results Message
-            RockMigrationHelper.UpdateBlockTypeAttribute("5D4E11DA-DEED-4157-A5FD-D16B3E562157","1D0D3794-C210-48A8-8C68-3FBEC08A6BA5","Results Message","ResultsMessage","",@"The text (HTML) to display at the top of the results section.<span class='tip tip-lava'></span><span class='tip tip-html'></span>",0,@"
+            #endregion Attrib for BlockType: EQ Assessment:Instructions
 
-<h2>EQ Inventory Assessment</h2>
+        }
 
-<h3>Self Awareness</h3>
-<p>
-    Self Awareness is being aware of what emotions you are experiencing and why you
-    are experiencing these emotions. This skill is demonstrated in real time. In other
-    words, when you are in the midst of a discussion or even a disagreement with someone
-    else, ask yourself these questions:
-    <ul>
-        <li>Are you aware of what emotions you are experiencing?</li>
-        <li>Are you aware of why you are experiencing these emotions?</li>
-    </ul>
+        /// <summary>
+        /// Creates the pages, blocks, and attributes for assessments.
+        /// </summary>
+        private void PagesBlocksAndAttributesUp()
+        {
+            RockMigrationHelper.AddLayout( "F3F82256-2D66-432B-9D67-3552CD2F4C2B", "FullWidthNarrow", "Full Width Narrow", "", "BE15B7BC-6D64-4880-991D-FDE962F91196" ); // Site:External Website
 
-    More than just knowing you are angry, our goal is to understand what has caused the
-    anger, such as frustration, hurt, pain, confusion, etc.
-</p>
+            // Parent page for all assessment tests
+            RockMigrationHelper.AddPage( true, "EBAA5140-4B8F-44B8-B1E8-C73B654E4B22","5FEAF34C-7FB6-4A11-8A1E-C452EC7849BD","Assessment Tests","","4F83D32A-E02E-42B8-872D-F954E4A39B32",""); // Site:External Website
 
-<!-- Graph -->
-{[ chart type:'horizontalBar' legendshow:'false' tooltipshow:'false' chartheight:'50' xaxistype:'linear0to100' ]}
-    [[ dataitem label:'Self Awareness' value:'{{SelfAwareness}}' fillcolor:'#5c8ae7' ]] [[ enddataitem ]]
-{[ endchart ]}
-<p class='text-center'><cite>Source: https://healthygrowingleaders.com</cite></p>
+            AssessmentListPageBlockAttributes();
+            ConflictProfileAssessmentPageBlockAttributes();
+            EmotionalIntelligenceAssessmentPageBlockAttributes();
 
-<blockquote>
-    Your responses to the items on the Self Awareness scale indicate the score for the
-    ability to be aware of your own emotions is equal to or better than {{ SelfAwareness }}%
-    of those who completed this instrument.
-</blockquote>
+            RockMigrationHelper.MovePage( "C8CEF4B0-4A09-46D2-9B6B-CD2B6D3078B1", "4F83D32A-E02E-42B8-872D-F954E4A39B32" );// Move DISC page to new parent Assessment Tests
+            RockMigrationHelper.MovePage( "06410598-3DA4-4710-A047-A518157753AB", "4F83D32A-E02E-42B8-872D-F954E4A39B32" );// Move gifts page to new parent Assessment Tests
 
-<h3>Self Regulating</h3>
-<p>
-    Self Regulating is appropriately expressing your emotions in the context of relationships
-    around you. Don’t confuse this with learning to suppress your emotions; rather, think of Self
-    Regulating as the ability to express your emotions appropriately. Healthy human beings
-    experience a full range of emotions and these are important for family, friends, and
-    co-workers to understand. Self Regulating is learning to tell others what you are
-    feeling in the moment.
-</p>
-
-    {[ chart type:'horizontalBar' legendshow:'false' tooltipshow:'false' chartheight:'50' xaxistype:'linear0to100' ]}
-        [[ dataitem label:'Self Regulating' value:'{{SelfRegulating}}' fillcolor:'#175c2d']] [[ enddataitem ]]
-    {[ endchart ]}
-<p class='text-center'><cite>Source: https://healthygrowingleaders.com</cite></p>
-
-<blockquote>
-    Your responses to the items on the Self Regulation scale indicate the score for the
-    the ability to appropriately express your own emotions is equal to or better than {{ SelfRegulating }}%
-    of those who completed this instrument.
-</blockquote>
-
-
-<h3>Others Awareness</h3>
-<p>
-    Others Awareness is being aware of what emotions others are experiencing around you and
-    why they are experiencing these emotions. As with understanding your own emotions, this
-    skill is knowing in real time what another is experiencing. This skill involves reading
-    cues to their emotional state through their eyes, facial expressions, body posture, the
-    tone of voice or many other ways. It is critical you learn to pay attention to these
-    cues for you to enhance your awareness of others' emotions.
-</p>
-
-    {[ chart type:'horizontalBar' legendshow:'false' tooltipshow:'false' chartheight:'50' xaxistype:'linear0to100' ]}
-        [[ dataitem label:'Others Awareness' value:'{{OthersAwareness}}' fillcolor:'#2e2e5e' ]] [[ enddataitem ]]
-    {[ endchart ]}
-<p class='text-center'><cite>Source: https://healthygrowingleaders.com</cite></p>
-
-<blockquote>
-    Your responses to the items on the Others Awareness scale indicate the score for the
-    ability to be aware of others emotions is equal to or better than {{ OthersAwareness }}%
-    of those who completed this instrument.
-</blockquote>
-
-
-<h3>Others Regulating</h3>
-<p>
-    Others Regulating is helping those around you express their emotions appropriately
-    in the context of your relationship with them. This skill centers on helping others
-    know what emotions they are experiencing and then asking questions or giving permission
-    to them to freely and appropriately express their emotions in the context of your relationship.
-</p>
-
-    {[ chart type:'horizontalBar' legendshow:'false' tooltipshow:'false' chartheight:'50' xaxistype:'linear0to100' ]}
-        [[ dataitem label:'Others Regulating' value:'{{OthersRegulating}}' fillcolor:'#5c5c2d' ]] [[ enddataitem ]]
-    {[ endchart ]}
-<p class='text-center'><cite>Source: https://healthygrowingleaders.com</cite></p>
-
-<blockquote>
-    Your responses to the items on the Others Regulation scale indicate the score for
-    the ability to enable others to appropriately express their emotions in the context
-    of your relationship is equal to or better than {{OthersRegulating}}% of those who
-    completed this instrument.
-</blockquote>
-
-
-<h2>Additional Scales</h2>
-<p>
-    The EQ*i includes two additional scales which are particularly useful for those in
-    leadership roles: 1) EQ in Problem Solving and 2) EQ under stress. Frequently we
-    find it difficult to appreciate that conflicting emotions exacerbate most problems
-    we experience in life. The solution, therefore, must account for these emotions, not
-    just logic or doing the “right” thing.
-</p>
-
-<h3>EQ in Problem Solving</h3>
-<p>
-    The EQ in Problem Solving identifies how proficient you are in using emotions to
-    solve problems. This skill requires first being aware of what emotions are involved
-    in the problem and what is the source of those emotions. It also includes helping
-    others (and yourself) express those emotions within the discussion.
-</p>
-
-    {[ chart type:'horizontalBar' legendshow:'false' tooltipshow:'false' chartheight:'50' xaxistype:'linear0to100' ]}
-        [[ dataitem label:'EQ in Problem Solving' value:'{{EQinProblemSolving}}' fillcolor:'#5b2d09' ]] [[ enddataitem ]]
-    {[ endchart ]}
-<p class='text-center'><cite>Source: https://healthygrowingleaders.com</cite></p>
-
-<blockquote>
-    Your responses to the items on the EQ in Problem Solving scale indicate the score for
-    the ability to use emotions in resolving problems is equal to or better than {{ EQinProblemSolving }}%
-    of those who completed this instrument.
-</blockquote>
-
-
-<h3>EQ Under Stress</h3>
-<p>
-    It is more difficult to maintain high EQ under high stress than at any other time,
-    so EQ Under Stress identifies how capable you are to keep high EQ under high-stress
-    moments. This skill requires highly developed Self and Others awareness to understand
-    how the stress is impacting yourself and others. It also involves being able to
-    articulate the appropriate emotions under pressure which may be different from
-    articulating them when not under stress.
-</p>
-
-    {[ chart type:'horizontalBar' legendshow:'false' tooltipshow:'false' chartheight:'50' xaxistype:'linear0to100' ]}
-        [[ dataitem label:'EQ Under Stress' value:'{{EQUnderStress}}' fillcolor:'#8a5c2d' ]] [[ enddataitem ]]
-    {[ endchart ]}
-<p class='text-center'><cite>Source: https://healthygrowingleaders.com</cite></p>
-
-<blockquote>
-    Your responses to the items on the EQ in Under Stress scale indicate the score
-    for the ability to maintain EQ under significant stress is equal to or better than {{ EQUnderStress }}%
-    of those who completed this instrument.
-</blockquote>
-","AB1B5EC8-C75D-4E71-8E14-287952502731");
-            // Attrib Value for Block:Assessment List, Attribute:Only Show Requested Page: Assessments, Site: External Website
-            RockMigrationHelper.AddBlockAttributeValue("0E22E6CB-1634-41CA-83EF-4BC7CE52F314","7A10C446-B0F3-43F0-9FEB-78B689593736",@"False");
-            // Attrib Value for Block:Assessment List, Attribute:Hide If No Requests Page: Assessments, Site: External Website
-            RockMigrationHelper.AddBlockAttributeValue("0E22E6CB-1634-41CA-83EF-4BC7CE52F314","1E5EE52F-DFD5-4406-A517-4B76E2800D2A",@"False");
-            // Attrib Value for Block:Assessment List, Attribute:Lava Template Page: Assessments, Site: External Website
-            RockMigrationHelper.AddBlockAttributeValue("0E22E6CB-1634-41CA-83EF-4BC7CE52F314","044D444A-ECDC-4B7A-8987-91577AAB227C",@"<div class='panel panel-default'>
-    <div class='panel-heading'>Assessments</div>
-    <div class='panel-body'>
-            {% for assessmenttype in AssessmentTypes %}
-                {% if assessmenttype.LastRequestObject %}
-                    {% if assessmenttype.LastRequestObject.Status == 'Complete' %}
-                        <div class='panel panel-success'>
-                            <div class='panel-heading'>{{ assessmenttype.Title }}</br>
-                                Completed: {{ assessmenttype.LastRequestObject.CompletedDate | Date:'M/d/yyyy'}} </br>
-                                <a href='{{ assessmenttype.AssessmentResultsPath}}'>View Results</a>
-                            </div>
-                        </div>
-                    {% elseif assessmenttype.LastRequestObject.Status == 'Pending' %}
-                        <div class='panel panel-primary'>
-                            <div class='panel-heading'> {{ assessmenttype.Title }}</br>
-                                Requested: {{assessmenttype.LastRequestObject.Requester}} ({{ assessmenttype.LastRequestObject.RequestedDate | Date:'M/d/yyyy'}})</br>
-                                <a href='{{ assessmenttype.AssessmentPath}}'>Start Assessment</a>
-                            </div>
-                        </div>
-                    {% endif %}
-                    {% else %}
-                        <div class='panel panel-default'>
-                            <div class='panel-heading'> {{ assessmenttype.Title }}</br>
-                                Available</br>
-                                <a href='{{ assessmenttype.AssessmentPath}}'>Start Assessment</a>
-                            </div>
-                        </div>
-                {% endif %}
-            {% endfor %}
-    </div>
-</div>");
-            // Attrib Value for Block:Assessment List, Attribute:Hide If No Active Requests Page: Assessments, Site: External Website
-            RockMigrationHelper.AddBlockAttributeValue("0E22E6CB-1634-41CA-83EF-4BC7CE52F314","305AD0A5-6E35-402A-A6A2-50474733368A",@"False");
-            // Attrib Value for Block:Assessment List, Attribute:Hide If No Active Requests Page: My Account, Site: External Website
-            RockMigrationHelper.AddBlockAttributeValue("37D4A991-9F9A-47CE-9084-04466F166B6A","305AD0A5-6E35-402A-A6A2-50474733368A",@"False");
-            // Attrib Value for Block:Assessment List, Attribute:Hide If No Requests Page: My Account, Site: External Website
-            RockMigrationHelper.AddBlockAttributeValue("37D4A991-9F9A-47CE-9084-04466F166B6A","1E5EE52F-DFD5-4406-A517-4B76E2800D2A",@"False");
-            // Attrib Value for Block:Assessment List, Attribute:Lava Template Page: My Account, Site: External Website
-            RockMigrationHelper.AddBlockAttributeValue("37D4A991-9F9A-47CE-9084-04466F166B6A","044D444A-ECDC-4B7A-8987-91577AAB227C",@"<div class='panel panel-default'>
-    <div class='panel-heading'>Assessments</div>
-    <div class='panel-body'>
-            {% for assessmenttype in AssessmentTypes %}
-                {% if assessmenttype.LastRequestObject %}
-                    {% if assessmenttype.LastRequestObject.Status == 'Complete' %}
-                        <div class='panel panel-success'>
-                            <div class='panel-heading'>{{ assessmenttype.Title }}</br>
-                                Completed: {{ assessmenttype.LastRequestObject.CompletedDate | Date:'M/d/yyyy'}} </br>
-                                <a href='{{ assessmenttype.AssessmentResultsPath}}'>View Results</a>
-                            </div>
-                        </div>
-                    {% elseif assessmenttype.LastRequestObject.Status == 'Pending' %}
-                        <div class='panel panel-primary'>
-                            <div class='panel-heading'> {{ assessmenttype.Title }}</br>
-                                Requested: {{assessmenttype.LastRequestObject.Requester}} ({{ assessmenttype.LastRequestObject.RequestedDate | Date:'M/d/yyyy'}})</br>
-                                <a href='{{ assessmenttype.AssessmentPath}}'>Start Assessment</a>
-                            </div>
-                        </div>
-                    {% endif %}
-                    {% else %}
-                        <div class='panel panel-default'>
-                            <div class='panel-heading'> {{ assessmenttype.Title }}</br>
-                                Available</br>
-                                <a href='{{ assessmenttype.AssessmentPath}}'>Start Assessment</a>
-                            </div>
-                        </div>
-                {% endif %}
-            {% endfor %}
-    </div>
-</div>");
-            // Attrib Value for Block:Assessment List, Attribute:Only Show Requested Page: My Account, Site: External Website
-            RockMigrationHelper.AddBlockAttributeValue("37D4A991-9F9A-47CE-9084-04466F166B6A","7A10C446-B0F3-43F0-9FEB-78B689593736",@"False");
             RockMigrationHelper.UpdateFieldType("Assessment Types","","Rock","Rock.Field.Types.AssessmentTypesFieldType","C263513A-30BE-4823-ABF1-AC12A56F9644");
-
         }
 
         /// <summary>
@@ -926,20 +926,6 @@ SELECT  CASE
         /// </summary>
         private void PagesBlocksAndAttributesDown()
         {
-            // Attrib for BlockType: Motivators Assessment:Number of Questions
-            RockMigrationHelper.DeleteAttribute("A42DE0DC-83E1-42F3-9F2D-21147CAF0932");
-            // Attrib for BlockType: Motivators Assessment:Set Page Icon
-            RockMigrationHelper.DeleteAttribute("917A9444-C3AB-43FE-9D82-05E57F0F48E7");
-            // Attrib for BlockType: Motivators Assessment:Set Page Title
-            RockMigrationHelper.DeleteAttribute("FDD86FC4-09AB-45F7-A017-3F801E027A05");
-            // Attrib for BlockType: Motivators Assessment:Min Days To Retake
-            RockMigrationHelper.DeleteAttribute("D87793A5-C326-451E-9EE9-249A6894EE32");
-            // Attrib for BlockType: Motivators Assessment:Results Message
-            RockMigrationHelper.DeleteAttribute("AB1B5EC8-C75D-4E71-8E14-287952502731");
-            // Attrib for BlockType: Motivators Assessment:Instructions
-            RockMigrationHelper.DeleteAttribute("38CA3E4F-4EEB-4A0F-BA80-73F9884A5766");
-            // Attrib for BlockType: Motivators Assessment:Allow Retakes
-            RockMigrationHelper.DeleteAttribute("86DC0536-A1D6-4455-9AE7-20C9EC5262CE");
             // Attrib for BlockType: EQ Assessment:Instructions
             RockMigrationHelper.DeleteAttribute("6C00C171-E6DC-4027-B587-0AB63AC939E3");
             // Attrib for BlockType: EQ Assessment:Min Days To Retake
@@ -976,8 +962,6 @@ SELECT  CASE
             RockMigrationHelper.DeleteAttribute("1E5EE52F-DFD5-4406-A517-4B76E2800D2A");
             // Attrib for BlockType: Assessment List:Only Show Requested
             RockMigrationHelper.DeleteAttribute("7A10C446-B0F3-43F0-9FEB-78B689593736");
-            // Remove Block: Motivators Assessment, from Page: Motivators Assessment, Site: External Website
-            RockMigrationHelper.DeleteBlock("2A4D0861-2E44-47C0-AD77-867451602ABC");
             // Remove Block: Conflict Profile, from Page: Conflict Profile Assessment, Site: External Website
             RockMigrationHelper.DeleteBlock("D005E292-25F8-45D4-A713-2A5C811F0219");
             // Remove Block: EQ Assessment, from Page: Emotional Intelligence Assessment, Site: External Website
@@ -986,7 +970,6 @@ SELECT  CASE
             RockMigrationHelper.DeleteBlock("37D4A991-9F9A-47CE-9084-04466F166B6A");
             // Remove Block: Assessment List, from Page: Assessments, Site: External Website
             RockMigrationHelper.DeleteBlock("0E22E6CB-1634-41CA-83EF-4BC7CE52F314");
-            RockMigrationHelper.DeleteBlockType("5D4E11DA-DEED-4157-A5FD-D16B3E562157"); // Motivators Assessment
             RockMigrationHelper.DeleteBlockType("040CFD6D-5155-4BC9-BAEE-A53219A7BECE"); // EQ Assessment
             RockMigrationHelper.DeleteBlockType("91473D2F-607D-4260-9C6A-DD3762FE472D"); // Conflict Profile
             RockMigrationHelper.DeleteBlockType("0AD1D108-4ABF-4AED-B3B7-4AAEA16D10E4"); // Assessment List
@@ -995,7 +978,5 @@ SELECT  CASE
             RockMigrationHelper.DeletePage("37F17AD8-8103-4F85-865C-94E76B4470BB"); //  Page: Conflict Profile Assessment, Layout: FullWidth, Site: External Website
             RockMigrationHelper.DeletePage("FCF44690-D74C-4FB7-A01B-0EFCA6EA9E1E"); //  Page: Assessments, Layout: FullWidth, Site: External Website
         }
-
-
     }
 }
