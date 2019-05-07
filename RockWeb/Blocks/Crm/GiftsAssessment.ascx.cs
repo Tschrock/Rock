@@ -85,20 +85,28 @@ namespace Rockweb.Blocks.Crm
         </tr>
     </thead>
     <tbody>
-        {% for dominantGift in DominantGifts %}
-        <tr>
-        <td>
-        {{ dominantGift.Value }}
-        </td>
-        <td>
-        {{ dominantGift.Description }}    
-        </td>
-        </tr>
-        {% endfor %}
+        {% if DominantGifts != empty %}
+            {% for dominantGift in DominantGifts %}
+                <tr>
+                    <td>
+                        {{ dominantGift.Value }}
+                    </td>
+                    <td>
+                        {{ dominantGift.Description }}    
+                    </td>
+                </tr>
+            {% endfor %}
+        {% else %}
+            <tr>
+                <td colspan='2'>
+                    You did not have any Dominant Gifts
+                </td>
+            </tr>
+        {% endif %}
     </tbody>
     </table>
     </div>
-    </div>
+</div>
     
 <div class='row'>
     <div class='col-md-12'>
@@ -117,16 +125,24 @@ namespace Rockweb.Blocks.Crm
                 </tr>
             </thead>
             <tbody>
-            {% for supportiveGift in SupportiveGifts %}
-            <tr>
-                <td>
-                {{ supportiveGift.Value }}
-                </td>
-                <td>
-                {{ supportiveGift.Description }}
-                </td>
-            </tr>
-                {% endfor %}
+                {% if SupportiveGifts != empty %}
+                    {% for supportiveGift in SupportiveGifts %}
+                        <tr>
+                            <td>
+                                {{ supportiveGift.Value }}
+                            </td>
+                            <td>
+                                {{ supportiveGift.Description }}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td colspan='2'>
+                            You did not have any Supportive Gifts
+                        </td>
+                    </tr>
+                {% endif %}
             </tbody>
         </table>
     </div>
@@ -148,16 +164,24 @@ namespace Rockweb.Blocks.Crm
                 </tr>
             </thead>
             <tbody>
-                {% for otherGift in OtherGifts %}
-            <tr>
-                <td>
-                {{ otherGift.Value }}
-                </td>
-                <td>
-                    {{ otherGift.Description }}
-                </td>
-            </tr>
-                {% endfor %}
+                {% if OtherGifts != empty %}
+                    {% for otherGift in OtherGifts %}
+                        <tr>
+                            <td>
+                                {{ otherGift.Value }}
+                            </td>
+                            <td>
+                                {{ otherGift.Description }}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                {% else %}
+                    <tr>
+                        <td colspan='2'>
+                            You did not have any Other Gifts
+                        </td>
+                    </tr>
+                {% endif %}
            </tbody>
         </table>
     </div>
