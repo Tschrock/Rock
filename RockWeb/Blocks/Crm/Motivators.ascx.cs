@@ -37,22 +37,18 @@ namespace Rockweb.Blocks.Crm
     [Category( "CRM" )]
     [Description( "Allows you to take a EQ Inventory test and saves your EQ Inventory score." )]
 
-    [TextField( "Set Page Title", "The text to display as the heading.", false, "EQ Inventory Assessment", order: 0 )]
+    [TextField( "Set Page Title", "The text to display as the heading.", false, "Motivators Assessment", order: 0 )]
     [TextField( "Set Page Icon", "The css class name to use for the heading icon.", false, "fa fa-gift", order: 1 )]
-    [IntegerField( "Number of Questions", "The number of questions to show per page while taking the test", true, 7, order: 2 )]
+    [IntegerField( "Number of Questions", "The number of questions to show per page while taking the test", true, 20, order: 2 )]
     [BooleanField( "Allow Retakes", "If enabled, the person can retake the test after the minimum days passes.", true, order: 3 )]
     [IntegerField( "Min Days To Retake", "The number of days that must pass before the test can be taken again. Leave blank to use the Assessment Type's minimum.", false, order: 4 )]
     [CodeEditorField( "Instructions", "The text (HTML) to display at the top of the instructions section.  <span class='tip tip-lava'></span> <span class='tip tip-html'></span>", CodeEditorMode.Html, CodeEditorTheme.Rock, 400, true, @"
-<h2>Welcome to the EQ Inventory Assessment</h2>
+<h2>Welcome to the Motivators Assessment</h2>
 <p>
-    {{ Person.NickName }}, this assessment was developed and researched by Dr. Gregory A. Wiens.
+    {{ Person.NickName }}, this assessment was developed and researched by Dr. Gregory A. Wiens and is intended to help identify the things that you value. These motivators influence your personal, professional, social and every other part of your life because they influence what you view as important and what should or should not be paid attention to. They impact the way you lead or even if you lead. They directly sway how you view your current situation.
 </p>
 <p>
- Our TrueWiring Emotional Intelligence Inventory (EQ-W) assesses your developed skills in two domains:
-   <ol>
-      <li> understanding your own emotions </li>
-      <li> understanding the emotions of others. This instrument identifies your ability to appropriately express your emotions while encouraging others to do the same. </li>
-   </ol>
+   We all have internal mechanisms that cause us to view life very differently from others. Some of this could be attributed to our personality. However, a great deal of research has been done to identify different values, motivators or internal drivers which cause each of us to have a different perspective on people, places, and events. These values cause you to construe one situation very differently from another who value things differently.
 </p>
 <p>
     Before you begin, please take a moment and pray that the Holy Spirit would guide your thoughts,
@@ -62,149 +58,73 @@ namespace Rockweb.Blocks.Crm
 
     [CodeEditorField( "Results Message", "The text (HTML) to display at the top of the results section.<span class='tip tip-lava'></span><span class='tip tip-html'></span>", CodeEditorMode.Html, CodeEditorTheme.Rock, 400, true, @"
 
-<h2>EQ Inventory Assessment</h2>
-
-<h3>Self Awareness</h3>
+<h2>Welcome to the Motivators Assessment</h2>
 <p>
-    Self Awareness is being aware of what emotions you are experiencing and why you
-    are experiencing these emotions. This skill is demonstrated in real time. In other
-    words, when you are in the midst of a discussion or even a disagreement with someone
-    else, ask yourself these questions:
-    <ul>
-        <li>Are you aware of what emotions you are experiencing?</li>
-        <li>Are you aware of why you are experiencing these emotions?</li>
-    </ul>
-
-    More than just knowing you are angry, our goal is to understand what has caused the
-    anger, such as frustration, hurt, pain, confusion, etc.
+    {{ Person.NickName }}, this assessment was developed and researched by Dr. Gregory A. Wiens and is intended to help identify the things that you value. These motivators influence your personal, professional, social and every other part of your life because they influence what you view as important and what should or should not be paid attention to. They impact the way you lead or even if you lead. They directly sway how you view your current situation.
+</p>
+<p>
+   We all have internal mechanisms that cause us to view life very differently from others. Some of this could be attributed to our personality. However, a great deal of research has been done to identify different values, motivators or internal drivers which cause each of us to have a different perspective on people, places, and events. These values cause you to construe one situation very differently from another who value things differently.
+</p>
+<p>
+    Before you begin, please take a moment and pray that the Holy Spirit would guide your thoughts,
+    calm your mind, and help you respond to each item as honestly as you can. Don't spend much time
+    on each item. Your first instinct is probably your best response.
 </p>
 
-<!-- Graph -->
-{[ chart type:'horizontalBar' legendshow:'false' tooltipshow:'false' chartheight:'50' xaxistype:'linear0to100' ]}
-    [[ dataitem label:'Self Awareness' value:'{{SelfAwareness}}' fillcolor:'#5c8ae7' ]] [[ enddataitem ]]
-{[ endchart ]}
-<p class='text-center'><cite>Source: https://healthygrowingleaders.com</cite></p>
-
-<blockquote>
-    Your responses to the items on the Self Awareness scale indicate the score for the
-    ability to be aware of your own emotions is equal to or better than {{ SelfAwareness }}%
-    of those who completed this instrument.
-</blockquote>
-
-<h3>Self Regulating</h3>
+Results Message (block setting default value):
 <p>
-    Self Regulating is appropriately expressing your emotions in the context of relationships
-    around you. Don’t confuse this with learning to suppress your emotions; rather, think of Self
-    Regulating as the ability to express your emotions appropriately. Healthy human beings
-    experience a full range of emotions and these are important for family, friends, and
-    co-workers to understand. Self Regulating is learning to tell others what you are
-    feeling in the moment.
+   This assessment identifies 22 different motivators (scales) which illustrate different things to which we all assign importance. These motivators listed in descending order on the report from the highest to the lowest. No one motivator is better than another. They are all critical and essential for the health of an organization. There are over 1,124,000,727,777,607,680,000 different combinations of these 22 motivators so we would hope you realize that your exceptional combination is clearly unique. We believe it is as important for you to know the motivators which are at the top as well as the ones at the bottom of your list. This is because you would best be advised to seek roles and responsibilities where your top motivators are needed. On the other hand, it would be advisable to <i>avoid roles or responsibilities where your bottom motivators would be required</i>. 
 </p>
 
-    {[ chart type:'horizontalBar' legendshow:'false' tooltipshow:'false' chartheight:'50' xaxistype:'linear0to100' ]}
-        [[ dataitem label:'Self Regulating' value:'{{SelfRegulating}}' fillcolor:'#175c2d']] [[ enddataitem ]]
-    {[ endchart ]}
-<p class='text-center'><cite>Source: https://healthygrowingleaders.com</cite></p>
-
-<blockquote>
-    Your responses to the items on the Self Regulation scale indicate the score for the
-    the ability to appropriately express your own emotions is equal to or better than {{ SelfRegulating }}%
-    of those who completed this instrument.
-</blockquote>
-
-
-<h3>Others Awareness</h3>
+<h2>Influential, Organizational, Intellectual, and Operational</h2>
 <p>
-    Others Awareness is being aware of what emotions others are experiencing around you and
-    why they are experiencing these emotions. As with understanding your own emotions, this
-    skill is knowing in real time what another is experiencing. This skill involves reading
-    cues to their emotional state through their eyes, facial expressions, body posture, the
-    tone of voice or many other ways. It is critical you learn to pay attention to these
-    cues for you to enhance your awareness of others' emotions.
+Each of the 22 motivators are grouped into one of four clusters: Influential, Organizational, Intellectual, and Operational. The clusters, graphed below, include the motivators that fall within each grouping.
+</p>
+<!--  Cluster Chart -->
+    <div class=""panel panel-default"">
+      <div class=""panel-heading"">
+        <h2 class=""panel-title""><b>Composite Score</b></h2>
+      </div>
+      <div class=""panel-body"">
+    {[chart type:'horizontalBar' chartheight:'1200' chartwidth:'75' ]}
+    {% for motivatorClusterScore in MotivatorClusterScores %}
+        [[dataitem label:'{{ motivatorClusterScore.DefinedValue.Value }}' value:'{{ motivatorClusterScore.Value }}' fillcolor:'{{ motivatorClusterScore.DefinedValue | Attribute:'Color' }}' ]] 
+        [[enddataitem]]
+    {% endfor %}
+    {[endchart]}
+    
+        Source: https://healthygrowingleaders.com
+      </div>
+    </div>
+<p>
+This graph is based on the average composite score for each cluster of Motivators.
+</p>
+{% for motivatorClusterScore in MotivatorClusterScores %}
+<p>
+<b>{{ motivatorClusterScore.DefinedValue.Value }}</b>
+</br>
+{{ motivatorClusterScore.DefinedValue.Description }}
+</br>
+{{ motivatorClusterScore.DefinedValue | Attribute:'Summary' }}
 </p>
 
-    {[ chart type:'horizontalBar' legendshow:'false' tooltipshow:'false' chartheight:'50' xaxistype:'linear0to100' ]}
-        [[ dataitem label:'Others Awareness' value:'{{OthersAwareness}}' fillcolor:'#2e2e5e' ]] [[ enddataitem ]]
-    {[ endchart ]}
-<p class='text-center'><cite>Source: https://healthygrowingleaders.com</cite></p>
-
-<blockquote>
-    Your responses to the items on the Others Awareness scale indicate the score for the
-    ability to be aware of others emotions is equal to or better than {{ OthersAwareness }}%
-    of those who completed this instrument.
-</blockquote>
-
-
-<h3>Others Regulating</h3>
+ {% endfor %}
 <p>
-    Others Regulating is helping those around you express their emotions appropriately
-    in the context of your relationship with them. This skill centers on helping others
-    know what emotions they are experiencing and then asking questions or giving permission
-    to them to freely and appropriately express their emotions in the context of your relationship.
+   The following graph shows your motivators ranked from top to bottom.
 </p>
 
-    {[ chart type:'horizontalBar' legendshow:'false' tooltipshow:'false' chartheight:'50' xaxistype:'linear0to100' ]}
-        [[ dataitem label:'Others Regulating' value:'{{OthersRegulating}}' fillcolor:'#5c5c2d' ]] [[ enddataitem ]]
-    {[ endchart ]}
-<p class='text-center'><cite>Source: https://healthygrowingleaders.com</cite></p>
-
-<blockquote>
-    Your responses to the items on the Others Regulation scale indicate the score for
-    the ability to enable others to appropriately express their emotions in the context
-    of your relationship is equal to or better than {{OthersRegulating}}% of those who
-    completed this instrument.
-</blockquote>
-
-
-<h2>Additional Scales</h2>
+  {[chart type:'horizontalBar' chartheight:'500' chartwidth:'75' ]}
+    {% for motivatorScore in MotivatorScores %}
+    {% assign cluster = motivatorScore.DefinedValue | Attribute:'Cluster' %}
+        {% if cluster and cluster != empty %}
+            [[dataitem label:'{{ motivatorScore.DefinedValue.Value }}' value:'{{ motivatorScore.Value }}' fillcolor:'{{ motivatorScore.DefinedValue | Attribute:'Color' }}' ]] 
+            [[enddataitem]]
+        {% endif %}
+    {% endfor %}
+    {[endchart]}
 <p>
-    The EQ*i includes two additional scales which are particularly useful for those in
-    leadership roles: 1) EQ in Problem Solving and 2) EQ under stress. Frequently we
-    find it difficult to appreciate that conflicting emotions exacerbate most problems
-    we experience in life. The solution, therefore, must account for these emotions, not
-    just logic or doing the “right” thing.
+    Your motivators will no doubt shift and morph throughout your life.For instance, #4 may drop to #7 and vice versa.  However, it is very doubtful that #22 would ever become #1. For that reason, read through all of the motivators and appreciate the ones that you have. Seek input from those who know you to see if they agree or disagree with these results.
 </p>
-
-<h3>EQ in Problem Solving</h3>
-<p>
-    The EQ in Problem Solving identifies how proficient you are in using emotions to
-    solve problems. This skill requires first being aware of what emotions are involved
-    in the problem and what is the source of those emotions. It also includes helping
-    others (and yourself) express those emotions within the discussion.
-</p>
-
-    {[ chart type:'horizontalBar' legendshow:'false' tooltipshow:'false' chartheight:'50' xaxistype:'linear0to100' ]}
-        [[ dataitem label:'EQ in Problem Solving' value:'{{EQinProblemSolving}}' fillcolor:'#5b2d09' ]] [[ enddataitem ]]
-    {[ endchart ]}
-<p class='text-center'><cite>Source: https://healthygrowingleaders.com</cite></p>
-
-<blockquote>
-    Your responses to the items on the EQ in Problem Solving scale indicate the score for
-    the ability to use emotions in resolving problems is equal to or better than {{ EQinProblemSolving }}%
-    of those who completed this instrument.
-</blockquote>
-
-
-<h3>EQ Under Stress</h3>
-<p>
-    It is more difficult to maintain high EQ under high stress than at any other time,
-    so EQ Under Stress identifies how capable you are to keep high EQ under high-stress
-    moments. This skill requires highly developed Self and Others awareness to understand
-    how the stress is impacting yourself and others. It also involves being able to
-    articulate the appropriate emotions under pressure which may be different from
-    articulating them when not under stress.
-</p>
-
-    {[ chart type:'horizontalBar' legendshow:'false' tooltipshow:'false' chartheight:'50' xaxistype:'linear0to100' ]}
-        [[ dataitem label:'EQ Under Stress' value:'{{EQUnderStress}}' fillcolor:'#8a5c2d' ]] [[ enddataitem ]]
-    {[ endchart ]}
-<p class='text-center'><cite>Source: https://healthygrowingleaders.com</cite></p>
-
-<blockquote>
-    Your responses to the items on the EQ in Under Stress scale indicate the score
-    for the ability to maintain EQ under significant stress is equal to or better than {{ EQUnderStress }}%
-    of those who completed this instrument.
-</blockquote>
 " )]
     public partial class Motivators : Rock.Web.UI.RockBlock
     {
@@ -218,23 +138,6 @@ namespace Rockweb.Blocks.Crm
         private const string RESULTS_MESSAGE = "ResultsMessage";
         private const string ALLOW_RETAKES = "AllowRetakes";
         private const string MIN_DAYS_TO_RETAKE = "MinDaysToRetake";
-        private Dictionary<int, string> NEGATIVE_OPTION = new Dictionary<int, string>
-        {
-            { 5, "Never" },
-            { 4, "Rarely" },
-            { 3, "Sometimes" },
-            { 2, "Usually" },
-            { 1, "Always" }
-        };
-
-        private Dictionary<int, string> POSITIVE_OPTION = new Dictionary<int, string>
-        {
-            { 1, "Never" },
-            { 2, "Rarely" },
-            { 3, "Sometimes" },
-            { 4, "Usually" },
-            { 5, "Always" }
-        };
 
         // View State Keys
         private const string ASSESSMENT_STATE = "AssessmentState";
@@ -349,7 +252,7 @@ namespace Rockweb.Blocks.Crm
             if ( !Page.IsPostBack )
             {
                 var rockContext = new RockContext();
-                var assessmentType = new AssessmentTypeService( rockContext ).Get( Rock.SystemGuid.AssessmentType.EQ.AsGuid() );
+                var assessmentType = new AssessmentTypeService( rockContext ).Get( Rock.SystemGuid.AssessmentType.MOTIVATORS.AsGuid() );
                 Assessment assessment = null;
 
                 if ( _targetPerson != null )
@@ -374,7 +277,7 @@ namespace Rockweb.Blocks.Crm
 
                     if ( assessment != null && assessment.Status == AssessmentRequestStatus.Complete )
                     {
-                        EQInventoryService.AssessmentResults savedScores = EQInventoryService.LoadSavedAssessmentResults( _targetPerson );
+                        MotivatorService.AssessmentResults savedScores = MotivatorService.LoadSavedAssessmentResults( _targetPerson );
                         ShowResult( savedScores, assessment );
 
                     }
@@ -457,8 +360,8 @@ namespace Rockweb.Blocks.Crm
             }
             else
             {
-                EQInventoryService.AssessmentResults result = EQInventoryService.GetResult( AssessmentResponses.ToDictionary( a => a.Code, b => b.Response.Value ) );
-                EQInventoryService.SaveAssessmentResults( _targetPerson, result );
+                MotivatorService.AssessmentResults result = MotivatorService.GetResult( AssessmentResponses.ToDictionary( a => a.Code, b => b.Response.Value ) );
+                MotivatorService.SaveAssessmentResults( _targetPerson, result );
                 var rockContext = new RockContext();
 
                 var assessmentService = new AssessmentService( rockContext );
@@ -471,7 +374,7 @@ namespace Rockweb.Blocks.Crm
 
                 if ( assessment == null )
                 {
-                    var assessmentType = new AssessmentTypeService( rockContext ).Get( Rock.SystemGuid.AssessmentType.EQ.AsGuid() );
+                    var assessmentType = new AssessmentTypeService( rockContext ).Get( Rock.SystemGuid.AssessmentType.MOTIVATORS.AsGuid() );
                     assessment = new Assessment()
                     {
                         AssessmentTypeId = assessmentType.Id,
@@ -511,17 +414,27 @@ namespace Rockweb.Blocks.Crm
             var assessmentResponseRow = e.Item.DataItem as AssessmentResponse;
             RockRadioButtonList rblQuestion = e.Item.FindControl( "rblQuestion" ) as RockRadioButtonList;
 
-            if ( assessmentResponseRow.Code.EndsWith( "N" ) )
+            if ( assessmentResponseRow.OptionType == MotivatorService.OptionType.Frequency )
             {
-                rblQuestion.DataSource = NEGATIVE_OPTION;
-               
+                rblQuestion.DataSource = MotivatorService.Frequency_Option;
             }
             else
             {
-                rblQuestion.DataSource = POSITIVE_OPTION;
+                rblQuestion.DataSource = MotivatorService.Agreement_Option;
             }
-            rblQuestion.DataTextField = "Value";
-            rblQuestion.DataValueField = "Key";
+
+            rblQuestion.DataTextField = "Name";
+
+            if ( assessmentResponseRow.Code.EndsWith( "N" ) )
+            {
+                rblQuestion.DataValueField = "Negative";
+
+            }
+            else
+            {
+                rblQuestion.DataValueField = "Positive";
+            }
+            
             rblQuestion.DataBind();
 
             rblQuestion.Label = assessmentResponseRow.Question;
@@ -578,7 +491,7 @@ namespace Rockweb.Blocks.Crm
         /// <summary>
         /// Shows the result.
         /// </summary>
-        private void ShowResult( EQInventoryService.AssessmentResults result, Assessment assessment )
+        private void ShowResult( MotivatorService.AssessmentResults result, Assessment assessment )
         {
             pnlInstructions.Visible = false;
             pnlQuestion.Visible = false;
@@ -607,12 +520,8 @@ namespace Rockweb.Blocks.Crm
                 mergeFields.Add( "Person", _targetPerson );
 
                 // The five Mode scores
-                mergeFields.Add( "SelfAwareness", result.SelfAwareConstruct );
-                mergeFields.Add( "SelfRegulating", result.SelfRegulatingConstruct );
-                mergeFields.Add( "OthersAwareness", result.OtherAwarenessContruct );
-                mergeFields.Add( "OthersRegulating", result.OthersRegulatingConstruct );
-                mergeFields.Add( "EQinProblemSolving", result.EQ_ProblemSolvingScale );
-                mergeFields.Add( "EQUnderStress", result.EQ_UnderStressScale );
+                mergeFields.Add( "MotivatorClusterScores", result.MotivatorClusterScores );
+                mergeFields.Add( "MotivatorScores", result.MotivatorScores );
             }
             lResult.Text = GetAttributeValue( RESULTS_MESSAGE ).ResolveMergeFields( mergeFields );
         }
@@ -625,11 +534,12 @@ namespace Rockweb.Blocks.Crm
             pnlInstructions.Visible = false;
             pnlQuestion.Visible = true;
             pnlResult.Visible = false;
-            AssessmentResponses = EQInventoryService.GetQuestions()
+            AssessmentResponses = MotivatorService.GetQuestions()
                                     .Select( a => new AssessmentResponse()
                                     {
-                                        Code = a.Key,
-                                        Question = a.Value
+                                        Code = a.Id,
+                                        Question = a.Question,
+                                        OptionType = a.OptionType
                                     } ).ToList();
 
             // If _maxQuestions has not been set yet...
@@ -712,6 +622,7 @@ namespace Rockweb.Blocks.Crm
         {
             public string Code { get; set; }
             public string Question { get; set; }
+            public MotivatorService.OptionType OptionType { get; set; }
             public int? Response { get; set; }
         }
 
