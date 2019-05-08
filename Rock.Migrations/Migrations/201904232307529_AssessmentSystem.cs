@@ -510,7 +510,7 @@ SELECT  CASE
         private void AssessmentListPageBlockAttributes()
         {
             // Assessments list page, this is where the link in the emails will go.
-            RockMigrationHelper.AddPage( true, "4F83D32A-E02E-42B8-872D-F954E4A39B32","5FEAF34C-7FB6-4A11-8A1E-C452EC7849BD","Assessments","","FCF44690-D74C-4FB7-A01B-0EFCA6EA9E1E","fa fa-bar-chart"); // Site:External Website
+            RockMigrationHelper.AddPage( true, "EBAA5140-4B8F-44B8-B1E8-C73B654E4B22","5FEAF34C-7FB6-4A11-8A1E-C452EC7849BD","Assessments","","FCF44690-D74C-4FB7-A01B-0EFCA6EA9E1E","fa fa-bar-chart"); // Site:External Website
             RockMigrationHelper.AddPageRoute("FCF44690-D74C-4FB7-A01B-0EFCA6EA9E1E","Assessments","F2873F65-617C-4BD3-94E0-48E2408EBDBD");// for Page:Assessments
             RockMigrationHelper.UpdateBlockType("Assessment List","Allows you to view and take any available assessments.","~/Blocks/Crm/AssessmentList.ascx","CRM","0AD1D108-4ABF-4AED-B3B7-4AAEA16D10E4");
             RockMigrationHelper.AddBlock( true, "FCF44690-D74C-4FB7-A01B-0EFCA6EA9E1E".AsGuid(),null,"F3F82256-2D66-432B-9D67-3552CD2F4C2B".AsGuid(),"0AD1D108-4ABF-4AED-B3B7-4AAEA16D10E4".AsGuid(), "Assessment List","Main",@"",@"",0,"0E22E6CB-1634-41CA-83EF-4BC7CE52F314"); // Add Block to Page: Assessments Site: External Website
@@ -646,7 +646,7 @@ SELECT  CASE
         private void ConflictProfileAssessmentPageBlockAttributes()
         {
             // Conflict Profile Assessment
-            RockMigrationHelper.AddPage( true, "4F83D32A-E02E-42B8-872D-F954E4A39B32","BE15B7BC-6D64-4880-991D-FDE962F91196","Conflict Profile Assessment","","37F17AD8-8103-4F85-865C-94E76B4470BB",""); // Site:External Website
+            RockMigrationHelper.AddPage( true, "FCF44690-D74C-4FB7-A01B-0EFCA6EA9E1E","BE15B7BC-6D64-4880-991D-FDE962F91196","Conflict Profile Assessment","","37F17AD8-8103-4F85-865C-94E76B4470BB",""); // Site:External Website
             RockMigrationHelper.AddPageRoute("37F17AD8-8103-4F85-865C-94E76B4470BB","ConflictProfile","B843AFE4-9198-49DE-904B-8D6440158DAC");// for Page:Conflict Profile Assessment
             RockMigrationHelper.AddPageRoute("37F17AD8-8103-4F85-865C-94E76B4470BB","ConflictProfile/{rckipid}","AFD90575-B363-4862-B4A6-1283D5C00AD9");// for Page:Conflict Profile Assessment
             RockMigrationHelper.UpdateBlockType("Conflict Profile","Allows you to take a conflict profile test and saves your conflict profile score.","~/Blocks/Crm/ConflictProfile.ascx","CRM","91473D2F-607D-4260-9C6A-DD3762FE472D");
@@ -720,7 +720,7 @@ SELECT  CASE
         {
              
             // Emotional Intelligence Assessment
-            RockMigrationHelper.AddPage( true, "4F83D32A-E02E-42B8-872D-F954E4A39B32","BE15B7BC-6D64-4880-991D-FDE962F91196","Emotional Intelligence Assessment","","BE5F3984-C25E-47CA-A602-EE1CED99E9AC",""); // Site:External Website
+            RockMigrationHelper.AddPage( true, "FCF44690-D74C-4FB7-A01B-0EFCA6EA9E1E","BE15B7BC-6D64-4880-991D-FDE962F91196","Emotional Intelligence Assessment","","BE5F3984-C25E-47CA-A602-EE1CED99E9AC",""); // Site:External Website
             RockMigrationHelper.AddPageRoute("BE5F3984-C25E-47CA-A602-EE1CED99E9AC","EmotionalIntelligence","8C5F1CF8-8AC1-4123-B7FD-E57EA36CFBBF");// for Page:Emotional Intelligence Assessment
             RockMigrationHelper.AddPageRoute("BE5F3984-C25E-47CA-A602-EE1CED99E9AC","EmotionalIntelligence/{rckipid}","C97D4D5A-F082-4F2B-A873-71F734B539CC");// for Page:Emotional Intelligence Assessment
             RockMigrationHelper.UpdateBlockType("EQ Assessment","Allows you to take a EQ Inventory test and saves your EQ Inventory score.","~/Blocks/Crm/EQInventory.ascx","CRM","040CFD6D-5155-4BC9-BAEE-A53219A7BECE");
@@ -908,15 +908,13 @@ SELECT  CASE
         {
             RockMigrationHelper.AddLayout( "F3F82256-2D66-432B-9D67-3552CD2F4C2B", "FullWidthNarrow", "Full Width Narrow", "", "BE15B7BC-6D64-4880-991D-FDE962F91196" ); // Site:External Website
 
-            // Parent page for all assessment tests
-            RockMigrationHelper.AddPage( true, "EBAA5140-4B8F-44B8-B1E8-C73B654E4B22","5FEAF34C-7FB6-4A11-8A1E-C452EC7849BD","Assessment Tests","","4F83D32A-E02E-42B8-872D-F954E4A39B32",""); // Site:External Website
-
             AssessmentListPageBlockAttributes();
             ConflictProfileAssessmentPageBlockAttributes();
             EmotionalIntelligenceAssessmentPageBlockAttributes();
 
-            RockMigrationHelper.MovePage( "C8CEF4B0-4A09-46D2-9B6B-CD2B6D3078B1", "4F83D32A-E02E-42B8-872D-F954E4A39B32" );// Move DISC page to new parent Assessment Tests
-            RockMigrationHelper.MovePage( "06410598-3DA4-4710-A047-A518157753AB", "4F83D32A-E02E-42B8-872D-F954E4A39B32" );// Move gifts page to new parent Assessment Tests
+            // Use Assessment List page as the parent page for existing assessments
+            RockMigrationHelper.MovePage( "C8CEF4B0-4A09-46D2-9B6B-CD2B6D3078B1", "FCF44690-D74C-4FB7-A01B-0EFCA6EA9E1E" );// Move DISC page to new parent Assessment Tests
+            RockMigrationHelper.MovePage( "06410598-3DA4-4710-A047-A518157753AB", "FCF44690-D74C-4FB7-A01B-0EFCA6EA9E1E" );// Move gifts page to new parent Assessment Tests
 
             RockMigrationHelper.UpdateFieldType("Assessment Types","","Rock","Rock.Field.Types.AssessmentTypesFieldType","C263513A-30BE-4823-ABF1-AC12A56F9644");
         }

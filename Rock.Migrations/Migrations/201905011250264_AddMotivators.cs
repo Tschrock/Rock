@@ -139,7 +139,7 @@ namespace Rock.Migrations
 
         private void AddMotivatorsAssessmenPage()
         {
-            RockMigrationHelper.AddPage( true, "4F83D32A-E02E-42B8-872D-F954E4A39B32", "5FEAF34C-7FB6-4A11-8A1E-C452EC7849BD", "Motivators Assessment", "", "0E6AECD6-675F-4908-9FA3-C7E46040527C", "" ); // Site:External Website
+            RockMigrationHelper.AddPage( true, "FCF44690-D74C-4FB7-A01B-0EFCA6EA9E1E", "5FEAF34C-7FB6-4A11-8A1E-C452EC7849BD", "Motivators Assessment", "", "0E6AECD6-675F-4908-9FA3-C7E46040527C", "" ); // Site:External Website
             RockMigrationHelper.UpdateBlockType( "Motivators Assessment", "Allows you to take a Motivators Assessment test and saves your results.", "~/Blocks/Crm/Motivators.ascx", "CRM", "18CF8DA8-5DE0-49EC-A279-D5507CFA5713" );
             // Add Block to Page: Motivator Assessment Site: External Website
             RockMigrationHelper.AddBlock( true, "0E6AECD6-675F-4908-9FA3-C7E46040527C".AsGuid(), null, "F3F82256-2D66-432B-9D67-3552CD2F4C2B".AsGuid(), "18CF8DA8-5DE0-49EC-A279-D5507CFA5713".AsGuid(), "Motivators Assessment", "Main", @"", @"", 0, "92C58130-9CE7-44E0-8F22-DF358A0F69C2" );
