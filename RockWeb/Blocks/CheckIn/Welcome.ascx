@@ -282,6 +282,105 @@
 
         </asp:Panel>
 
+        <%-- Check-in Manager Reprint Label Panel for searching for person --%>
+        <asp:Panel ID="pnlReprintLabels" runat="server" Visible="false">
+            <div class="checkin-body">
+                <div class="checkin-scroll-panel">
+                    <div class="scroller">
+                        <div class="checkin-search-body">
+
+                            <asp:Panel ID="pnlSearchName" CssClass="clearfix" runat="server">
+                                <Rock:RockTextBox ID="tbNameOrPhone" runat="server" Label="Phone or Name" CssClass="search-input namesearch input-lg" FormGroupCssClass="search-name-form-group" />
+                            </asp:Panel>
+
+                            <div class="checkin-actions">
+                                <Rock:BootstrapButton CssClass="btn btn-primary btn-block" ID="lbManagerSearch" runat="server" OnClick="lbManagerSearch_Click" Text="Search" DataLoadingText="Searching..." ></Rock:BootstrapButton>
+                                <asp:LinkButton CssClass="btn btn-default btn-block btn-cancel" ID="lbManagerCancelBack" runat="server" OnClick="lbManagerCancel_Click" Text="Cancel" />
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </asp:Panel>
+
+        <!-- Check-in Manager Reprint Label Panel showing person search results -->
+        <asp:Panel ID="pnlReprintSearchPersonResults" runat="server" Visible="false">
+            <div class="checkin-body">
+                <div class="checkin-scroll-panel">
+                    <div class="scroller">
+
+                    <div class="control-group checkin-body-container">
+                        <label class="control-label"><asp:Literal ID="lCaption" runat="server"></asp:Literal></label>
+                        <div class="controls">
+                            <asp:Repeater ID="rReprintLabelPersonResults" runat="server" OnItemCommand="rReprintLabelPersonResults_ItemCommand" OnItemDataBound="rReprintLabelPersonResults_ItemDataBound">
+                                <ItemTemplate><asp:HiddenField ID="hfAttendanceIds" runat="server" Value='<%#String.Join(",",((PersonResult)Container.DataItem).AttendanceIds )%>' /> 
+                                    <Rock:BootstrapButton ID="lbSelectPersonForReprint" runat="server" Text='<%# Container.DataItem.ToString() %>' CommandName='<%# Eval("AttendanceIds") %>' CommandArgument='<%# Eval("Id") %>' CssClass="btn btn-primary btn-large btn-block btn-checkin-select text-left" DataLoadingText="Loading..." />
+                                </ItemTemplate>
+                            </asp:Repeater>
+                        </div>
+                    </div>
+
+                    </div>
+                </div>
+            </div>
+
+            <div class="checkin-footer">
+                <div class="checkin-actions">
+                    <asp:LinkButton CssClass="btn btn-default btn-cancel" ID="lbReprintSearchPersonCancel" runat="server" OnClick="lbManagerCancel_Click" Text="Cancel" />
+                </div>
+            </div>
+        </asp:Panel>
+
+        <!-- Check-in Manager Reprint Label Panel showing selected person's available labels -->
+        <asp:Panel ID="pnlReprintSelectedPersonLabels" runat="server" Visible="false">
+            <div class="checkin-body">
+                <div class="checkin-scroll-panel">
+                    <div class="scroller">
+
+                    <div class="control-group checkin-body-container">
+                        <label class="control-label">Select Tags to Reprint</label>
+                        <div class="controls">
+
+                           <div class="controls js-labeltype-list">
+                                <asp:Repeater ID="rReprintLabelTypeSelection" runat="server" OnItemDataBound="rReprintLabelTypeSelection_ItemDataBound">
+                                    <ItemTemplate>
+                                        <div class="row">
+                                                <a data-labeltype-id='<%# Eval("Id") %>' class="btn btn-primary btn-checkin-select btn-block js-labeltype-select <%# GetSelectedClass( false ) %>">
+                                                    <div class="row">
+                                                        <div class="col-md-1 col-sm-2 col-xs-3 checkbox-container">
+                                                            <i class='fa fa-3x <%# GetCheckboxClass( false ) %>'></i>
+                                                        </div>
+                                                        <asp:Panel ID="pnlLabelType" runat="server"><asp:Literal ID="lLabelTypeButton" runat="server"></asp:Literal></asp:Panel>
+                                                    </div>
+                                                </a>
+
+                                            <asp:Panel ID="pnlChangeButton" runat="server" CssClass="col-xs-9 col-sm-3 col-md-2" Visible="false">
+                                                <asp:LinkButton ID="lbChange" runat="server" CssClass="btn btn-default btn-checkin-select btn-block" CommandArgument='<%# Eval("Id") %>' CommandName="Change">Change</asp:LinkButton>
+                                            </asp:Panel>
+                                        </div>
+                                    </ItemTemplate>
+                                </asp:Repeater>
+                            </div>
+                        </div>
+                    </div>
+
+                    </div>
+                </div>
+
+                <asp:HiddenField ID="hfSelectedPersonId" runat="server"></asp:HiddenField>
+                <asp:HiddenField ID="hfSelectedAttendanceIds" runat="server"></asp:HiddenField>
+                <asp:HiddenField ID="hfLabelTypes" runat="server"></asp:HiddenField>
+            </div>
+
+            <div class="checkin-footer">
+                <div class="checkin-actions">
+                    <asp:LinkButton CssClass="btn btn-primary " ID="lbReprintSelectLabelTypes" runat="server" OnClientClick="return GetLabelTypeSelection();" OnClick="lbReprintSelectLabelTypes_Click" Text="Print" data-loading-text="Printing..." />
+                    <asp:LinkButton CssClass="btn btn-default btn-cancel" ID="LinkButton2" runat="server" OnClick="lbManagerCancel_Click" Text="Cancel" />
+                </div>
+            </div>
+        </asp:Panel>
+
         <%-- Panel for checkin manager login --%>
         <asp:Panel ID="pnlManagerLogin" CssClass="js-manager-login" runat="server" Visible="false">
 
@@ -292,6 +391,7 @@
             <div class="checkin-body">
 
                 <div class="checkin-scroll-panel">
+
                     <div class="scroller">
                         <div class="row">
                             <div class="col-md-6">
@@ -331,8 +431,6 @@
                             </div>
                         </div>
                     </div>
-
-
 
                 </div>
             </div>

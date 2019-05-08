@@ -17,8 +17,10 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Data.Entity;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Web.UI;
 using System.Web.UI.HtmlControls;
 using System.Web.UI.WebControls;
@@ -183,6 +185,38 @@ namespace RockWeb.Blocks.CheckIn
             {
                 bodyTag.AddCssClass( "checkin-welcome-bg" );
             }
+
+            // For Label Reprints
+            string script = string.Format( @"
+        function GetLabelTypeSelection() {{
+            var ids = '';
+            $('div.js-labeltype-list').find('i.fa-check-square').each( function() {{
+                ids += $(this).closest('a').attr('data-labeltype-id') + ',';
+            }});
+            if (ids == '') {{
+                bootbox.alert('Please select at least one tag');
+                return false;
+            }}
+            else
+            {{
+                $('#{0}').button('loading')
+                $('#{1}').val(ids);
+                return true;
+            }}
+        }}
+
+        $('a.js-labeltype-select').click( function() {{
+            $(this).toggleClass('active');
+            $(this).find('i').toggleClass('fa-check-square').toggleClass('fa-square-o');
+            var ids = '';
+            $('div.js-labeltype-list').find('i.fa-check-square').each( function() {{
+                ids += $(this).closest('a').attr('data-labeltype-id') + ',';
+            }});
+            $('#{1}').val(ids);
+        }});
+
+", lbReprintSelectLabelTypes.ClientID, hfLabelTypes.ClientID );
+            ScriptManager.RegisterStartupScript( pnlReprintSelectedPersonLabels, pnlReprintSelectedPersonLabels.GetType(), "SelectLabelTypes", script, true );
         }
 
         /// <summary>
@@ -316,9 +350,8 @@ namespace RockWeb.Blocks.CheckIn
             CurrentCheckInState.Messages = new List<CheckInMessage>();
         }
 
-        // TODO: Add support for scanner
         /// <summary>
-        /// Somes the scanner search.
+        /// Performs a search for the family.
         /// </summary>
         /// <param name="searchType">Type of the search.</param>
         /// <param name="searchValue">The search value.</param>
@@ -509,6 +542,8 @@ namespace RockWeb.Blocks.CheckIn
 
         #region Check-in Manager Events
 
+        #region Check-in Manager Reprint Label Events
+
         /// <summary>
         /// Handles the Click event of the btnReprintLabels control.
         /// </summary>
@@ -516,8 +551,250 @@ namespace RockWeb.Blocks.CheckIn
         /// <param name="e"></param>
         protected void btnReprintLabels_Click( object sender, EventArgs e )
         {
-            // TODO
+            pnlReprintLabels.Visible = true;
+            pnlManager.Visible = false;
+            tbNameOrPhone.Text = string.Empty;
         }
+        
+        protected void lbManagerSearch_Click( object sender, EventArgs e )
+        {
+            if ( string.IsNullOrWhiteSpace( tbNameOrPhone.Text ) )
+            {
+                maWarning.Show( "Please enter a phone number or name.", Rock.Web.UI.Controls.ModalAlertType.Warning );
+                return;
+            }
+
+            pnlReprintSearchPersonResults.Visible = true;
+
+            using ( var rockContext = new RockContext() )
+            {
+                var personService = new PersonService( rockContext );
+                bool reversed = false;
+
+                List<int> matchingPeopleIds = null;
+
+                // Find all matching people
+                var isNumericMatch = Regex.Match( tbNameOrPhone.Text, @"\d+" );
+
+                if ( isNumericMatch.Success )
+                {
+                    matchingPeopleIds = PhoneSearch( tbNameOrPhone.Text ).ToList();
+                }
+                else
+                {
+                    matchingPeopleIds = personService
+                        .GetByFullName( tbNameOrPhone.Text, false, false, false, out reversed )
+                        .Select( p => p.Id ).ToList();
+                }
+
+                // Find all people currently checked in.
+                var dayStart = RockDateTime.Today.AddDays( -1 );
+                var attendees = new AttendanceService( rockContext )
+                    .Queryable( "Occurrence.Group,PersonAlias.Person,Occurrence.Schedule,AttendanceCode" )
+                    .AsNoTracking()
+                    .Where( a =>
+                        a.StartDateTime > dayStart &&
+                        !a.EndDateTime.HasValue &&
+                        a.Occurrence.LocationId.HasValue &&
+                        a.DidAttend.HasValue &&
+                        a.DidAttend.Value &&
+                        a.Occurrence.ScheduleId.HasValue )
+                    .Where( a=> matchingPeopleIds.Contains( a.PersonAlias.PersonId ) )
+                    .ToList()
+                    .Where( a => a.IsCurrentlyCheckedIn )
+                    .ToList();
+
+                var people = new List<PersonResult>();
+
+                foreach ( var personId in attendees
+                    .OrderBy( a => a.PersonAlias.Person.NickName )
+                    .ThenBy( a => a.PersonAlias.Person.LastName )
+                    .Select( a => a.PersonAlias.PersonId )
+                    .Distinct() )
+                {
+                    var matchingAttendeesAttendanceRecords = attendees
+                        .Where( a => a.PersonAlias.PersonId == personId )
+                        .ToList();
+
+                    people.Add( new PersonResult( matchingAttendeesAttendanceRecords ) );
+                }
+
+                if ( people == null || people.Count == 0 )
+                {
+                    maWarning.Show( "There is no one currently checked-in that matches the search criteria.", Rock.Web.UI.Controls.ModalAlertType.Warning );
+                    pnlReprintLabels.Visible = true;
+                    pnlReprintSearchPersonResults.Visible = false;
+                    tbNameOrPhone.Text = string.Empty;
+                }
+                else
+                {
+                    pnlReprintLabels.Visible = false;
+                    pnlReprintSearchPersonResults.Visible = true;
+
+                    rReprintLabelPersonResults.DataSource = people;
+                }
+
+            }
+
+            rReprintLabelPersonResults.DataBind();
+        }
+
+
+        protected void lbManagerCancel_Click( object sender, EventArgs e )
+        {
+            // Hide all the manager operations
+            pnlReprintLabels.Visible = false;
+            pnlReprintSearchPersonResults.Visible = false;
+            pnlReprintSelectedPersonLabels.Visible = false;
+
+            // Show the manager panel since we're still in that mode.
+            pnlManager.Visible = true;
+        }
+
+        protected void rReprintLabelPersonResults_ItemDataBound( object sender, RepeaterItemEventArgs e )
+        {
+            var person = e.Item.DataItem as PersonResult;
+            var lbSelectPersonForReprint = e.Item.FindControl( "lbSelectPersonForReprint" ) as Rock.Web.UI.Controls.BootstrapButton;
+
+            if ( lbSelectPersonForReprint != null )
+            {
+                //lbSelectPersonForReprint.Text += string.Format( "<span class='pull-right'>{0}</span>", person.ScheduleGroupNames );
+            }
+        }
+
+        protected void rReprintLabelPersonResults_ItemCommand( object source, RepeaterCommandEventArgs e )
+        {
+            // Get the person Id
+            int id = Int32.Parse( e.CommandArgument.ToString() );
+            hfSelectedPersonId.Value = id.ToStringSafe();
+
+            // Get the attendanceIds
+            var hfAttendanceIds = e.Item.FindControl( "hfAttendanceIds" ) as HiddenField;
+            hfSelectedAttendanceIds.Value = hfAttendanceIds.Value;
+
+            // hide reprint person select results
+            pnlReprintLabels.Visible = false;
+            pnlManager.Visible = false;
+            pnlReprintSearchPersonResults.Visible = false;
+
+            // bind all possible tags to reprint
+            //BindLabelTypesForPerson( int id );
+            pnlReprintSelectedPersonLabels.Visible = true;
+            List<CheckInLabelType> labelTypes = new List<CheckInLabelType>();
+
+            labelTypes.Add( new CheckInLabelType() { Name = "Parent Tag", Id = 1, PersonId = id, AttendanceIds = hfAttendanceIds.Value.SplitDelimitedValues().AsIntegerList() } );
+
+            labelTypes.Add( new CheckInLabelType() { Name = "Child Tag", Id = 2, PersonId = id, AttendanceIds = hfAttendanceIds.Value.SplitDelimitedValues().AsIntegerList() } );
+            rReprintLabelTypeSelection.DataSource = labelTypes;
+            rReprintLabelTypeSelection.DataBind();
+        }
+
+        /// <summary>
+        /// Handles the ItemDataBound event of the rSelection control.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The <see cref="RepeaterItemEventArgs"/> instance containing the event data.</param>
+        protected void rReprintLabelTypeSelection_ItemDataBound( object sender, RepeaterItemEventArgs e )
+        {
+            if ( e.Item.ItemType == ListItemType.Item || e.Item.ItemType == ListItemType.AlternatingItem )
+            {
+                var pnlLabelType = e.Item.FindControl( "pnlLabelType" ) as Panel;
+
+                if ( pnlLabelType != null )
+                {
+                    pnlLabelType.CssClass = "col-md-10 col-sm-10 col-xs-8";
+
+                    var lLabelTypeButton = e.Item.FindControl( "lLabelTypeButton" ) as Literal;
+                    var labelType = e.Item.DataItem as CheckInLabelType;
+
+                    if ( lLabelTypeButton != null && labelType != null )
+                    {
+                        lLabelTypeButton.Text = labelType.Name;
+                    }
+                }
+            }
+        }
+
+        protected void lbReprintSelectLabelTypes_Click( object sender, EventArgs e )
+        {
+            var labelTypeIds = hfLabelTypes.Value.SplitDelimitedValues();
+            var selectedPersonId = hfSelectedPersonId.ValueAsInt();
+
+            var selectedAttendanceIds = hfSelectedAttendanceIds.Value.SplitDelimitedValues().AsIntegerList();
+
+            // TODO Fetch the actual labels and print them
+
+        }
+
+        protected string GetCheckboxClass( bool selected )
+        {
+            return selected ? "fa fa-check-square" : "fa fa-square-o";
+        }
+
+        protected string GetSelectedClass( bool selected )
+        {
+            return selected ? "active" : "";
+        }
+
+        /// <summary>
+        /// TODO: Move this to the service layer and reuse in Locations.ascx.cs
+        /// </summary>
+        /// <returns></returns>
+        private DateTime GetCampusTime( int? campusId )
+        {
+            if ( !campusId.HasValue )
+            {
+                return RockDateTime.Now;
+            }
+
+            var cacheCampus = CampusCache.Get( campusId.Value );
+            return cacheCampus != null ? cacheCampus.CurrentDateTime : RockDateTime.Now;
+        }
+
+        /// <summary>
+        /// Returns a list of people who belong to a family that matches the given number
+        /// </summary>
+        /// <param name="numericPhone"></param>
+        /// <returns></returns>
+        private IQueryable<int> PhoneSearch( string numericPhone )
+        {
+            var rockContext = new RockContext();
+
+            var personService = new PersonService( rockContext );
+            var memberService = new GroupMemberService( rockContext );
+            var groupService = new GroupService( rockContext );
+
+            int personRecordTypeId = DefinedValueCache.Get( Rock.SystemGuid.DefinedValue.PERSON_RECORD_TYPE_PERSON.AsGuid() ).Id;
+            int familyGroupTypeId = GroupTypeCache.Get( Rock.SystemGuid.GroupType.GROUPTYPE_FAMILY.AsGuid() ).Id;
+            var dvInactive = DefinedValueCache.Get( Rock.SystemGuid.DefinedValue.PERSON_RECORD_STATUS_INACTIVE.AsGuid() );
+
+            IQueryable<int> personIds = null;
+
+            var phoneQry = new PhoneNumberService( rockContext ).Queryable().AsNoTracking();
+
+            phoneQry = phoneQry.Where( o => o.Number.Contains( numericPhone ) );
+
+            // Similar query used by the FindFamilies check-in workflow action
+            var tmpQry = phoneQry
+                .Join( personService.Queryable().AsNoTracking(),
+                    o => new { PersonId = o.PersonId, IsDeceased = false, RecordTypeValueId = personRecordTypeId },
+                    p => new { PersonId = p.Id, IsDeceased = p.IsDeceased, RecordTypeValueId = p.RecordTypeValueId.Value },
+                    ( pn, p ) => new { Person = p, PhoneNumber = pn } )
+                .Join( memberService.Queryable().AsNoTracking(),
+                pn => pn.Person.Id,
+                m => m.PersonId,
+                ( o, m ) => new { PersonNumber = o.PhoneNumber, GroupMember = m } );
+
+            personIds = groupService.Queryable()
+                .Where( g => tmpQry.Any( o => o.GroupMember.GroupId == g.Id ) && g.GroupTypeId == familyGroupTypeId )
+                .SelectMany( g => g.Members.Where( m => m.GroupMemberStatus == GroupMemberStatus.Active ) )
+                .Select( p => p.PersonId )
+                .Distinct();
+
+            return personIds;
+        }
+
+        #endregion
 
         /// <summary>
         /// Handles the Click event of the btnOverride control.
@@ -541,6 +818,7 @@ namespace RockWeb.Blocks.CheckIn
             RefreshView();
             ManagerLoggedIn = false;
             pnlManager.Visible = false;
+
         }
 
         /// <summary>
@@ -611,7 +889,7 @@ namespace RockWeb.Blocks.CheckIn
         #endregion
 
         /// <summary>
-        /// Shows the management details.
+        /// Shows the management screen details.
         /// </summary>
         private void ShowManagementDetails()
         {
@@ -730,5 +1008,66 @@ namespace RockWeb.Blocks.CheckIn
         }
 
         #endregion
+
+        #region Helper Classes
+        public class PersonResult
+        {
+            public int Id { get; set; }
+            public List<int> AttendanceIds { get; set; }
+            public Guid Guid { get; set; }
+            public string Name { get; set; }
+            public Gender Gender { get; set; }
+            public int? PhotoId { get; set; }
+            public DateTime? LastCheckin { get; set; }
+            public bool CheckedInNow { get; set; }
+            public string LocationAndScheduleNames { get; set; }
+            public string Age { get; set; }
+            public bool ShowCancel { get; set; }
+
+            public PersonResult()
+            {
+                ShowCancel = false;
+            }
+
+            public PersonResult( List<Attendance> attendances )
+            {
+                ShowCancel = true;
+                if ( attendances.Any() )
+                {
+                    var person = attendances.First().PersonAlias.Person;
+                    Id = person.Id;
+                    AttendanceIds = attendances.Select( a => a.Id ).ToList();
+                    Guid = person.Guid;
+                    Name = person.FullName;
+                    Gender = person.Gender;
+                    Age = person.Age.ToString() ?? string.Empty;
+                    PhotoId = person.PhotoId;
+
+                    LocationAndScheduleNames = attendances
+                        .Select( a => string.Format( "{0} {1}",
+                                a.Occurrence.Location.Name,
+                                a.Occurrence.Schedule != null ? a.Occurrence.Schedule.Name : string.Empty ) )
+                        .Distinct()
+                        .ToList()
+                        .AsDelimited( "\r\n" );
+                }
+            }
+
+            public override string ToString()
+            {
+                return string.Format( "{0} <span class='pull-right'>{1}</span>", Name, LocationAndScheduleNames );
+            }
+        }
+
+        public class CheckInLabelType
+        {
+            public int Id { get; set; }
+            public string Name { get; set; }
+            public int PersonId { get; set; }
+            public List<int> AttendanceIds { get; set; }
+        }
+
+        #endregion
+
     }
 }
