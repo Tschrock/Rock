@@ -128,7 +128,7 @@
                                     <Rock:RockTextBox ID="tbStepTypeName" runat="server" Label="Step Type Name"></Rock:RockTextBox>
                                     <Rock:RockTextBox ID="tbStepStatus" runat="server" Label="Step Status"></Rock:RockTextBox>
                                 </Rock:GridFilter>
-                                <Rock:Grid ID="gStepList" runat="server" RowItemText="Step" AllowSorting="true">
+                                <Rock:Grid ID="gStepList" runat="server" RowItemText="Step" AllowSorting="true" OnRowSelected="gStepList_RowSelected">
                                     <Columns>
                                         <Rock:RockLiteralField HeaderText="Step Type" ID="lStepType" SortExpression="StepTypeName" OnDataBound="lStepType_DataBound" />
                                         <Rock:DateField DataField="CompletedDateTime" HeaderText="Completion Date" SortExpression="CompletedDateTime" ItemStyle-HorizontalAlign="Left" HeaderStyle-HorizontalAlign="Left" />

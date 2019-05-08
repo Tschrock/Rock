@@ -42,6 +42,12 @@ namespace RockWeb.Blocks.Steps
         order: 1,
         key: AttributeKeys.StepProgram )]
 
+    [LinkedPage(
+        name: "Step Page",
+        description: "The page where step records can be edited or added",
+        order: 2,
+        key: AttributeKeys.StepPage )]
+
     #endregion Attributes
 
     public partial class PersonProgramStepList : RockBlock
@@ -54,6 +60,7 @@ namespace RockWeb.Blocks.Steps
         private static class AttributeKeys
         {
             public const string StepProgram = "StepProgram";
+            public const string StepPage = "StepPage";
         }
 
         /// <summary>
@@ -209,18 +216,32 @@ namespace RockWeb.Blocks.Steps
         protected void AddStep( object sender, CommandEventArgs e )
         {
             var stepTypeId = e.CommandArgument.ToStringSafe().AsIntegerOrNull();
-            // TODO
+
+            if ( stepTypeId.HasValue )
+            {
+                GoToStepPage( stepTypeId.Value );
+            }
         }
 
         /// <summary>
-        /// Event when the user clicks to delete a step from the card view
+        /// Event when the user clicks to edit a step from the card view
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
         protected void rSteps_Edit( object sender, CommandEventArgs e )
         {
-            var stepId = e.CommandArgument.ToStringSafe().AsInteger();
-            // TODO
+            var stepId = e.CommandArgument.ToStringSafe().AsIntegerOrNull();
+
+            if ( stepId.HasValue )
+            {
+                var stepTypeId = GetStepTypeId( stepId.Value );
+
+                if ( stepTypeId.HasValue )
+                {
+                    GoToStepPage( stepTypeId.Value, stepId );
+
+                }
+            }
         }
 
         /// <summary>
@@ -247,6 +268,27 @@ namespace RockWeb.Blocks.Steps
             RenderGridView();
         }
 
+        /// <summary>
+        /// A row in the grid view grid is clicked
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        protected void gStepList_RowSelected( object sender, RowEventArgs e )
+        {
+            var stepId = e.RowKeyId;
+            var stepTypeId = GetStepTypeId( stepId );
+
+            if ( stepTypeId.HasValue )
+            {
+                GoToStepPage( stepTypeId.Value, stepId );
+            }
+        }
+
+        /// <summary>
+        /// Event called for each step in the add steps repeater
+        /// </summary>
+        /// <param name="Sender"></param>
+        /// <param name="e"></param>
         protected void rAddStepButtons_ItemDataBound( Object Sender, RepeaterItemEventArgs e )
         {
             if ( e.Item.ItemType != ListItemType.Item && e.Item.ItemType != ListItemType.AlternatingItem )
@@ -507,6 +549,26 @@ namespace RockWeb.Blocks.Steps
             return _personStepsMap;
         }
         private Dictionary<int, List<Step>> _personStepsMap;
+
+        /// <summary>
+        /// Given a step Id, get the step type Id
+        /// </summary>
+        /// <param name="stepId"></param>
+        /// <returns></returns>
+        private int? GetStepTypeId(int stepId)
+        {
+            var stepMap = GetStepTypeToPersonStepMap();
+
+            foreach ( var kvp in stepMap )
+            {
+                if ( kvp.Value.Any( s => s.Id == stepId ) )
+                {
+                    return kvp.Key;
+                }
+            }
+
+            return null;
+        }
 
         /// <summary>
         /// Get a list of the prerequisites for the given step type id
@@ -851,6 +913,25 @@ namespace RockWeb.Blocks.Steps
             }
 
             return true;
+        }
+
+        /// <summary>
+        /// Navigate to the step page. StepTypeId is required. StepId can be ommitted for add, or set for edit.
+        /// </summary>
+        /// <param name="stepTypeId"></param>
+        /// <param name="stepId"></param>
+        private void GoToStepPage( int stepTypeId, int? stepId = null )
+        {
+            var person = GetPerson();
+
+            if ( person != null )
+            {
+                NavigateToLinkedPage( AttributeKeys.StepPage, new Dictionary<string, string> {
+                    { "personId", person.Id.ToString() },
+                    { "stepTypeId", stepTypeId.ToString() },
+                    { "stepId", (stepId ?? 0).ToString() }
+                } );
+            }
         }
 
         #endregion Control Helpers
