@@ -184,7 +184,7 @@
                     <asp:LinkButton ID="btnNext" runat="server" AccessKey="n" Text="Next" OnClientClick="if (!isComplete()) { return false; }" DataLoadingText="Next" CssClass="btn btn-primary pull-right js-wizard-navigation" CausesValidation="true" OnClick="btnNext_Click" />
                 </div>
 
-                <div class="disc-attribution">
+                <div class="disc-attribution margin-t-lg">
                     <small>DISC assessment courtesy of Dr Gregory Wiens at <a href="http://www.healthygrowingleaders.com">healthygrowingleaders.com</a>.</small>
                 </div>
             </div>
@@ -229,7 +229,7 @@
                     <asp:Button ID="btnRetakeTest" runat="server" Visible="false" Text="Retake Test" CssClass="btn btn-default" OnClick="btnRetakeTest_Click" />
                 </div>
 
-                <div class="disc-attribution">
+                <div class="disc-attribution margin-t-lg">
                     <small>DISC assessment courtesy of Dr Gregory Wiens at <a href="http://www.healthygrowingleaders.com">healthygrowingleaders.com</a>.</small>
                 </div>
             </div>
