@@ -110,23 +110,23 @@ namespace Rockweb.Blocks.Crm
                 {% if assessmenttype.LastRequestObject %}
                     {% if assessmenttype.LastRequestObject.Status == 'Complete' %}
                         <div class='panel panel-success'>
-                            <div class='panel-heading'>{{ assessmenttype.Title }}</br>
-                                Completed: {{ assessmenttype.LastRequestObject.CompletedDate | Date:'M/d/yyyy'}} </br>
+                            <div class='panel-heading'>{{ assessmenttype.Title }}<br />
+                                Completed: {{ assessmenttype.LastRequestObject.CompletedDate | Date:'M/d/yyyy'}} <br />
                                 <a href='{{ assessmenttype.AssessmentResultsPath}}'>View Results</a>
                             </div>
                         </div>
                     {% elseif assessmenttype.LastRequestObject.Status == 'Pending' %}
                         <div class='panel panel-warning'>
-                            <div class='panel-heading'> {{ assessmenttype.Title }}</br>
-                                Requested: {{assessmenttype.LastRequestObject.Requester}} ({{ assessmenttype.LastRequestObject.RequestedDate | Date:'M/d/yyyy'}})</br>
+                            <div class='panel-heading'> {{ assessmenttype.Title }}<br />
+                                Requested: {{assessmenttype.LastRequestObject.Requester}} ({{ assessmenttype.LastRequestObject.RequestedDate | Date:'M/d/yyyy'}})<br />
                                 <a href='{{ assessmenttype.AssessmentPath}}'>Start Assessment</a>
                             </div>
                         </div>
                     {% endif %}
                     {% else %}
                         <div class='panel panel-default'>
-                            <div class='panel-heading'> {{ assessmenttype.Title }}</br>
-                                Available</br>
+                            <div class='panel-heading'> {{ assessmenttype.Title }}<br />
+                                Available<br />
                                 <a href='{{ assessmenttype.AssessmentPath}}'>Start Assessment</a>
                             </div>
                         </div>
@@ -194,16 +194,15 @@ namespace Rockweb.Blocks.Crm
             // Gets Assessment types and assessments for each
             RockContext rockContext = new RockContext();
             AssessmentTypeService assessmentTypeService = new AssessmentTypeService( rockContext );
-
             var allAssessmentsOfEachType = assessmentTypeService.Queryable().AsNoTracking()
-                .Where(x => x.IsActive == true )
+                .Where( x => x.IsActive == true )
                 .Select( t => new
-                    {
-                        Title = t.Title,
-                        AssessmentPath = t.AssessmentPath,
-                        AssessmentResultsPath = t.AssessmentResultsPath,
-                        RequiresRequest = t.RequiresRequest,
-                        LastRequestObject = t.Assessments
+                {
+                    Title = t.Title,
+                    AssessmentPath = t.AssessmentPath,
+                    AssessmentResultsPath = t.AssessmentResultsPath,
+                    RequiresRequest = t.RequiresRequest,
+                    LastRequestObject = t.Assessments
                             .Where( a => a.PersonAlias.Person.Id == CurrentPersonId )
                             .OrderBy( a => a.Status ) // pending first
                             .Select( a => new
@@ -212,12 +211,17 @@ namespace Rockweb.Blocks.Crm
                                 CompletedDate = a.CompletedDateTime,
                                 Status = a.Status,
                                 Requester = a.RequesterPersonAlias.Person.NickName + " " + a.RequesterPersonAlias.Person.LastName
-                            } ).OrderByDescending( x => x.CompletedDate ).FirstOrDefault()
+                            } )
+                            .OrderBy( x => x.Status )
+                            .ThenByDescending( x => x.CompletedDate )
+                            .FirstOrDefault()
                     }
                 )
                 // order by requested then by pending, completed, then by available to take
-                .OrderByDescending( x => x.LastRequestObject ).ThenBy( x => x.LastRequestObject.Status ).ToList();
-
+                .OrderByDescending( x => x.LastRequestObject.Status )
+                .ThenBy( x => x.LastRequestObject )
+                .ToList();
+            
             // Checks current request types to use against the settings
             bool areThereAnyPendingRequests = false;
             bool areThereAnyRequests = false;
@@ -246,19 +250,22 @@ namespace Rockweb.Blocks.Crm
                 // Show only the tests requested or completed?...
                 if ( GetAttributeValue( AttributeKey.OnlyShowRequested ).AsBoolean() )
                 {
+                    // the completed data is only populated if the assessment was actually completed, where as a complete status can be assinged if it was not taken. So use date instead of status for completed.
                     var onlyRequestedOrCompleted = allAssessmentsOfEachType
-                        .Where( x => x.LastRequestObject != null && x.LastRequestObject.Requester != null &&
-                        ( x.LastRequestObject.Status == AssessmentRequestStatus.Pending || x.LastRequestObject.CompletedDate != null ) );
+                        .Where( x => x.LastRequestObject != null )
+                        .Where( x => x.LastRequestObject.Requester != null )
+                        .Where( x => x.LastRequestObject.Status == AssessmentRequestStatus.Pending || x.LastRequestObject.CompletedDate != null );
 
                     mergeFields.Add( "AssessmentTypes", onlyRequestedOrCompleted );
                 }
                 else
                 {
                     // ...Otherwise show any allowed, requested or completed requests.
+                    // the completed data is only populated if the assessment was actually completed, where as a complete status can be assinged if it was not taken. So use date instead of status for completed.
                     var onlyAllowedRequestedOrCompleted = allAssessmentsOfEachType
-                        .Where( x => x.RequiresRequest != true ||
-                            ( x.LastRequestObject != null && x.LastRequestObject.Status == AssessmentRequestStatus.Pending ) ||
-                            ( x.LastRequestObject != null && x.LastRequestObject.CompletedDate != null )
+                        .Where( x => x.RequiresRequest != true
+                            || ( x.LastRequestObject != null && x.LastRequestObject.Status == AssessmentRequestStatus.Pending )
+                            || ( x.LastRequestObject != null && x.LastRequestObject.CompletedDate != null ) 
                         );
 
                     mergeFields.Add( "AssessmentTypes", onlyAllowedRequestedOrCompleted );
