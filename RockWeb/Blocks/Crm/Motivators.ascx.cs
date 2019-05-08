@@ -31,14 +31,14 @@ using Rock.Web.UI.Controls;
 namespace Rockweb.Blocks.Crm
 {
     /// <summary>
-    /// Calculates a person's EQ Inventory assessment score based on a series of question answers.
+    /// Calculates a person's motivators assessment score based on a series of questions and answers.
     /// </summary>
     [DisplayName( "Motivators Assessment" )]
     [Category( "CRM" )]
-    [Description( "Allows you to take a EQ Inventory test and saves your EQ Inventory score." )]
+    [Description( "Allows you to take a Motivators Assessment test and saves your results." )]
 
     [TextField( "Set Page Title", "The text to display as the heading.", false, "Motivators Assessment", order: 0 )]
-    [TextField( "Set Page Icon", "The css class name to use for the heading icon.", false, "fa fa-gift", order: 1 )]
+    [TextField( "Set Page Icon", "The css class name to use for the heading icon.", false, "", order: 1 )]
     [IntegerField( "Number of Questions", "The number of questions to show per page while taking the test", true, 20, order: 2 )]
     [BooleanField( "Allow Retakes", "If enabled, the person can retake the test after the minimum days passes.", true, order: 3 )]
     [IntegerField( "Min Days To Retake", "The number of days that must pass before the test can be taken again. Leave blank to use the Assessment Type's minimum.", false, order: 4 )]
@@ -56,23 +56,7 @@ namespace Rockweb.Blocks.Crm
     on each item. Your first instinct is probably your best response.
 </p>" )]
 
-    [CodeEditorField( "Results Message", "The text (HTML) to display at the top of the results section.<span class='tip tip-lava'></span><span class='tip tip-html'></span>", CodeEditorMode.Html, CodeEditorTheme.Rock, 400, true, @"
-
-<h2>Welcome to the Motivators Assessment</h2>
-<p>
-    {{ Person.NickName }}, this assessment was developed and researched by Dr. Gregory A. Wiens and is intended to help identify the things that you value. These motivators influence your personal, professional, social and every other part of your life because they influence what you view as important and what should or should not be paid attention to. They impact the way you lead or even if you lead. They directly sway how you view your current situation.
-</p>
-<p>
-   We all have internal mechanisms that cause us to view life very differently from others. Some of this could be attributed to our personality. However, a great deal of research has been done to identify different values, motivators or internal drivers which cause each of us to have a different perspective on people, places, and events. These values cause you to construe one situation very differently from another who value things differently.
-</p>
-<p>
-    Before you begin, please take a moment and pray that the Holy Spirit would guide your thoughts,
-    calm your mind, and help you respond to each item as honestly as you can. Don't spend much time
-    on each item. Your first instinct is probably your best response.
-</p>
-
-Results Message (block setting default value):
-<p>
+    [CodeEditorField( "Results Message", "The text (HTML) to display at the top of the results section.<span class='tip tip-lava'></span><span class='tip tip-html'></span>", CodeEditorMode.Html, CodeEditorTheme.Rock, 400, true, @"<p>
    This assessment identifies 22 different motivators (scales) which illustrate different things to which we all assign importance. These motivators listed in descending order on the report from the highest to the lowest. No one motivator is better than another. They are all critical and essential for the health of an organization. There are over 1,124,000,727,777,607,680,000 different combinations of these 22 motivators so we would hope you realize that your exceptional combination is clearly unique. We believe it is as important for you to know the motivators which are at the top as well as the ones at the bottom of your list. This is because you would best be advised to seek roles and responsibilities where your top motivators are needed. On the other hand, it would be advisable to <i>avoid roles or responsibilities where your bottom motivators would be required</i>. 
 </p>
 
