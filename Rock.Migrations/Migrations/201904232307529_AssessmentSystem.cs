@@ -721,8 +721,8 @@ SELECT  CASE
              
             // Emotional Intelligence Assessment
             RockMigrationHelper.AddPage( true, "FCF44690-D74C-4FB7-A01B-0EFCA6EA9E1E","BE15B7BC-6D64-4880-991D-FDE962F91196","Emotional Intelligence Assessment","","BE5F3984-C25E-47CA-A602-EE1CED99E9AC",""); // Site:External Website
-            RockMigrationHelper.AddPageRoute("BE5F3984-C25E-47CA-A602-EE1CED99E9AC","EmotionalIntelligence","8C5F1CF8-8AC1-4123-B7FD-E57EA36CFBBF");// for Page:Emotional Intelligence Assessment
-            RockMigrationHelper.AddPageRoute("BE5F3984-C25E-47CA-A602-EE1CED99E9AC","EmotionalIntelligence/{rckipid}","C97D4D5A-F082-4F2B-A873-71F734B539CC");// for Page:Emotional Intelligence Assessment
+            RockMigrationHelper.AddPageRoute("BE5F3984-C25E-47CA-A602-EE1CED99E9AC","EQAssessment","8C5F1CF8-8AC1-4123-B7FD-E57EA36CFBBF");// for Page:Emotional Intelligence Assessment
+            RockMigrationHelper.AddPageRoute("BE5F3984-C25E-47CA-A602-EE1CED99E9AC","EQAssessment/{rckipid}","C97D4D5A-F082-4F2B-A873-71F734B539CC");// for Page:Emotional Intelligence Assessment
             RockMigrationHelper.UpdateBlockType("EQ Assessment","Allows you to take a EQ Inventory test and saves your EQ Inventory score.","~/Blocks/Crm/EQInventory.ascx","CRM","040CFD6D-5155-4BC9-BAEE-A53219A7BECE");
             RockMigrationHelper.AddBlock( true, "BE5F3984-C25E-47CA-A602-EE1CED99E9AC".AsGuid(),null,"F3F82256-2D66-432B-9D67-3552CD2F4C2B".AsGuid(),"040CFD6D-5155-4BC9-BAEE-A53219A7BECE".AsGuid(), "EQ Assessment","Main",@"",@"",0,"71BE6A7A-7D51-4149-AFB1-3307DF04B2DF"); // Add Block to Page: Emotional Intelligence Assessment Site: External Website
             RockMigrationHelper.UpdateBlockTypeAttribute("040CFD6D-5155-4BC9-BAEE-A53219A7BECE","9C204CD0-1233-41C5-818A-C5DA439445AA","Set Page Title","SetPageTitle","",@"The text to display as the heading.",0,@"EQ Inventory Assessment","E99F01A7-AF8F-4010-A456-3A9048347859"); // Attrib for BlockType: EQ Assessment:Set Page Title
