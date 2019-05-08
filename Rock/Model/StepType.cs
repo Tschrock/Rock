@@ -19,7 +19,7 @@ namespace Rock.Model
         #region Constants
 
         private const string _defaultCardLavaTemplate = @"
-<h2>{{ StepType.Name }}</h2>
+<h3>{{ StepType.Name }}</h3>
 <i class=""{{ StepType.IconCssClass }} fa-4x""></i>
 {% if IsComplete %}
     <p>

@@ -7,6 +7,7 @@
         height: 235px;
         overflow: hidden;
         position: relative;
+        margin-bottom: 15px;
     }
 
     .step-card .badge {
@@ -124,14 +125,15 @@
                         <div class="col-xs-12">
                             <div class="grid grid-panel">
                                 <Rock:GridFilter ID="gfGridFilter" runat="server">
-                                    <Rock:RockTextBox ID="tbStepTypeName" runat="server" Label="Name"></Rock:RockTextBox>
+                                    <Rock:RockTextBox ID="tbStepTypeName" runat="server" Label="Step Type Name"></Rock:RockTextBox>
+                                    <Rock:RockTextBox ID="tbStepStatus" runat="server" Label="Step Status"></Rock:RockTextBox>
                                 </Rock:GridFilter>
                                 <Rock:Grid ID="gStepList" runat="server" RowItemText="Step" AllowSorting="true">
                                     <Columns>
                                         <Rock:RockLiteralField HeaderText="Step Type" ID="lStepType" SortExpression="StepTypeName" OnDataBound="lStepType_DataBound" />
                                         <Rock:DateField DataField="CompletedDateTime" HeaderText="Completion Date" SortExpression="CompletedDateTime" ItemStyle-HorizontalAlign="Left" HeaderStyle-HorizontalAlign="Left" />
                                         <Rock:RockLiteralField HeaderText="Summary" ID="lSummary" SortExpression="Summary" />
-                                        <Rock:RockLiteralField HeaderText="Status" ID="lStepStatus" SortExpression="Status" OnDataBound="lStepStatus_DataBound" />
+                                        <Rock:RockLiteralField HeaderText="Status" ID="lStepStatus" SortExpression="StepStatusName" OnDataBound="lStepStatus_DataBound" />
                                         <Rock:DeleteField OnClick="gStepList_Delete" />
                                     </Columns>
                                 </Rock:Grid>

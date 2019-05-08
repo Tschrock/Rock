@@ -35,26 +35,45 @@ namespace RockWeb.Blocks.Steps
 
     #region Attributes
 
-    [IntegerField(
-        name: "Step Program Id",
-        description: "The Id of the Step Program to display. This value can also be a page parameter: StepProgramId. Leave blank to use the page parameter.",
+    [StepProgramField(
+        name: "Step Program",
+        description: "The Step Program to display. This value can also be a page parameter: StepProgramId. Leave this attribute blank to use the page parameter.",
         required: false,
         order: 1,
-        key: AttributeKeys.StepProgramId )]
+        key: AttributeKeys.StepProgram )]
 
     #endregion Attributes
 
     public partial class PersonProgramStepList : RockBlock
     {
-        private class AttributeKeys
+        #region Keys
+
+        /// <summary>
+        /// Attribute keys
+        /// </summary>
+        private static class AttributeKeys
+        {
+            public const string StepProgram = "StepProgram";
+        }
+
+        /// <summary>
+        /// Filter keys
+        /// </summary>
+        private static class FilterKeys
+        {
+            public const string StepTypeName = "StepTypeName";
+            public const string StepStatusName = "StepStatusName";
+        }
+
+        /// <summary>
+        /// Query string or other page parameter keys
+        /// </summary>
+        private static class PageParameters
         {
             public const string StepProgramId = "StepProgramId";
         }
 
-        private class FilterKeys
-        {
-            public const string StepTypeName = "StepTypeName";
-        }
+        #endregion Keys
 
         #region Events
 
@@ -66,6 +85,9 @@ namespace RockWeb.Blocks.Steps
         {
             base.OnInit( e );
 
+            ClearError();
+            BlockUpdated += PersonProgramStepList_BlockUpdated;
+
             gfGridFilter.ApplyFilterClick += gfGridFilter_ApplyFilterClick;
             gfGridFilter.ClearFilterClick += gfGridFilter_ClearFilterClick;
             gfGridFilter.DisplayFilterValue += gfGridFilter_DisplayFilterValue;
@@ -76,11 +98,21 @@ namespace RockWeb.Blocks.Steps
             if ( !IsPostBack )
             {
                 SetProgramDetailsOnBlock();
-                RenderCardView();
-                RenderGridView();                
             }
 
-            SetViewMode( hfIsCardView.Value.AsBoolean() );
+            RenderViewMode();
+        }
+
+        /// <summary>
+        /// Handle the event where the block was updated
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void PersonProgramStepList_BlockUpdated( object sender, EventArgs e )
+        {
+            ClearError();
+            SetProgramDetailsOnBlock();
+            RenderViewMode();
         }
 
         /// <summary>
@@ -100,7 +132,8 @@ namespace RockWeb.Blocks.Steps
         /// <param name="e"></param>
         protected void ShowGrid( object sender, EventArgs e )
         {
-            SetViewMode( false );
+            hfIsCardView.Value = false.ToString();
+            RenderViewMode();
         }
 
         /// <summary>
@@ -110,16 +143,26 @@ namespace RockWeb.Blocks.Steps
         /// <param name="e"></param>
         protected void ShowCards( object sender, EventArgs e )
         {
-            SetViewMode( true );
+            hfIsCardView.Value = true.ToString();
+            RenderViewMode();
         }
 
         /// <summary>
         /// Display either the card or the grid view
         /// </summary>
-        /// <param name="isCardView"></param>
-        private void SetViewMode( bool isCardView )
+        private void RenderViewMode()
         {
-            hfIsCardView.Value = isCardView.ToString();
+            var isCardView = hfIsCardView.Value.AsBoolean();
+
+            if (isCardView)
+            {
+                RenderCardView();
+            }
+            else
+            {
+                RenderGridView();
+            }
+
             pnlCardView.Visible = isCardView;
             pnlGridView.Visible = !isCardView;
         }
@@ -132,7 +175,7 @@ namespace RockWeb.Blocks.Steps
         protected void lStepType_DataBound( object sender, RowEventArgs e )
         {
             var lStepType = sender as Literal;
-            var stepGridRow = e.Row.DataItem as StepGridRow;
+            var stepGridRow = e.Row.DataItem as StepGridRowViewModel;
 
             lStepType.Text = string.Format( "<i class=\"{0}\"></i> {1}", stepGridRow.StepTypeIconCssClass, stepGridRow.StepTypeName );
         }
@@ -145,14 +188,17 @@ namespace RockWeb.Blocks.Steps
         protected void lStepStatus_DataBound( object sender, RowEventArgs e )
         {
             var lStepStatus = sender as Literal;
-            var stepGridRow = e.Row.DataItem as StepGridRow;
+            var stepGridRow = e.Row.DataItem as StepGridRowViewModel;
+            var classAttribute = string.Empty;
 
-            if ( stepGridRow.StepStatus == null )
+            if ( !stepGridRow.StepStatusColor.IsNullOrWhiteSpace() )
             {
-                return;
+                classAttribute = string.Format( @" class=""label label-{0}""", stepGridRow.StepStatusColor );
             }
 
-            lStepStatus.Text = string.Format( "<span class='label label-{0}'>{1}</span>", stepGridRow.StepStatus.StatusColor, stepGridRow.StepStatus.Name );
+            lStepStatus.Text = string.Format( "<span{0}>{1}</span>",
+                classAttribute,
+                stepGridRow.StepStatusName.IsNullOrWhiteSpace() ? "-" : stepGridRow.StepStatusName );
         }
 
         /// <summary>
@@ -208,7 +254,7 @@ namespace RockWeb.Blocks.Steps
                 return;
             }
 
-            var addStepButton = e.Item.DataItem as AddStepButton;
+            var addStepButton = e.Item.DataItem as AddStepButtonViewModel;
 
             if ( !addStepButton.IsEnabled )
             {
@@ -217,6 +263,11 @@ namespace RockWeb.Blocks.Steps
             }
         }
 
+        /// <summary>
+        /// When the card data is bound within the repeater, this method is called and allows manipulation of that card
+        /// </summary>
+        /// <param name="Sender"></param>
+        /// <param name="e"></param>
         protected void rStepTypeCards_ItemDataBound( Object Sender, RepeaterItemEventArgs e )
         {
             if ( e.Item.ItemType != ListItemType.Item && e.Item.ItemType != ListItemType.AlternatingItem )
@@ -224,7 +275,7 @@ namespace RockWeb.Blocks.Steps
                 return;
             }
 
-            var cardData = e.Item.DataItem as CardData;
+            var cardData = e.Item.DataItem as CardViewModel;
             var stepTypeId = cardData.StepType.Id;
             var hasMetPrerequisites = HasMetPrerequisites( stepTypeId );
 
@@ -238,7 +289,7 @@ namespace RockWeb.Blocks.Steps
             {
                 var steps = GetPersonStepsOfType( stepTypeId );
 
-                var data = steps.Select( s => new CardStepData
+                var data = steps.Select( s => new CardStepViewModel
                 {
                     StepId = s.Id,
                     StatusHtml = string.Format( "{0}<br /><small>{1}</small>",
@@ -291,7 +342,8 @@ namespace RockWeb.Blocks.Steps
         /// <param name="e">The <see cref="EventArgs"/> instance containing the event data.</param>
         protected void gfGridFilter_ApplyFilterClick( object sender, EventArgs e )
         {
-            gfGridFilter.SaveUserPreference( FilterKeys.StepTypeName, tbStepTypeName.Text );            
+            gfGridFilter.SaveUserPreference( FilterKeys.StepTypeName, tbStepTypeName.Text );
+            gfGridFilter.SaveUserPreference( FilterKeys.StepStatusName, tbStepStatus.Text );
             RenderGridView();
         }
 
@@ -313,6 +365,9 @@ namespace RockWeb.Blocks.Steps
         {
             var stepTypeNameFilter = gfGridFilter.GetUserPreference( FilterKeys.StepTypeName );
             tbStepTypeName.Text = !string.IsNullOrWhiteSpace( stepTypeNameFilter ) ? stepTypeNameFilter : string.Empty;
+
+            var stepStatusNameFilter = gfGridFilter.GetUserPreference( FilterKeys.StepStatusName );
+            tbStepStatus.Text = !string.IsNullOrWhiteSpace( stepStatusNameFilter ) ? stepStatusNameFilter : string.Empty;
         }
 
         #endregion GridFilter Events
@@ -328,14 +383,18 @@ namespace RockWeb.Blocks.Steps
             if ( _stepProgram == null )
             {
                 var rockContext = GetRockContext();
-                var programId = GetAttributeValue( AttributeKeys.StepProgramId ).AsIntegerOrNull();
+                var service = new StepProgramService( rockContext );
 
-                if ( !programId.HasValue )
+                var programGuid = GetAttributeValue( AttributeKeys.StepProgram ).AsGuidOrNull();
+                var programId = PageParameter( PageParameters.StepProgramId ).AsIntegerOrNull();
+
+                if ( programGuid.HasValue )
                 {
-                    programId = PageParameter( "StepProgramId" ).AsIntegerOrNull();
+                    _stepProgram = new StepProgramService( rockContext ).Queryable()
+                        .AsNoTracking()
+                        .FirstOrDefault( sp => sp.Guid == programGuid.Value && sp.IsActive );
                 }
-
-                if ( programId.HasValue )
+                else if ( programId.HasValue )
                 {
                     _stepProgram = new StepProgramService( rockContext ).Queryable()
                         .AsNoTracking()
@@ -351,7 +410,7 @@ namespace RockWeb.Blocks.Steps
         /// Gets the step types (model) for this program
         /// </summary>
         /// <returns></returns>
-        private IEnumerable<StepType> GetStepTypes()
+        private List<StepType> GetStepTypes()
         {
             if ( _stepTypes == null )
             {
@@ -359,13 +418,13 @@ namespace RockWeb.Blocks.Steps
 
                 if ( program != null )
                 {
-                    _stepTypes = program.StepTypes.Where( st => st.IsActive );
+                    _stepTypes = program.StepTypes.Where( st => st.IsActive ).ToList();
                 }                
             }
 
             return _stepTypes;
         }
-        private IEnumerable<StepType> _stepTypes;
+        private List<StepType> _stepTypes;
 
         /// <summary>
         /// Apply standard ordering for step types to a step type query
@@ -577,18 +636,27 @@ namespace RockWeb.Blocks.Steps
         }
 
         /// <summary>
+        /// Clear the displayed error
+        /// </summary>
+        private void ClearError()
+        {
+            nbNotificationBox.NotificationBoxType = NotificationBoxType.Danger;
+            nbNotificationBox.Title = string.Empty;
+            nbNotificationBox.Text = string.Empty;
+            nbNotificationBox.Visible = false;
+        }
+
+        /// <summary>
         /// Set details on the block that come from the program
         /// </summary>
         private void SetProgramDetailsOnBlock()
         {
-            var program = GetStepProgram();
-
-            if ( program == null )
+            if ( !ValidateRequiredModels() )
             {
-                ShowError( "The step program was not found" );
                 return;
             }
 
+            var program = GetStepProgram();
             lStepProgramName.Text = program.Name;
             iIcon.Attributes["class"] = program.IconCssClass;
         }
@@ -598,33 +666,17 @@ namespace RockWeb.Blocks.Steps
         /// </summary>
         private void RenderCardView()
         {
+            if ( !ValidateRequiredModels() )
+            {
+                return;
+            }
+
             var program = GetStepProgram();
-
-            if ( program == null )
-            {
-                ShowError( "The step program was not found" );
-                return;
-            }
-
             var person = GetPerson();
+            var orderedStepTypes = OrderStepTypes( GetStepTypes() );
+            var cardsData = new List<CardViewModel>();
 
-            if ( person == null )
-            {
-                ShowError( "The person was not found" );
-                return;
-            }
-
-            var stepTypes = OrderStepTypes( GetStepTypes() );
-
-            if ( stepTypes == null )
-            {
-                ShowError( "The step types were not found" );
-                return;
-            }
-
-            var cardsData = new List<CardData>();
-
-            foreach ( var stepType in stepTypes )
+            foreach ( var stepType in orderedStepTypes )
             {
                 var personStepsOfType = GetPersonStepsOfType( stepType.Id );
 
@@ -638,7 +690,7 @@ namespace RockWeb.Blocks.Steps
                     { "StepCount", personStepsOfType.Count }
                 } );
 
-                cardsData.Add( new CardData
+                cardsData.Add( new CardViewModel
                 {
                     StepType = stepType,
                     RenderedLava = rendered
@@ -654,41 +706,106 @@ namespace RockWeb.Blocks.Steps
         /// </summary>
         private void RenderGridView()
         {
-            var stepTypesQry = GetStepTypes();
-
-            if ( stepTypesQry == null )
+            if ( !ValidateRequiredModels() )
             {
-                ShowError( "The step types were not found" );
                 return;
             }
 
-            // Apply filters
-            var stepTypeNameFilter = gfGridFilter.GetUserPreference( FilterKeys.StepTypeName );
-            if ( !string.IsNullOrEmpty( stepTypeNameFilter ) )
+            RenderStepGrid();
+            RenderAddStepButtons();
+        }
+
+        /// <summary>
+        /// Render the grid view's grid
+        /// </summary>
+        private void RenderStepGrid()
+        {
+            if ( !ValidateRequiredModels() )
             {
-                stepTypesQry = stepTypesQry.Where( st => st.Name.Contains( stepTypeNameFilter ) );
+                return;
             }
 
-            // Order the step types
-            var orderedStepTypes = OrderStepTypes( stepTypesQry );
-            var rows = new List<StepGridRow>();
-            var addButtons = new List<AddStepButton>();
+            // Get the initial query
+            var stepTypes = GetStepTypes();
 
-            foreach ( var stepType in stepTypesQry )
+            // Get filter values
+            var stepTypeNameFilter = gfGridFilter.GetUserPreference( FilterKeys.StepTypeName );
+            var stepStatusNameFilter = gfGridFilter.GetUserPreference( FilterKeys.StepStatusName );
+
+            // Apply step type filters            
+            if ( !string.IsNullOrEmpty( stepTypeNameFilter ) )
             {
-                var personStepsOfType = GetPersonStepsOfType( stepType.Id );
-                rows.AddRange( personStepsOfType.Select( s => new StepGridRow
-                {
-                    Id = s.Id,
-                    StepTypeName = stepType.Name,
-                    CompletedDateTime = s.CompletedDateTime,
-                    StepStatus = s.StepStatus,
-                    StepTypeIconCssClass = stepType.IconCssClass
-                } ) );
+                stepTypes = stepTypes.Where( st => st.Name.Contains( stepTypeNameFilter ) ).ToList();
+            }
 
+            // Get the step type Ids
+            var stepTypeIds = stepTypes.Select( st => st.Id ).ToList();
+
+            // Query for the steps
+            var rockContext = GetRockContext();
+            var stepService = new StepService( rockContext );
+            var person = GetPerson();
+
+            var stepsQuery = stepService.Queryable()
+                .AsNoTracking()
+                .Include( s => s.StepType )
+                .Include( s => s.StepStatus )
+                .Where( s =>
+                    s.PersonAlias.PersonId == person.Id &&
+                    stepTypeIds.Contains( s.StepTypeId ) );
+
+            // Apply step filters                
+            if ( !string.IsNullOrEmpty( stepStatusNameFilter ) )
+            {
+                stepsQuery = stepsQuery.Where( s => s.StepStatus != null && s.StepStatus.Name.Contains( stepStatusNameFilter ) );
+            }
+
+            // Create a view model for each step
+            var viewModels = stepsQuery.Select( s => new StepGridRowViewModel
+            {
+                Id = s.Id,
+                StepTypeName = s.StepType.Name,
+                CompletedDateTime = s.CompletedDateTime,
+                StepStatusColor = s.StepStatus == null ? string.Empty : s.StepStatus.StatusColor,
+                StepStatusName = s.StepStatus == null ? string.Empty : s.StepStatus.Name,
+                StepTypeIconCssClass = s.StepType.IconCssClass,
+                Summary = string.Empty // TODO
+            } );
+
+            // Sort the view models
+            if ( gStepList.SortProperty != null )
+            {
+                viewModels = viewModels.Sort( gStepList.SortProperty );
+            }
+            else
+            {
+                viewModels = viewModels.OrderBy( vm => vm.StepTypeName );
+            }
+
+            // Bind the grid for the steps
+            gStepList.SetLinqDataSource( viewModels );
+            gStepList.DataBind();
+        }
+
+        /// <summary>
+        /// Render the grid view's buttons
+        /// </summary>
+        private void RenderAddStepButtons()
+        {
+            if ( !ValidateRequiredModels() )
+            {
+                return;
+            }
+
+            var stepTypes = GetStepTypes();
+            var addButtons = new List<AddStepButtonViewModel>();
+
+            foreach ( var stepType in stepTypes )
+            {
+                // Add a view model for the add button for this step type
                 var addButtonIsEnabled = CanAddStep( stepType );
 
-                addButtons.Add( new AddStepButton
+                addButtons.Add( new AddStepButtonViewModel
                 {
                     StepTypeId = stepType.Id,
                     IsEnabled = CanAddStep( stepType ),
@@ -696,40 +813,87 @@ namespace RockWeb.Blocks.Steps
                 } );
             }
 
-            gStepList.DataSource = rows;
-            gStepList.DataBind();
-
+            // Bind the repeater for the add buttons
             rAddStepButtons.DataSource = addButtons;
             rAddStepButtons.DataBind();
+        }
+
+        /// <summary>
+        /// Determine if the required models for rendering this block are available. If not, display a validation error.
+        /// </summary>
+        /// <returns></returns>
+        private bool ValidateRequiredModels()
+        {
+            var program = GetStepProgram();
+
+            if ( program == null )
+            {
+                ShowError( string.Format(
+                    "The step program was not found. Please set the block attribute or ensure a query parameter `{0}` is set.",
+                    PageParameters.StepProgramId ) );
+                return false;
+            }
+
+            var person = GetPerson();
+
+            if ( person == null )
+            {
+                ShowError( "The person was not found" );
+                return false;
+            }
+
+            var stepTypes = GetStepTypes();
+
+            if ( stepTypes == null )
+            {
+                ShowError( "The step types were not found" );
+                return false;
+            }
+
+            return true;
         }
 
         #endregion Control Helpers
 
         #region Helper Classes
 
-        public class StepGridRow
+        /// <summary>
+        /// View model for data for a grid row
+        /// </summary>
+        public class StepGridRowViewModel
         {
             public int Id { get; set; }
             public string StepTypeName { get; set; }
             public DateTime? CompletedDateTime { get; set; }
-            public StepStatus StepStatus { get; set; }
+            public string StepStatusColor { get; set; }
+            public string StepStatusName { get; set; }
             public string StepTypeIconCssClass { get; set; }
+            public string Summary { get; set; }
         }
 
-        public class AddStepButton
+        /// <summary>
+        /// View model for the add step buttons above the grid
+        /// </summary>
+        public class AddStepButtonViewModel
         {
             public int StepTypeId { get; set; }
             public bool IsEnabled { get; set; }
             public string ButtonContents { get; set; }
         }
 
-        public class CardData
+        /// <summary>
+        /// View model for the data show on a card
+        /// </summary>
+        public class CardViewModel
         {
             public StepType StepType { get; set; }
             public string RenderedLava { get; set; }
         }
 
-        public class CardStepData
+        /// <summary>
+        /// View model for a single step shown on the hover state of the card 
+        /// </summary>
+        public class CardStepViewModel
         {
             public int StepId { get; set; }
             public string StatusHtml { get; set; }
