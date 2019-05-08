@@ -531,23 +531,23 @@ SELECT  CASE
                 {% if assessmenttype.LastRequestObject %}
                     {% if assessmenttype.LastRequestObject.Status == 'Complete' %}
                         <div class='panel panel-success'>
-                            <div class='panel-heading'>{{ assessmenttype.Title }}</br>
-                                Completed: {{ assessmenttype.LastRequestObject.CompletedDate | Date:'M/d/yyyy'}} </br>
+                            <div class='panel-heading'>{{ assessmenttype.Title }}<br />
+                                Completed: {{ assessmenttype.LastRequestObject.CompletedDate | Date:'M/d/yyyy'}} <br />
                                 <a href='{{ assessmenttype.AssessmentResultsPath}}'>View Results</a>
                             </div>
                         </div>
                     {% elseif assessmenttype.LastRequestObject.Status == 'Pending' %}
-                        <div class='panel panel-primary'>
-                            <div class='panel-heading'> {{ assessmenttype.Title }}</br>
-                                Requested: {{assessmenttype.LastRequestObject.Requester}} ({{ assessmenttype.LastRequestObject.RequestedDate | Date:'M/d/yyyy'}})</br>
+                        <div class='panel panel-warning'>
+                            <div class='panel-heading'> {{ assessmenttype.Title }}<br />
+                                Requested: {{assessmenttype.LastRequestObject.Requester}} ({{ assessmenttype.LastRequestObject.RequestedDate | Date:'M/d/yyyy'}})<br />
                                 <a href='{{ assessmenttype.AssessmentPath}}'>Start Assessment</a>
                             </div>
                         </div>
                     {% endif %}
                     {% else %}
                         <div class='panel panel-default'>
-                            <div class='panel-heading'> {{ assessmenttype.Title }}</br>
-                                Available</br>
+                            <div class='panel-heading'> {{ assessmenttype.Title }}<br />
+                                Available<br />
                                 <a href='{{ assessmenttype.AssessmentPath}}'>Start Assessment</a>
                             </div>
                         </div>
@@ -568,23 +568,23 @@ SELECT  CASE
                 {% if assessmenttype.LastRequestObject %}
                     {% if assessmenttype.LastRequestObject.Status == 'Complete' %}
                         <div class='panel panel-success'>
-                            <div class='panel-heading'>{{ assessmenttype.Title }}</br>
-                                Completed: {{ assessmenttype.LastRequestObject.CompletedDate | Date:'M/d/yyyy'}} </br>
+                            <div class='panel-heading'>{{ assessmenttype.Title }}<br />
+                                Completed: {{ assessmenttype.LastRequestObject.CompletedDate | Date:'M/d/yyyy'}} <br />
                                 <a href='{{ assessmenttype.AssessmentResultsPath}}'>View Results</a>
                             </div>
                         </div>
                     {% elseif assessmenttype.LastRequestObject.Status == 'Pending' %}
-                        <div class='panel panel-primary'>
-                            <div class='panel-heading'> {{ assessmenttype.Title }}</br>
-                                Requested: {{assessmenttype.LastRequestObject.Requester}} ({{ assessmenttype.LastRequestObject.RequestedDate | Date:'M/d/yyyy'}})</br>
+                        <div class='panel panel-warning'>
+                            <div class='panel-heading'> {{ assessmenttype.Title }}<br />
+                                Requested: {{assessmenttype.LastRequestObject.Requester}} ({{ assessmenttype.LastRequestObject.RequestedDate | Date:'M/d/yyyy'}})<br />
                                 <a href='{{ assessmenttype.AssessmentPath}}'>Start Assessment</a>
                             </div>
                         </div>
                     {% endif %}
                     {% else %}
                         <div class='panel panel-default'>
-                            <div class='panel-heading'> {{ assessmenttype.Title }}</br>
-                                Available</br>
+                            <div class='panel-heading'> {{ assessmenttype.Title }}<br />
+                                Available<br />
                                 <a href='{{ assessmenttype.AssessmentPath}}'>Start Assessment</a>
                             </div>
                         </div>
@@ -606,23 +606,23 @@ SELECT  CASE
                 {% if assessmenttype.LastRequestObject %}
                     {% if assessmenttype.LastRequestObject.Status == 'Complete' %}
                         <div class='panel panel-success'>
-                            <div class='panel-heading'>{{ assessmenttype.Title }}</br>
-                                Completed: {{ assessmenttype.LastRequestObject.CompletedDate | Date:'M/d/yyyy'}} </br>
+                            <div class='panel-heading'>{{ assessmenttype.Title }}<br />
+                                Completed: {{ assessmenttype.LastRequestObject.CompletedDate | Date:'M/d/yyyy'}} <br />
                                 <a href='{{ assessmenttype.AssessmentResultsPath}}'>View Results</a>
                             </div>
                         </div>
                     {% elseif assessmenttype.LastRequestObject.Status == 'Pending' %}
-                        <div class='panel panel-primary'>
-                            <div class='panel-heading'> {{ assessmenttype.Title }}</br>
-                                Requested: {{assessmenttype.LastRequestObject.Requester}} ({{ assessmenttype.LastRequestObject.RequestedDate | Date:'M/d/yyyy'}})</br>
+                        <div class='panel panel-warning'>
+                            <div class='panel-heading'> {{ assessmenttype.Title }}<br />
+                                Requested: {{assessmenttype.LastRequestObject.Requester}} ({{ assessmenttype.LastRequestObject.RequestedDate | Date:'M/d/yyyy'}})<br />
                                 <a href='{{ assessmenttype.AssessmentPath}}'>Start Assessment</a>
                             </div>
                         </div>
                     {% endif %}
                     {% else %}
                         <div class='panel panel-default'>
-                            <div class='panel-heading'> {{ assessmenttype.Title }}</br>
-                                Available</br>
+                            <div class='panel-heading'> {{ assessmenttype.Title }}<br />
+                                Available<br />
                                 <a href='{{ assessmenttype.AssessmentPath}}'>Start Assessment</a>
                             </div>
                         </div>
