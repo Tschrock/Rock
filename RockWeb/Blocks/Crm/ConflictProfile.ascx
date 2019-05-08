@@ -52,6 +52,10 @@
         fadePanelIn();
         Sys.WebForms.PageRequestManager.getInstance().add_endRequest(fadePanelIn);
     });
+
+    function scrollToTop() {
+        window.scrollTo(0, 0);
+    }
 </script>
 <asp:UpdatePanel ID="upAssessment" runat="server">
     <ContentTemplate>
@@ -97,8 +101,8 @@
                          Please answer all questions before continuing.
                      </div>
                     <div class="actions">
-                        <asp:LinkButton ID="btnPrevious" runat="server" AccessKey="p" ToolTip="Alt+p" Text="Previous" CssClass="btn btn-default js-wizard-navigation" CausesValidation="false" OnClick="btnPrevious_Click" />
-                        <asp:LinkButton ID="btnNext" runat="server" AccessKey="n" Text="Next" OnClientClick="if (!isComplete()) { return false; }" DataLoadingText="Next" CssClass="btn btn-primary pull-right js-wizard-navigation" CausesValidation="true" OnClick="btnNext_Click" />
+                        <asp:LinkButton ID="btnPrevious" runat="server" AccessKey="p" ToolTip="Alt+p" Text="Previous" CssClass="btn btn-default js-wizard-navigation" CausesValidation="false" OnClick="btnPrevious_Click" OnClientClick="scrollToTop();" />
+                        <asp:LinkButton ID="btnNext" runat="server" AccessKey="n" Text="Next" OnClientClick="if (!isComplete()) { return false; } scrollToTop();" DataLoadingText="Next" CssClass="btn btn-primary pull-right js-wizard-navigation" CausesValidation="true" OnClick="btnNext_Click" />
                     </div>
                 </asp:Panel>
                   <asp:Panel ID="pnlResult" runat="server">
