@@ -87,6 +87,33 @@ namespace RockWeb.Blocks.Education
             public const string LavaTemplate = "LavaTemplate";
         }
 
+        private void OutputDebugInfo()
+        {
+            var lessonChoice = new LessonChoiceDTO()
+            {
+                //Id = 123,
+                //PersonAliasId = 10,
+                ScheduleId = 321,
+                RoleId = 444,
+                LessonOptionIds = new List<int>() { 1, 2, 3, 4 }
+            };
+            lDebug.Text = "<pre>" + Environment.NewLine +
+                "Sample Json Object:" + Environment.NewLine +
+                JsonConvert.SerializeObject( lessonChoice ) + Environment.NewLine +
+                "</pre>";
+        }
+        private class LessonChoiceDTO
+        {
+            //public int Id, PersonAliasId, ScheduleId, RoleId;
+            public int ScheduleId, RoleId;
+            public List<int> LessonOptionIds;
+            public LessonChoiceDTO()
+            {
+                LessonOptionIds = new List<int>();
+            }
+
+        }
+
         #region Base Control Methods
 
         /// <summary>
@@ -99,6 +126,9 @@ namespace RockWeb.Blocks.Education
             // this event gets fired after block settings are updated. it's nice to repaint the screen if these settings would alter it
             this.BlockUpdated += Block_BlockUpdated;
             this.AddConfigurationUpdateTrigger( upnlContent );
+
+            OutputDebugInfo();
+
         }
 
         /// <summary>
@@ -189,6 +219,23 @@ namespace RockWeb.Blocks.Education
         protected void btnSave_Click( object sender, EventArgs e )
         {
             lDebug.Text = string.Format( "PostBack Successful at {0}.  The value was: {1}", DateTime.Now.ToShortTimeString(),  hfWriteBackValue.Value );
+
+            LessonChoiceDTO lessonChoice;
+            try
+            {
+                lessonChoice = JsonConvert.DeserializeObject<LessonChoiceDTO>( hfWriteBackValue.Value );
+                lDebug.Text += "<br />Json Deserialization succeeded.";
+                lDebug.Text += "<br />Current Person Alias ID: " + CurrentPersonAliasId;
+                lDebug.Text += "<br />Role ID: " + lessonChoice.RoleId;
+                lDebug.Text += "<br />Schedule ID: " + lessonChoice.ScheduleId;
+                lDebug.Text += "<br />Lesson Option IDs: " + lessonChoice.LessonOptionIds.AsDelimited( ", " );
+
+            }
+            catch (Exception ex)
+            {
+                lDebug.Text += "<br />Json Deserialization failed:" + ex.Message;
+            }
+            
         }
     }
 }
