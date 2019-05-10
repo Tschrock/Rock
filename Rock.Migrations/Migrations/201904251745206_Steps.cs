@@ -277,14 +277,16 @@ BEGIN
 		[EntityTypeId], 
 		[Name],
 		[Guid], [IconCssClass], 
-		[Order]
+		[Order],
+        [UserSelectable]
 	) VALUES (
 		1, -- IsSystem
 		(SELECT Id FROM EntityType WHERE Name = 'Rock.Model.Step'), -- EntityTypeId
 		N'Step Note', -- Name
 		N'{0}', -- Guid
 		N'fa fa-quote-left', -- IconCssClass
-		0 -- Order
+		0, -- Order
+        1 -- UserSelectable
 	);
 END", StepNoteTypeGuidString ) );
         }
