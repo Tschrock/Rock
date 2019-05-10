@@ -354,7 +354,9 @@ namespace Rockweb.Blocks.Crm
                 assessment.AssessmentResultData = result.AssessmentData.ToJson();
                 rockContext.SaveChanges();
 
-                ShowResult( result, assessment );
+                //ShowResult( result, assessment );
+                // Since we are rendering chart.js we have to register the script or reload the page.
+                this.NavigateToCurrentPageReference();
             }
         }
 
