@@ -42,7 +42,13 @@ namespace Rockweb.Blocks.Crm
     [IntegerField( "Number of Questions", "The number of questions to show per page while taking the test", true, 7, order: 2 )]
     [BooleanField( "Allow Retakes", "If enabled, the person can retake the test after the minimum days passes.", true, order: 3 )]
     [IntegerField( "Min Days To Retake", "The number of days that must pass before the test can be taken again. Leave blank to use the Assessment Type's minimum.", false, order: 4 )]
-    [CodeEditorField( "Instructions", "The text (HTML) to display at the top of the instructions section.  <span class='tip tip-lava'></span> <span class='tip tip-html'></span>", CodeEditorMode.Html, CodeEditorTheme.Rock, 400, true, @"
+    [CodeEditorField( "Instructions", "The text (HTML) to display at the top of the instructions section.  <span class='tip tip-lava'></span> <span class='tip tip-html'></span>", CodeEditorMode.Html, CodeEditorTheme.Rock, 400, true, InstructionsDefaultValue )]
+    [CodeEditorField( "Results Message", "The text (HTML) to display at the top of the results section.<span class='tip tip-lava'></span><span class='tip tip-html'></span>", CodeEditorMode.Html, CodeEditorTheme.Rock, 400, true, ResultsMessageDefaultValue )]
+    public partial class EQInventory : Rock.Web.UI.RockBlock
+    {
+        #region Attribute Default values
+
+        private const string InstructionsDefaultValue = @"
 <h2>Welcome to the EQ Inventory Assessment</h2>
 <p>
     {{ Person.NickName }}, this assessment was developed and researched by Dr. Gregory A. Wiens.
@@ -58,9 +64,9 @@ namespace Rockweb.Blocks.Crm
     Before you begin, please take a moment and pray that the Holy Spirit would guide your thoughts,
     calm your mind, and help you respond to each item as honestly as you can. Don't spend much time
     on each item. Your first instinct is probably your best response.
-</p>" )]
+</p>";
 
-    [CodeEditorField( "Results Message", "The text (HTML) to display at the top of the results section.<span class='tip tip-lava'></span><span class='tip tip-html'></span>", CodeEditorMode.Html, CodeEditorTheme.Rock, 400, true, @"
+        private const string ResultsMessageDefaultValue = @"
 
 {%- assign chartColor = '#5c8ae7' -%}
 {%- assign chartHeight = '100px' -%}
@@ -245,10 +251,10 @@ go from this point forward.</p>
 <li><a href='https://www.goodreads.com/book/show/180463.Leadership_and_Self_Deception'>Leadership and Self-Deception: Getting Out of the Box</a> by The Arbinger Group</li>
 <li><a href='https://www.goodreads.com/book/show/163106.Primal_Leadership'>Primal Leadership: Realizing the Power of Emotional Intelligence</a> by Daniel Goleman</li>
 </ul>
-{% endif %}
-" )]
-    public partial class EQInventory : Rock.Web.UI.RockBlock
-    {
+{% endif %}";
+
+        #endregion Attribute Default values
+
         #region Fields
 
         //block attribute keys
@@ -526,7 +532,9 @@ go from this point forward.</p>
                 assessment.AssessmentResultData = result.AssessmentData.ToJson();
                 rockContext.SaveChanges();
 
-                ShowResult( result, assessment );
+                //ShowResult( result, assessment );
+                // Since we are rendering chart.js we have to register the script or reload the page.
+                this.NavigateToCurrentPageReference();
             }
         }
 
