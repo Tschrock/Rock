@@ -42,74 +42,9 @@ namespace Rockweb.Blocks.Crm
     [IntegerField( "Number of Questions", "The number of questions to show per page while taking the test", true, 20, order: 2 )]
     [BooleanField( "Allow Retakes", "If enabled, the person can retake the test after the minimum days passes.", true, order: 3 )]
     [IntegerField( "Min Days To Retake", "The number of days that must pass before the test can be taken again. Leave blank to use the Assessment Type's minimum.", false, order: 4 )]
-    [CodeEditorField( "Instructions", "The text (HTML) to display at the top of the instructions section.  <span class='tip tip-lava'></span> <span class='tip tip-html'></span>", CodeEditorMode.Html, CodeEditorTheme.Rock, 400, true, @"
-<h2>Welcome to the Motivators Assessment</h2>
-<p>
-    {{ Person.NickName }}, this assessment was developed and researched by Dr. Gregory A. Wiens and is intended to help identify the things that you value. These motivators influence your personal, professional, social and every other part of your life because they influence what you view as important and what should or should not be paid attention to. They impact the way you lead or even if you lead. They directly sway how you view your current situation.
-</p>
-<p>
-   We all have internal mechanisms that cause us to view life very differently from others. Some of this could be attributed to our personality. However, a great deal of research has been done to identify different values, motivators or internal drivers which cause each of us to have a different perspective on people, places, and events. These values cause you to construe one situation very differently from another who value things differently.
-</p>
-<p>
-    Before you begin, please take a moment and pray that the Holy Spirit would guide your thoughts,
-    calm your mind, and help you respond to each item as honestly as you can. Don't spend much time
-    on each item. Your first instinct is probably your best response.
-</p>" )]
+    [CodeEditorField( "Instructions", "The text (HTML) to display at the top of the instructions section.  <span class='tip tip-lava'></span> <span class='tip tip-html'></span>", CodeEditorMode.Html, CodeEditorTheme.Rock, 400, true, InstructionsDefaultValue )]
+    [CodeEditorField( "Results Message", "The text (HTML) to display at the top of the results section.<span class='tip tip-lava'></span><span class='tip tip-html'></span>", CodeEditorMode.Html, CodeEditorTheme.Rock, 400, true, ResultMessageDefaultValue )]
 
-    [CodeEditorField( "Results Message", "The text (HTML) to display at the top of the results section.<span class='tip tip-lava'></span><span class='tip tip-html'></span>", CodeEditorMode.Html, CodeEditorTheme.Rock, 400, true, @"<p>
-   This assessment identifies 22 different motivators (scales) which illustrate different things to which we all assign importance. These motivators listed in descending order on the report from the highest to the lowest. No one motivator is better than another. They are all critical and essential for the health of an organization. There are over 1,124,000,727,777,607,680,000 different combinations of these 22 motivators so we would hope you realize that your exceptional combination is clearly unique. We believe it is as important for you to know the motivators which are at the top as well as the ones at the bottom of your list. This is because you would best be advised to seek roles and responsibilities where your top motivators are needed. On the other hand, it would be advisable to <i>avoid roles or responsibilities where your bottom motivators would be required</i>. 
-</p>
-
-<h2>Influential, Organizational, Intellectual, and Operational</h2>
-<p>
-Each of the 22 motivators are grouped into one of four clusters: Influential, Organizational, Intellectual, and Operational. The clusters, graphed below, include the motivators that fall within each grouping.
-</p>
-<!--  Cluster Chart -->
-    <div class=""panel panel-default"">
-      <div class=""panel-heading"">
-        <h2 class=""panel-title""><b>Composite Score</b></h2>
-      </div>
-      <div class=""panel-body"">
-    {[chart type:'horizontalBar' chartheight:'1200' chartwidth:'75' ]}
-    {% for motivatorClusterScore in MotivatorClusterScores %}
-        [[dataitem label:'{{ motivatorClusterScore.DefinedValue.Value }}' value:'{{ motivatorClusterScore.Value }}' fillcolor:'{{ motivatorClusterScore.DefinedValue | Attribute:'Color' }}' ]] 
-        [[enddataitem]]
-    {% endfor %}
-    {[endchart]}
-    
-        Source: https://healthygrowingleaders.com
-      </div>
-    </div>
-<p>
-This graph is based on the average composite score for each cluster of Motivators.
-</p>
-{% for motivatorClusterScore in MotivatorClusterScores %}
-<p>
-<b>{{ motivatorClusterScore.DefinedValue.Value }}</b>
-</br>
-{{ motivatorClusterScore.DefinedValue.Description }}
-</br>
-{{ motivatorClusterScore.DefinedValue | Attribute:'Summary' }}
-</p>
-
- {% endfor %}
-<p>
-   The following graph shows your motivators ranked from top to bottom.
-</p>
-
-  {[chart type:'horizontalBar' chartheight:'500' chartwidth:'75' ]}
-    {% for motivatorScore in MotivatorScores %}
-    {% assign cluster = motivatorScore.DefinedValue | Attribute:'Cluster' %}
-        {% if cluster and cluster != empty %}
-            [[dataitem label:'{{ motivatorScore.DefinedValue.Value }}' value:'{{ motivatorScore.Value }}' fillcolor:'{{ motivatorScore.DefinedValue | Attribute:'Color' }}' ]] 
-            [[enddataitem]]
-        {% endif %}
-    {% endfor %}
-    {[endchart]}
-<p>
-    Your motivators will no doubt shift and morph throughout your life.For instance, #4 may drop to #7 and vice versa.  However, it is very doubtful that #22 would ever become #1. For that reason, read through all of the motivators and appreciate the ones that you have. Seek input from those who know you to see if they agree or disagree with these results.
-</p>
-" )]
     public partial class Motivators : Rock.Web.UI.RockBlock
     {
         #region Fields
@@ -138,6 +73,87 @@ This graph is based on the average composite score for each cluster of Motivator
         private decimal _percentComplete = 0;
 
         #endregion
+
+        #region Attribute Default values
+        private const string InstructionsDefaultValue = @"
+<h2>Welcome to the Motivators Assessment</h2>
+<p>
+    {{ Person.NickName }}, this assessment was developed and researched by Dr. Gregory A. Wiens and is intended to help identify the things that you value. These motivators influence your personal, professional, social and every other part of your life because they influence what you view as important and what should or should not be paid attention to. They impact the way you lead or even if you lead. They directly sway how you view your current situation.
+</p>
+<p>
+   We all have internal mechanisms that cause us to view life very differently from others. Some of this could be attributed to our personality. However, a great deal of research has been done to identify different values, motivators or internal drivers which cause each of us to have a different perspective on people, places, and events. These values cause you to construe one situation very differently from another who value things differently.
+</p>
+<p>
+    Before you begin, please take a moment and pray that the Holy Spirit would guide your thoughts,
+    calm your mind, and help you respond to each item as honestly as you can. Don't spend much time
+    on each item. Your first instinct is probably your best response.
+</p>";
+
+        private const string ResultMessageDefaultValue = @"<p>
+   This assessment identifies 22 different motivators (scales) which illustrate different things to which we all assign importance. These motivators listed in descending order on the report from the highest to the lowest. No one motivator is better than another. They are all critical and essential for the health of an organization. There are over 1,124,000,727,777,607,680,000 different combinations of these 22 motivators so we would hope you realize that your exceptional combination is clearly unique. We believe it is as important for you to know the motivators which are at the top as well as the ones at the bottom of your list. This is because you would best be advised to seek roles and responsibilities where your top motivators are needed. On the other hand, it would be advisable to <i>avoid roles or responsibilities where your bottom motivators would be required</i>. 
+</p>
+
+<h2>Influential, Organizational, Intellectual, and Operational</h2>
+<p>
+Each of the 22 motivators are grouped into one of four clusters: Influential, Organizational, Intellectual, and Operational. The clusters, graphed below, include the motivators that fall within each grouping.
+</p>
+<!--  Cluster Chart -->
+    <div class=""panel panel-default"">
+      <div class=""panel-heading"">
+        <h2 class=""panel-title""><b>Composite Score</b></h2>
+      </div>
+      <div class=""panel-body"">
+    {[chart type:'horizontalBar' chartheight:'200px' ]}
+    {% for motivatorClusterScore in MotivatorClusterScores %}
+        [[dataitem label:'{{ motivatorClusterScore.DefinedValue.Value }}' value:'{{ motivatorClusterScore.Value }}' fillcolor:'{{ motivatorClusterScore.DefinedValue | Attribute:'Color' }}' ]] 
+        [[enddataitem]]
+    {% endfor %}
+    {[endchart]}
+    
+        Source: <a href=""https://healthygrowingleaders.com"">https://healthygrowingleaders.com</a>
+      </div>
+    </div>
+<p>
+This graph is based on the average composite score for each cluster of Motivators.
+</p>
+{% for motivatorClusterScore in MotivatorClusterScores %}
+<p>
+<b>{{ motivatorClusterScore.DefinedValue.Value }}</b>
+</br>
+{{ motivatorClusterScore.DefinedValue.Description }}
+</br>
+{{ motivatorClusterScore.DefinedValue | Attribute:'Summary' }}
+</p>
+
+ {% endfor %}
+<p>
+   The following graph shows your motivators ranked from top to bottom.
+</p>
+
+  <div class=""panel panel-default"">
+    <div class=""panel-heading"">
+      <h2 class=""panel-title""><b>Ranked Motivators</b></h2>
+    </div>
+    <div class=""panel-body"">
+
+      {[ chart type:'horizontalBar' ]}
+        {% for motivatorScore in MotivatorScores %}
+        {% assign cluster = motivatorScore.DefinedValue | Attribute:'Cluster' %}
+            {% if cluster and cluster != empty %}
+                [[dataitem label:'{{ motivatorScore.DefinedValue.Value }}' value:'{{ motivatorScore.Value }}' fillcolor:'{{ motivatorScore.DefinedValue | Attribute:'Color' }}' ]] 
+                [[enddataitem]]
+            {% endif %}
+        {% endfor %}
+        {[endchart]}
+    </div>
+  </div>
+<p>
+    Your motivators will no doubt shift and morph throughout your life.For instance, #4 may drop to #7 and vice versa.  However, it is very doubtful that #22 would ever become #1. For that reason, read through all of the motivators and appreciate the ones that you have. Seek input from those who know you to see if they agree or disagree with these results.
+</p>
+";
+
+
+        #endregion Attribute Default values
 
         #region Properties
 
@@ -372,7 +388,9 @@ This graph is based on the average composite score for each cluster of Motivator
                 assessment.AssessmentResultData = result.AssessmentData.ToJson();
                 rockContext.SaveChanges();
 
-                ShowResult( result, assessment );
+                //ShowResult( result, assessment );
+                // Since we are rendering chart.js we have to register the script or reload the page.
+                this.NavigateToCurrentPageReference();
             }
         }
 

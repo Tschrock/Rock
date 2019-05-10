@@ -171,14 +171,14 @@ Each of the 22 motivators are grouped into one of four clusters: Influential, Or
         <h2 class=""panel-title""><b>Composite Score</b></h2>
       </div>
       <div class=""panel-body"">
-    {[chart type:'horizontalBar' chartheight:'1200' chartwidth:'75' ]}
+    {[chart type:'horizontalBar' chartheight:'200px' ]}
     {% for motivatorClusterScore in MotivatorClusterScores %}
         [[dataitem label:'{{ motivatorClusterScore.DefinedValue.Value }}' value:'{{ motivatorClusterScore.Value }}' fillcolor:'{{ motivatorClusterScore.DefinedValue | Attribute:'Color' }}' ]] 
         [[enddataitem]]
     {% endfor %}
     {[endchart]}
     
-        Source: https://healthygrowingleaders.com
+        Source: <a href=""https://healthygrowingleaders.com"">https://healthygrowingleaders.com</a>
       </div>
     </div>
 <p>
@@ -198,15 +198,23 @@ This graph is based on the average composite score for each cluster of Motivator
    The following graph shows your motivators ranked from top to bottom.
 </p>
 
-  {[chart type:'horizontalBar' chartheight:'500' chartwidth:'75' ]}
-    {% for motivatorScore in MotivatorScores %}
-    {% assign cluster = motivatorScore.DefinedValue | Attribute:'Cluster' %}
-        {% if cluster and cluster != empty %}
-            [[dataitem label:'{{ motivatorScore.DefinedValue.Value }}' value:'{{ motivatorScore.Value }}' fillcolor:'{{ motivatorScore.DefinedValue | Attribute:'Color' }}' ]] 
-            [[enddataitem]]
-        {% endif %}
-    {% endfor %}
-    {[endchart]}
+  <div class=""panel panel-default"">
+    <div class=""panel-heading"">
+      <h2 class=""panel-title""><b>Ranked Motivators</b></h2>
+    </div>
+    <div class=""panel-body"">
+
+      {[ chart type:'horizontalBar' ]}
+        {% for motivatorScore in MotivatorScores %}
+        {% assign cluster = motivatorScore.DefinedValue | Attribute:'Cluster' %}
+            {% if cluster and cluster != empty %}
+                [[dataitem label:'{{ motivatorScore.DefinedValue.Value }}' value:'{{ motivatorScore.Value }}' fillcolor:'{{ motivatorScore.DefinedValue | Attribute:'Color' }}' ]] 
+                [[enddataitem]]
+            {% endif %}
+        {% endfor %}
+        {[endchart]}
+    </div>
+  </div>
 <p>
     Your motivators will no doubt shift and morph throughout your life.For instance, #4 may drop to #7 and vice versa.  However, it is very doubtful that #22 would ever become #1. For that reason, read through all of the motivators and appreciate the ones that you have. Seek input from those who know you to see if they agree or disagree with these results.
 </p>", "BA51DFCD-B174-463F-AE3F-6EEE73DD9338" );
