@@ -16,18 +16,16 @@
 //
 namespace Rock.Migrations
 {
-    using System;
-    using System.Data.Entity.Migrations;
-    
     /// <summary>
     ///
     /// </summary>
-    public partial class Steps : Rock.Migrations.RockMigration
+    public partial class Steps : RockMigration
     {
+        private const string StepNoteTypeGuidString = "2678D220-2852-49B7-963F-CA36BD1B6DBB";
+
         /// <summary>
         /// Operations to be performed during the upgrade process.
         /// Add sample pages and blocks: https://gist.github.com/bjwiley2/a800176a96fbcda22a8759cf20f250da
-        /// Add sample data: https://gist.github.com/bjwiley2/09bd2bbd5c0d4921411dbe424eee420f
         /// </summary>
         public override void Up()
         {
@@ -270,6 +268,25 @@ namespace Rock.Migrations
             AddColumn("dbo.AttendanceOccurrence", "StepTypeId", c => c.Int());
             CreateIndex("dbo.AttendanceOccurrence", "StepTypeId");
             AddForeignKey("dbo.AttendanceOccurrence", "StepTypeId", "dbo.StepType", "Id", cascadeDelete: true);
+
+            Sql( string.Format( @"
+If NOT EXISTS (SELECT * FROM NoteType WHERE Guid = '{0}')
+BEGIN
+	INSERT[dbo].[NoteType] (
+		[IsSystem], 
+		[EntityTypeId], 
+		[Name],
+		[Guid], [IconCssClass], 
+		[Order]
+	) VALUES (
+		1, -- IsSystem
+		(SELECT Id FROM EntityType WHERE Name = 'Rock.Model.Step'), -- EntityTypeId
+		N'Step Note', -- Name
+		N'{0}', -- Guid
+		N'fa fa-quote-left', -- IconCssClass
+		0 -- Order
+	);
+END", StepNoteTypeGuidString ) );
         }
         
         /// <summary>
@@ -277,6 +294,7 @@ namespace Rock.Migrations
         /// </summary>
         public override void Down()
         {
+            Sql( string.Format( "DELETE FROM NoteType WHERE Guid = '{0}';", StepNoteTypeGuidString ) );
             DropForeignKey("dbo.AttendanceOccurrence", "StepTypeId", "dbo.StepType");
             DropForeignKey("dbo.StepTypePrerequisite", "StepTypeId", "dbo.StepType");
             DropForeignKey("dbo.StepTypePrerequisite", "PrerequisiteStepTypeId", "dbo.StepType");
