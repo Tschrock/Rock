@@ -239,6 +239,76 @@ BEGIN
 	);
 END
 
+-- Insert attributes for step types
+DECLARE @textFieldTypeId AS INT = (SELECT Id FROM FieldType WHERE Class = 'Rock.Field.Types.TextFieldType');
+DECLARE @intFieldTypeId AS INT = (SELECT Id FROM FieldType WHERE Class = 'Rock.Field.Types.IntegerFieldType');
+DECLARE @stepEntityTypeId AS INT = (SELECT Id FROM EntityType WHERE Name = 'Rock.Model.Step');
+DECLARE @baptismBaptismalGuid AS UNIQUEIDENTIFIER = '1CBE6BE4-9699-4660-B859-D240ABDB0FA8';
+DECLARE @baptismPrepYearGuid AS UNIQUEIDENTIFIER = 'E36B38CD-D958-4552-A0D3-DF529C3283FD';
+
+IF NOT EXISTS (SELECT * FROM Attribute WHERE Guid = @baptismBaptismalGuid)
+BEGIN
+	INSERT INTO Attribute (
+		IsSystem,
+		FieldTypeId,
+		EntityTypeId,
+		EntityTypeQualifierColumn,
+		EntityTypeQualifierValue,
+		[Key],
+		Name,
+		[Order],
+		IsGridColumn,
+		IsMultiValue,
+		IsRequired,
+		Guid
+	) VALUES (
+		1,
+		@textFieldTypeId,
+		@stepEntityTypeId,
+		'StepTypeId',
+		(SELECT Id FROM StepType WHERE Guid = @baptismStepTypeGuid),
+		'BaptismalName',
+		'Baptismal Name',
+		1,
+		0,
+		0,
+		0,
+		@baptismBaptismalGuid
+	);
+END
+
+IF NOT EXISTS (SELECT * FROM Attribute WHERE Guid = @baptismPrepYearGuid)
+BEGIN
+	INSERT INTO Attribute (
+		IsSystem,
+		FieldTypeId,
+		EntityTypeId,
+		EntityTypeQualifierColumn,
+		EntityTypeQualifierValue,
+		[Key],
+		Name,
+		[Order],
+		IsGridColumn,
+		IsMultiValue,
+		IsRequired,
+		Guid
+	) VALUES (
+		1,
+		@intFieldTypeId,
+		@stepEntityTypeId,
+		'StepTypeId',
+		(SELECT Id FROM StepType WHERE Guid = @baptismStepTypeGuid),
+		'PrepYear',
+		'Prep Year',
+		1,
+		0,
+		0,
+		0,
+		@baptismPrepYearGuid
+	);
+END
+
+-- Add step data for Ted Decker
 IF NOT EXISTS (SELECT * FROM Step WHERE Guid = @baptismTedGuid)
 BEGIN
 	INSERT INTO Step (

@@ -98,15 +98,12 @@ namespace RockWeb.Blocks.Steps
         {
             base.OnLoad( e );
 
-            if ( !Page.IsPostBack )
+            if ( !Page.IsPostBack && !ValidateRequiredModels() )
             {
-                if ( !ValidateRequiredModels() )
-                {
-                    return;
-                }
-
-                ShowEditDetails();
+                return;
             }
+
+            ShowEditDetails( Page.IsPostBack );
         }
 
         #endregion
@@ -208,32 +205,35 @@ namespace RockWeb.Blocks.Steps
         /// <summary>
         /// Shows the edit details.
         /// </summary>
-        private void ShowEditDetails()
+        private void ShowEditDetails( bool isPostback )
         {
-            var stepType = GetStepType();
-
-            if ( stepType == null )
+            if ( !isPostback )
             {
-                return;
+                var stepType = GetStepType();
+
+                if ( stepType == null )
+                {
+                    return;
+                }
+
+                lStepTypeTitle.Text = string.Format( "{0} {1}",
+                    stepType.IconCssClass.IsNotNullOrWhiteSpace() ?
+                        string.Format( @"<i class=""{0}""></i>", stepType.IconCssClass ) :
+                        string.Empty,
+                    stepType.Name );
+
+                rdpEndDate.Visible = stepType.HasEndDate;
+                rdpStartDate.Label = stepType.HasEndDate ? "Start Date" : "Date";
+
+                var step = GetStep();
+                if ( step != null )
+                {
+                    rdpStartDate.SelectedDate = step.StartDateTime;
+                    rdpEndDate.SelectedDate = step.EndDateTime;
+                }
             }
 
-            lStepTypeTitle.Text = string.Format( "{0} {1}",
-                stepType.IconCssClass.IsNotNullOrWhiteSpace() ?
-                    string.Format( @"<i class=""{0}""></i>", stepType.IconCssClass ) :
-                    string.Empty,
-                stepType.Name );
-
-            rdpEndDate.Visible = stepType.HasEndDate;
-            rdpStartDate.Label = stepType.HasEndDate ? "Start Date" : "Date";
-
-            var step = GetStep();
-            if ( step != null )
-            {
-                rdpStartDate.SelectedDate = step.StartDateTime;
-                rdpEndDate.SelectedDate = step.EndDateTime;
-            }
-
-            BuildDynamicControls( true );
+            BuildDynamicControls( !isPostback );
         }
 
         /// <summary>
@@ -242,18 +242,15 @@ namespace RockWeb.Blocks.Steps
         private void BuildDynamicControls( bool setValues )
         {
             var rockContext = GetRockContext();
-            var step = GetStep();
+            var stepType = GetStepType();
+            var step = GetStep() ?? new Step { StepTypeId = stepType.Id };
             var entityTypeCache = EntityTypeCache.Get( "Rock.Model.Step" );
 
+            step.LoadAttributes();
+
             Helper.UpdateAttributes( entityTypeCache.GetEntityType(), entityTypeCache.Id, null, null, rockContext );
-
-            if ( step != null )
-            {
-                step.LoadAttributes( rockContext );
-            }
-
             dphAttributes.Controls.Clear();
-            Helper.AddEditControls( step, dphAttributes, setValues, BlockValidationGroup );
+            Helper.AddEditControls( step, dphAttributes, setValues, BlockValidationGroup, 2 );
         }
 
         #endregion

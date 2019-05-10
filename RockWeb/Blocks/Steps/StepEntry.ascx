@@ -32,7 +32,9 @@
                     </div>
 
                     <div class="row">
-                        <Rock:DynamicPlaceHolder ID="dphAttributes" runat="server" />
+                        <div class="col-sm-12">
+                            <Rock:DynamicPlaceHolder ID="dphAttributes" runat="server" />
+                        </div>
                     </div>
 
                     <div class="actions">

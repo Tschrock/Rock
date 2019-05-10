@@ -96,8 +96,8 @@
                 <div class="panel-labels">
                     <asp:LinkButton ID="lbShowCards" runat="server" class="btn btn-xs btn-square btn-default" OnClick="ShowCards" AutoPostBack="true">
                         <i class="fa fa-th"></i>
-                    </asp:LinkButton>
-                    <asp:LinkButton ID="lbShowGrid" runat="server" class="btn btn-xs btn-square btn-default" OnClick="ShowGrid" AutoPostBack="true">
+                    </asp:LinkButton><!--
+                    --><asp:LinkButton ID="lbShowGrid" runat="server" class="btn btn-xs btn-square btn-default" OnClick="ShowGrid" AutoPostBack="true">
                         <i class="fa fa-list"></i>
                     </asp:LinkButton>
                 </div>
@@ -112,11 +112,11 @@
                         <div class="col-xs-12">
                             <asp:repeater id="rAddStepButtons" runat="server" OnItemDataBound="rAddStepButtons_ItemDataBound">
                                 <itemtemplate>
-                                    <asp:LinkButton runat="server" id="lbAddStep" class="btn btn-sm btn-default" OnCommand="AddStep" CommandArgument='<%# Eval("StepTypeId") %>'>
+                                    <button runat="server" id="bAddStep" class="btn btn-sm btn-default" OnCommand="AddStep" CommandArgument='<%# Eval("StepTypeId") %>' onserverclick="bAddStep_ServerClick">
                                         <i class="fa fa-plus"></i>
                                         &nbsp;
                                         <%# Eval("ButtonContents") %>
-                                    </asp:LinkButton>
+                                    </button>
                                 </itemtemplate>
                             </asp:repeater>
                         </div><!-- col -->
@@ -151,7 +151,7 @@
                                         <%# Eval( "RenderedLava" ) %>
                                         <div class="step-card-hover">
                                             <asp:Panel ID="pnlStepRecords" runat="server">
-                                                <asp:LinkButton runat="server" OnCommand="AddStep" CommandArgument='<%# Eval("StepType.Id") %>' CssClass="card-add-step-button">
+                                                <asp:LinkButton runat="server" id="lbCardAddStep" OnCommand="AddStep" CommandArgument='<%# Eval("StepType.Id") %>' CssClass="card-add-step-button">
                                                     <i class="fa fa-plus-circle fa-4x"></i>
                                                     <br />
                                                     Add a Step

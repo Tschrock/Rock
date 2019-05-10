@@ -21,15 +21,17 @@ namespace Rock.Model
         private const string _defaultCardLavaTemplate = @"
 <h3>{{ StepType.Name }}</h3>
 <i class=""{{ StepType.IconCssClass }} fa-4x""></i>
-{% if IsComplete %}
-    <p>
+<p>
+    {% if IsComplete %}
         Completed
         {% if CompletedDateTime %}
             <br />
             <small>{{ CompletedDateTime | Date:'M/d/yyyy' }}</small>
         {% endif %}
-    </p>
-{% endif %}
+    {% else %}
+        In Progress
+    {% endif %}
+</p>
 {% if StepCount > 1 %}
     <span class=""badge"">{{ StepCount }}</span>
 {% endif %}

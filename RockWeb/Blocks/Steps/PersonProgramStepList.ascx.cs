@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data.Entity;
 using System.Linq;
+using System.Web.UI.HtmlControls;
 using System.Web.UI.WebControls;
 using Rock;
 using Rock.Attribute;
@@ -233,10 +234,34 @@ namespace RockWeb.Blocks.Steps
         protected void AddStep( object sender, CommandEventArgs e )
         {
             var stepTypeId = e.CommandArgument.ToStringSafe().AsIntegerOrNull();
+            AddStep( stepTypeId );
+        }
 
+        /// <summary>
+        /// The click event of the add step buttons
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        protected void bAddStep_ServerClick( object sender, EventArgs e )
+        {
+            var stepTypeId = ( ( HtmlButton ) sender ).Attributes["data-step-type-id"].AsIntegerOrNull();
+            AddStep( stepTypeId );
+        }
+
+        /// <summary>
+        /// Add a step with the given step type
+        /// </summary>
+        /// <param name="stepTypeId"></param>
+        private void AddStep(int? stepTypeId)
+        {
             if ( stepTypeId.HasValue )
             {
-                GoToStepPage( stepTypeId.Value );
+                var stepType = GetStepTypes().FirstOrDefault( st => st.Id == stepTypeId );
+
+                if ( stepType != null && CanAddStep( stepType ) )
+                {
+                    GoToStepPage( stepTypeId.Value );
+                }
             }
         }
 
@@ -313,12 +338,15 @@ namespace RockWeb.Blocks.Steps
                 return;
             }
 
+            var viewModel = e.Item.DataItem as AddStepButtonViewModel;
             var addStepButton = e.Item.DataItem as AddStepButtonViewModel;
+            var bAddStep = e.Item.FindControl( "bAddStep" ) as HtmlButton;
+
+            bAddStep.Attributes["data-step-type-id"] = viewModel.StepTypeId.ToString();
 
             if ( !addStepButton.IsEnabled )
             {
-                var linkButton = e.Item.FindControl( "lbAddStep" ) as LinkButton;
-                linkButton.Attributes["disabled"] = "disabled";
+                bAddStep.Attributes["disabled"] = "disabled";
             }
         }
 
@@ -340,7 +368,9 @@ namespace RockWeb.Blocks.Steps
 
             var pnlStepRecords = e.Item.FindControl( "pnlStepRecords" ) as Panel;
             var pnlPrereqs = e.Item.FindControl( "pnlPrereqs" ) as Panel;
+            var lbCardAddStep = e.Item.FindControl( "lbCardAddStep" ) as LinkButton;
 
+            lbCardAddStep.Visible = CanAddStep( cardData.StepType );
             pnlStepRecords.Visible = hasMetPrerequisites;
             pnlPrereqs.Visible = !hasMetPrerequisites;
 
