@@ -27,7 +27,7 @@
                             <Rock:DatePicker ID="rdpEndDate" runat="server" PropertyName="EndDate" />
                         </div>
                         <div class="col-sm-12 col-md-6">
-                            <Rock:RockDropDownList ID="rddlStatus" runat="server" Label="Status" />
+                            <Rock:StepStatusPicker ID="rsspStatus" runat="server" Label="Status" />                            
                         </div>
                     </div>
 

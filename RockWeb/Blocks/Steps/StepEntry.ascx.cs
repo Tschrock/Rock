@@ -135,6 +135,7 @@ namespace RockWeb.Blocks.Steps
 
             step.StartDateTime = rdpStartDate.SelectedDate;
             step.EndDateTime = stepType.HasEndDate ? rdpEndDate.SelectedDate : null;
+            step.StepStatusId = rsspStatus.SelectedValueAsId();
 
             rockContext.SaveChanges();
 
@@ -216,6 +217,8 @@ namespace RockWeb.Blocks.Steps
                     return;
                 }
 
+                rsspStatus.StepProgramId = stepType.StepProgramId;
+
                 lStepTypeTitle.Text = string.Format( "{0} {1}",
                     stepType.IconCssClass.IsNotNullOrWhiteSpace() ?
                         string.Format( @"<i class=""{0}""></i>", stepType.IconCssClass ) :
@@ -230,6 +233,7 @@ namespace RockWeb.Blocks.Steps
                 {
                     rdpStartDate.SelectedDate = step.StartDateTime;
                     rdpEndDate.SelectedDate = step.EndDateTime;
+                    rsspStatus.SelectedValue = step.StepStatusId.ToStringSafe();
                 }
             }
 
