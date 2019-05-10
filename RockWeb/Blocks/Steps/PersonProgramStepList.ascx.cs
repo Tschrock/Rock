@@ -80,6 +80,14 @@ namespace RockWeb.Blocks.Steps
             public const string StepProgramId = "StepProgramId";
         }
 
+        /// <summary>
+        /// User preference keys
+        /// </summary>
+        private static class PreferenceKeys
+        {
+            public const string IsCardView = "PersonProgramStepList.IsCardView";
+        }
+
         #endregion Keys
 
         #region Events
@@ -105,6 +113,13 @@ namespace RockWeb.Blocks.Steps
             if ( !IsPostBack )
             {
                 SetProgramDetailsOnBlock();
+
+                var isCardViewPref = GetUserPreference( PreferenceKeys.IsCardView ).AsBooleanOrNull();
+
+                if ( isCardViewPref.HasValue )
+                {
+                    hfIsCardView.Value = isCardViewPref.ToString();
+                }
             }
 
             RenderViewMode();
@@ -161,7 +176,7 @@ namespace RockWeb.Blocks.Steps
         {
             var isCardView = hfIsCardView.Value.AsBoolean();
 
-            if (isCardView)
+            if ( isCardView )
             {
                 RenderCardView();
             }
@@ -172,6 +187,8 @@ namespace RockWeb.Blocks.Steps
 
             pnlCardView.Visible = isCardView;
             pnlGridView.Visible = !isCardView;
+
+            SetUserPreference( PreferenceKeys.IsCardView, isCardView.ToString(), true );
         }
 
         /// <summary>
@@ -424,20 +441,19 @@ namespace RockWeb.Blocks.Steps
         {
             if ( _stepProgram == null )
             {
-                var rockContext = GetRockContext();
-                var service = new StepProgramService( rockContext );
-
                 var programGuid = GetAttributeValue( AttributeKeys.StepProgram ).AsGuidOrNull();
                 var programId = PageParameter( PageParameters.StepProgramId ).AsIntegerOrNull();
 
                 if ( programGuid.HasValue )
                 {
+                    var rockContext = GetRockContext();
                     _stepProgram = new StepProgramService( rockContext ).Queryable()
                         .AsNoTracking()
                         .FirstOrDefault( sp => sp.Guid == programGuid.Value && sp.IsActive );
                 }
                 else if ( programId.HasValue )
                 {
+                    var rockContext = GetRockContext();
                     _stepProgram = new StepProgramService( rockContext ).Queryable()
                         .AsNoTracking()
                         .FirstOrDefault( sp => sp.Id == programId.Value && sp.IsActive );
@@ -461,7 +477,7 @@ namespace RockWeb.Blocks.Steps
                 if ( program != null )
                 {
                     _stepTypes = program.StepTypes.Where( st => st.IsActive ).ToList();
-                }                
+                }
             }
 
             return _stepTypes;
@@ -555,7 +571,7 @@ namespace RockWeb.Blocks.Steps
         /// </summary>
         /// <param name="stepId"></param>
         /// <returns></returns>
-        private int? GetStepTypeId(int stepId)
+        private int? GetStepTypeId( int stepId )
         {
             var stepMap = GetStepTypeToPersonStepMap();
 
@@ -623,7 +639,7 @@ namespace RockWeb.Blocks.Steps
         /// <returns></returns>
         private bool CanAddStep( StepType stepType )
         {
-            if ( !stepType.IsActive || !HasMetPrerequisites(stepType.Id))
+            if ( !stepType.IsActive || !HasMetPrerequisites( stepType.Id ) )
             {
                 return false;
             }
