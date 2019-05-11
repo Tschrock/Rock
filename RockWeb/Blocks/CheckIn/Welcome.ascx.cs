@@ -24,12 +24,16 @@ using System.Text.RegularExpressions;
 using System.Web.UI;
 using System.Web.UI.HtmlControls;
 using System.Web.UI.WebControls;
+
+using Newtonsoft.Json;
+
 using Rock;
 using Rock.Attribute;
 using Rock.CheckIn;
 using Rock.Data;
 using Rock.Model;
 using Rock.Security;
+using Rock.Utility;
 using Rock.Web.Cache;
 
 namespace RockWeb.Blocks.CheckIn
@@ -190,8 +194,8 @@ namespace RockWeb.Blocks.CheckIn
             string script = string.Format( @"
         function GetLabelTypeSelection() {{
             var ids = '';
-            $('div.js-labeltype-list').find('i.fa-check-square').each( function() {{
-                ids += $(this).closest('a').attr('data-labeltype-id') + ',';
+            $('div.js-label-list').find('i.fa-check-square').each( function() {{
+                ids += $(this).closest('a').attr('data-label-guid') + ',';
             }});
             if (ids == '') {{
                 bootbox.alert('Please select at least one tag');
@@ -205,17 +209,17 @@ namespace RockWeb.Blocks.CheckIn
             }}
         }}
 
-        $('a.js-labeltype-select').click( function() {{
+        $('a.js-label-select').click( function() {{
             $(this).toggleClass('active');
             $(this).find('i').toggleClass('fa-check-square').toggleClass('fa-square-o');
             var ids = '';
-            $('div.js-labeltype-list').find('i.fa-check-square').each( function() {{
-                ids += $(this).closest('a').attr('data-labeltype-id') + ',';
+            $('div.js-label-list').find('i.fa-check-square').each( function() {{
+                ids += $(this).closest('a').attr('data-label-guid') + ',';
             }});
             $('#{1}').val(ids);
         }});
 
-", lbReprintSelectLabelTypes.ClientID, hfLabelTypes.ClientID );
+", lbReprintSelectLabelTypes.ClientID, hfLabelFileGuids.ClientID );
             ScriptManager.RegisterStartupScript( pnlReprintSelectedPersonLabels, pnlReprintSelectedPersonLabels.GetType(), "SelectLabelTypes", script, true );
         }
 
@@ -538,11 +542,22 @@ namespace RockWeb.Blocks.CheckIn
             hfRefreshTimerSeconds.Value = "600";
         }
 
-        #region Check-in Manager
+        #region Device Manager
 
-        #region Check-in Manager Events
+        #region Device Manager Events
 
-        #region Check-in Manager Reprint Label Events
+        #region Device Manager Reprint Label Events
+ 
+        protected void lbManagerCancel_Click( object sender, EventArgs e )
+        {
+            // Hide all the manager operations
+            pnlReprintLabels.Visible = false;
+            pnlReprintSearchPersonResults.Visible = false;
+            pnlReprintSelectedPersonLabels.Visible = false;
+
+            // Show the manager panel since we're still in that mode.
+            pnlManager.Visible = true;
+        }
 
         /// <summary>
         /// Handles the Click event of the btnReprintLabels control.
@@ -553,13 +568,20 @@ namespace RockWeb.Blocks.CheckIn
         {
             pnlReprintLabels.Visible = true;
             pnlManager.Visible = false;
+            tbNameOrPhone.Focus();
             tbNameOrPhone.Text = string.Empty;
         }
-        
-        protected void lbManagerSearch_Click( object sender, EventArgs e )
+
+        /// <summary>
+        /// Manager Reprint screen to search by name or phone
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        protected void lbManagerReprintSearch_Click( object sender, EventArgs e )
         {
             if ( string.IsNullOrWhiteSpace( tbNameOrPhone.Text ) )
             {
+                tbNameOrPhone.Focus();
                 maWarning.Show( "Please enter a phone number or name.", Rock.Web.UI.Controls.ModalAlertType.Warning );
                 return;
             }
@@ -625,6 +647,7 @@ namespace RockWeb.Blocks.CheckIn
                     pnlReprintLabels.Visible = true;
                     pnlReprintSearchPersonResults.Visible = false;
                     tbNameOrPhone.Text = string.Empty;
+                    tbNameOrPhone.Focus();
                 }
                 else
                 {
@@ -639,52 +662,102 @@ namespace RockWeb.Blocks.CheckIn
             rReprintLabelPersonResults.DataBind();
         }
 
-
-        protected void lbManagerCancel_Click( object sender, EventArgs e )
-        {
-            // Hide all the manager operations
-            pnlReprintLabels.Visible = false;
-            pnlReprintSearchPersonResults.Visible = false;
-            pnlReprintSelectedPersonLabels.Visible = false;
-
-            // Show the manager panel since we're still in that mode.
-            pnlManager.Visible = true;
-        }
-
         protected void rReprintLabelPersonResults_ItemDataBound( object sender, RepeaterItemEventArgs e )
         {
-            var person = e.Item.DataItem as PersonResult;
-            var lbSelectPersonForReprint = e.Item.FindControl( "lbSelectPersonForReprint" ) as Rock.Web.UI.Controls.BootstrapButton;
+            //var person = e.Item.DataItem as PersonResult;
+            //var lbSelectPersonForReprint = e.Item.FindControl( "lbSelectPersonForReprint" ) as Rock.Web.UI.Controls.BootstrapButton;
 
-            if ( lbSelectPersonForReprint != null )
-            {
-                //lbSelectPersonForReprint.Text += string.Format( "<span class='pull-right'>{0}</span>", person.ScheduleGroupNames );
-            }
+            //if ( lbSelectPersonForReprint != null )
+            //{
+            //    //lbSelectPersonForReprint.Text += string.Format( "<span class='pull-right'>{0}</span>", person.ScheduleGroupNames );
+            //}
         }
 
         protected void rReprintLabelPersonResults_ItemCommand( object source, RepeaterCommandEventArgs e )
         {
             // Get the person Id
-            int id = Int32.Parse( e.CommandArgument.ToString() );
-            hfSelectedPersonId.Value = id.ToStringSafe();
+            int personId = Int32.Parse( e.CommandArgument.ToString() );
+            hfSelectedPersonId.Value = personId.ToStringSafe();
 
             // Get the attendanceIds
             var hfAttendanceIds = e.Item.FindControl( "hfAttendanceIds" ) as HiddenField;
+            if ( hfAttendanceIds == null )
+            {
+                return;
+            }
+
+            // save the attendance ids for later use.
             hfSelectedAttendanceIds.Value = hfAttendanceIds.Value;
 
-            // hide reprint person select results
+            // hide the reprint person select results, then show the selected labels to pick from
             pnlReprintLabels.Visible = false;
             pnlManager.Visible = false;
             pnlReprintSearchPersonResults.Visible = false;
+            pnlReprintSelectedPersonLabels.Visible = true;
 
             // bind all possible tags to reprint
-            //BindLabelTypesForPerson( int id );
-            pnlReprintSelectedPersonLabels.Visible = true;
+            BindLabelTypesForPerson( personId, hfSelectedAttendanceIds.Value.SplitDelimitedValues().AsIntegerList() );
+        }
+
+        /// <summary>
+        /// Bind a multi selector of available labels to reprint for the given person and attendanceIds.
+        /// </summary>
+        /// <param name="personId"></param>
+        /// <param name="attendanceIds"></param>
+        private void BindLabelTypesForPerson( int personId, List<int> attendanceIds )
+        {
             List<CheckInLabelType> labelTypes = new List<CheckInLabelType>();
 
-            labelTypes.Add( new CheckInLabelType() { Name = "Parent Tag", Id = 1, PersonId = id, AttendanceIds = hfAttendanceIds.Value.SplitDelimitedValues().AsIntegerList() } );
+            var rockContext = new RockContext();
+            var attendanceService = new AttendanceService( rockContext );
+            var binaryFileService = new BinaryFileService( rockContext );
 
-            labelTypes.Add( new CheckInLabelType() { Name = "Child Tag", Id = 2, PersonId = id, AttendanceIds = hfAttendanceIds.Value.SplitDelimitedValues().AsIntegerList() } );
+            // Get the attendance records for the set given to us
+            var attendanceRecords = attendanceService.GetByIds( attendanceIds );
+
+            var handledList = new Dictionary<Guid, bool>();
+
+            foreach ( var attendance in attendanceRecords )
+            {
+                var attendanceData = attendance.AttendanceData;
+                var json = attendanceData.LabelData.Trim();
+
+                // determine if the return type is an array or not
+                if ( json.Substring( 0, 1 ) == "[" )
+                {
+                    // De-serialize the JSON into a list of objects
+                    var checkinLabels = JsonConvert.DeserializeObject<List<CheckInLabel>>( json );
+                    if ( checkinLabels == null )
+                    {
+                        continue;
+                    }
+
+                    var fileGuids = checkinLabels.Where( l => l.PersonId == personId && ! handledList.ContainsKey( l.FileGuid ) )
+                        .Select( l => l.FileGuid )
+                        .ToList();
+
+                    if ( fileGuids == null || fileGuids.Count == 0 )
+                    {
+                        continue;
+                    }
+
+                    var labels = binaryFileService.GetByGuids( fileGuids );
+
+                    foreach ( var label in labels )
+                    {
+                        handledList.AddOrReplace( label.Guid, true );
+                        labelTypes.Add( new CheckInLabelType
+                        {
+                            Name = label.FileName,
+                            LabelFileId = (int)label.Id,
+                            FileGuid = label.Guid,
+                            PersonId = personId,
+                            AttendanceIds = attendanceIds
+                        } );
+                    }
+                }
+            }
+
             rReprintLabelTypeSelection.DataSource = labelTypes;
             rReprintLabelTypeSelection.DataBind();
         }
@@ -698,39 +771,134 @@ namespace RockWeb.Blocks.CheckIn
         {
             if ( e.Item.ItemType == ListItemType.Item || e.Item.ItemType == ListItemType.AlternatingItem )
             {
-                var pnlLabelType = e.Item.FindControl( "pnlLabelType" ) as Panel;
+                var pnlLabel = e.Item.FindControl( "pnlLabel" ) as Panel;
 
-                if ( pnlLabelType != null )
+                if ( pnlLabel != null )
                 {
-                    pnlLabelType.CssClass = "col-md-10 col-sm-10 col-xs-8";
+                    pnlLabel.CssClass = "col-md-10 col-sm-10 col-xs-8";
 
-                    var lLabelTypeButton = e.Item.FindControl( "lLabelTypeButton" ) as Literal;
+                    var lLabelButton = e.Item.FindControl( "lLabelButton" ) as Literal;
                     var labelType = e.Item.DataItem as CheckInLabelType;
 
-                    if ( lLabelTypeButton != null && labelType != null )
+                    if ( lLabelButton != null && labelType != null )
                     {
-                        lLabelTypeButton.Text = labelType.Name;
+                        lLabelButton.Text = string.Format( "{0}", labelType.Name );
                     }
                 }
             }
         }
 
+        /// <summary>
+        /// Reprint the selected labels
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         protected void lbReprintSelectLabelTypes_Click( object sender, EventArgs e )
         {
-            var labelTypeIds = hfLabelTypes.Value.SplitDelimitedValues();
-            var selectedPersonId = hfSelectedPersonId.ValueAsInt();
-
+            //var fileGuids = hfLabelFileGuids.Value.SplitDelimitedValues().ToList().AsGuidList();
+            var fileGuids = hfLabelFileGuids.Value.SplitDelimitedValues().AsGuidList();
+            var personId = hfSelectedPersonId.ValueAsInt();
             var selectedAttendanceIds = hfSelectedAttendanceIds.Value.SplitDelimitedValues().AsIntegerList();
 
-            // TODO Fetch the actual labels and print them
+            // Fetch the actual labels and print them
+            var rockContext = new RockContext();
+            var attendanceService = new AttendanceService( rockContext );
 
+            // Get the selected attendance records
+            var attendanceRecords = attendanceService.GetByIds( selectedAttendanceIds );
+
+            var printFromClient = new List<CheckInLabel>();
+            var printFromServer = new List<CheckInLabel>();
+
+            // Now grab only the selected label types (matching fileGuids) from those record's AttendanceData
+            // for the selected  person
+            foreach ( var attendance in attendanceRecords )
+            {
+                var attendanceData = attendance.AttendanceData;
+                var json = attendanceData.LabelData.Trim();
+
+                // skip if the return type is not an array
+                if ( json.Substring( 0, 1 ) != "[" )
+                {
+                    continue;
+                }
+
+                // De-serialize the JSON into a list of objects
+                var checkinLabels = JsonConvert.DeserializeObject<List<CheckInLabel>>( json );
+
+                // skip if no labels were found
+                if ( checkinLabels == null )
+                {
+                    continue;
+                }
+
+                // Take only the labels that match the selected person and label types (file guids).
+                checkinLabels = checkinLabels.Where( l => l.PersonId == personId && fileGuids.Contains( l.FileGuid ) ).ToList();
+
+                printFromClient.AddRange( checkinLabels.Where( l => l.PrintFrom == Rock.Model.PrintFrom.Client ) );
+                printFromServer.AddRange( checkinLabels.Where( l => l.PrintFrom == Rock.Model.PrintFrom.Server ) );
+            }
+
+            // Print client labels
+            if ( printFromClient.Any() )
+            {
+                var urlRoot = string.Format( "{0}://{1}", Request.Url.Scheme, Request.Url.Authority );
+                printFromClient
+                    .OrderBy( l => l.PersonId )
+                    .ThenBy( l => l.Order )
+                    .ToList()
+                    .ForEach( l => l.LabelFile = urlRoot + l.LabelFile );
+                AddLabelScript( printFromClient.ToJson(), this );
+            }
+
+            var messages = new List<string>();
+
+            // Print server labels
+            if ( printFromServer.Any() )
+            {
+                messages = ZebraPrint.PrintLabels( printFromServer );
+            }
+
+            // No messages is "good news".
+            if ( messages.Count == 0 )
+            {
+                messages.Add( "The labels have been printed." );
+            }
+
+            pnlReprintResults.Visible = true;
+            pnlReprintSelectedPersonLabels.Visible = false;
+
+            lReprintResultsHtml.Text = messages.JoinStrings( "<br>" );
         }
 
+        /// <summary>
+        /// When label re-printing is done, this button would be pressed
+        /// so the person is returned back to the device manager screen.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        protected void lbManagerReprintDone_Click( object sender, EventArgs e )
+        {
+            // Hide our panels and show the Manager panel.
+            pnlReprintResults.Visible = false;
+            pnlManager.Visible = true;
+        }
+
+        /// <summary>
+        /// Gets the icon CSS class for the checkbox for either state.
+        /// </summary>
+        /// <param name="selected"></param>
+        /// <returns></returns>
         protected string GetCheckboxClass( bool selected )
         {
             return selected ? "fa fa-check-square" : "fa fa-square-o";
         }
 
+        /// <summary>
+        /// Gets the icon CSS class that represents the 'selected' or non-selected state.
+        /// </summary>
+        /// <param name="selected"></param>
+        /// <returns></returns>
         protected string GetSelectedClass( bool selected )
         {
             return selected ? "active" : "";
@@ -792,6 +960,64 @@ namespace RockWeb.Blocks.CheckIn
                 .Distinct();
 
             return personIds;
+        }
+
+        /// <summary>
+        /// TODO - move to service layer (same as Success.ascx)
+        /// Adds the label script.
+        /// </summary>
+        /// <param name="jsonObject">The json object.</param>
+        public static void AddLabelScript( string jsonObject, Control control )
+        {
+            string script = string.Format( @"
+
+        // setup deviceready event to wait for cordova
+	    if (navigator.userAgent.match(/(iPhone|iPod|iPad)/)) {{
+            document.addEventListener('deviceready', onDeviceReady, false);
+        }} else {{
+            $( document ).ready(function() {{
+                onDeviceReady();
+            }});
+        }}
+
+	    // label data
+        var labelData = {0};
+
+		function onDeviceReady() {{
+            try {{			
+                printLabels();
+            }} 
+            catch (err) {{
+                console.log('An error occurred printing labels: ' + err);
+            }}
+		}}
+		
+		function alertDismissed() {{
+		    // do something
+		}}
+		
+		function printLabels() {{
+		    ZebraPrintPlugin.printTags(
+            	JSON.stringify(labelData), 
+            	function(result) {{ 
+			        console.log('Tag printed');
+			    }},
+			    function(error) {{   
+				    // error is an array where:
+				    // error[0] is the error message
+				    // error[1] determines if a re-print is possible (in the case where the JSON is good, but the printer was not connected)
+			        console.log('An error occurred: ' + error[0]);
+                    navigator.notification.alert(
+                        'An error occurred while printing the labels.' + error[0],  // message
+                        alertDismissed,         // callback
+                        'Error',            // title
+                        'Ok'                  // buttonName
+                    );
+			    }}
+            );
+	    }}
+", jsonObject );
+            ScriptManager.RegisterStartupScript( control, control.GetType(), "addLabelScript", script, true );
         }
 
         #endregion
@@ -1062,8 +1288,11 @@ namespace RockWeb.Blocks.CheckIn
         public class CheckInLabelType
         {
             public int Id { get; set; }
+            public int LabelFileId { get; set; }
+            public Guid FileGuid { get; set; }
             public string Name { get; set; }
             public int PersonId { get; set; }
+            public string ScheduleName { get; set; }
             public List<int> AttendanceIds { get; set; }
         }
 
