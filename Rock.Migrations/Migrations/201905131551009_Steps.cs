@@ -14,6 +14,8 @@
 // limitations under the License.
 // </copyright>
 //
+using Rock.SystemGuid;
+
 namespace Rock.Migrations
 {
     /// <summary>
@@ -268,6 +270,29 @@ namespace Rock.Migrations
             AddColumn( "dbo.AttendanceOccurrence", "StepTypeId", c => c.Int() );
             CreateIndex( "dbo.AttendanceOccurrence", "StepTypeId" );
             AddForeignKey( "dbo.AttendanceOccurrence", "StepTypeId", "dbo.StepType", "Id", cascadeDelete: true );
+
+            RockMigrationHelper.UpdateEntityType( "Rock.Model.Step", EntityType.STEP, true, true );
+
+            Sql( string.Format( @"
+If NOT EXISTS (SELECT * FROM NoteType WHERE Guid = '{0}')
+BEGIN
+	INSERT[dbo].[NoteType] (
+		[IsSystem], 
+		[EntityTypeId], 
+		[Name],
+		[Guid], [IconCssClass], 
+		[Order],
+        [UserSelectable]
+	) VALUES (
+		1, -- IsSystem
+		(SELECT Id FROM EntityType WHERE Name = 'Rock.Model.Step'), -- EntityTypeId
+		N'Step Note', -- Name
+		N'{0}', -- Guid
+		N'fa fa-quote-left', -- IconCssClass
+		0, -- Order
+        1 -- UserSelectable
+	);
+END", StepNoteTypeGuidString ) );
         }
 
         /// <summary>
@@ -275,6 +300,8 @@ namespace Rock.Migrations
         /// </summary>
         public override void Down()
         {
+            Sql( string.Format( "DELETE FROM NoteType WHERE Guid = '{0}';", StepNoteTypeGuidString ) );
+            RockMigrationHelper.DeleteEntityType( EntityType.STEP );
             DropForeignKey( "dbo.AttendanceOccurrence", "StepTypeId", "dbo.StepType" );
             DropForeignKey( "dbo.StepTypePrerequisite", "StepTypeId", "dbo.StepType" );
             DropForeignKey( "dbo.StepTypePrerequisite", "PrerequisiteStepTypeId", "dbo.StepType" );
