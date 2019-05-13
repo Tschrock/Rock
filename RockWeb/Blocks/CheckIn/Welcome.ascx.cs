@@ -588,6 +588,29 @@ namespace RockWeb.Blocks.CheckIn
 
             pnlReprintSearchPersonResults.Visible = true;
 
+            var people = FindPossibleMatchingCheckedInPeople();
+
+            if ( people == null || people.Count == 0 )
+            {
+                maWarning.Show( "There is no one currently checked-in that matches the search criteria.", Rock.Web.UI.Controls.ModalAlertType.Warning );
+                pnlReprintLabels.Visible = true;
+                pnlReprintSearchPersonResults.Visible = false;
+                tbNameOrPhone.Text = string.Empty;
+                tbNameOrPhone.Focus();
+            }
+            else
+            {
+                rReprintLabelPersonResults.DataSource = people;
+                rReprintLabelPersonResults.DataBind();
+                pnlReprintLabels.Visible = false;
+                pnlReprintSearchPersonResults.Visible = true;
+            }
+        }
+
+        private List<PersonResult> FindPossibleMatchingCheckedInPeople()
+        {
+            var people = new List<PersonResult>();
+
             using ( var rockContext = new RockContext() )
             {
                 var personService = new PersonService( rockContext );
@@ -621,12 +644,10 @@ namespace RockWeb.Blocks.CheckIn
                         a.DidAttend.HasValue &&
                         a.DidAttend.Value &&
                         a.Occurrence.ScheduleId.HasValue )
-                    .Where( a=> matchingPeopleIds.Contains( a.PersonAlias.PersonId ) )
+                    .Where( a => matchingPeopleIds.Contains( a.PersonAlias.PersonId ) )
                     .ToList()
                     .Where( a => a.IsCurrentlyCheckedIn )
                     .ToList();
-
-                var people = new List<PersonResult>();
 
                 foreach ( var personId in attendees
                     .OrderBy( a => a.PersonAlias.Person.NickName )
@@ -640,37 +661,9 @@ namespace RockWeb.Blocks.CheckIn
 
                     people.Add( new PersonResult( matchingAttendeesAttendanceRecords ) );
                 }
-
-                if ( people == null || people.Count == 0 )
-                {
-                    maWarning.Show( "There is no one currently checked-in that matches the search criteria.", Rock.Web.UI.Controls.ModalAlertType.Warning );
-                    pnlReprintLabels.Visible = true;
-                    pnlReprintSearchPersonResults.Visible = false;
-                    tbNameOrPhone.Text = string.Empty;
-                    tbNameOrPhone.Focus();
-                }
-                else
-                {
-                    pnlReprintLabels.Visible = false;
-                    pnlReprintSearchPersonResults.Visible = true;
-
-                    rReprintLabelPersonResults.DataSource = people;
-                }
-
             }
 
-            rReprintLabelPersonResults.DataBind();
-        }
-
-        protected void rReprintLabelPersonResults_ItemDataBound( object sender, RepeaterItemEventArgs e )
-        {
-            //var person = e.Item.DataItem as PersonResult;
-            //var lbSelectPersonForReprint = e.Item.FindControl( "lbSelectPersonForReprint" ) as Rock.Web.UI.Controls.BootstrapButton;
-
-            //if ( lbSelectPersonForReprint != null )
-            //{
-            //    //lbSelectPersonForReprint.Text += string.Format( "<span class='pull-right'>{0}</span>", person.ScheduleGroupNames );
-            //}
+            return people;
         }
 
         protected void rReprintLabelPersonResults_ItemCommand( object source, RepeaterCommandEventArgs e )

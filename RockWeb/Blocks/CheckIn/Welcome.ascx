@@ -314,7 +314,7 @@
                     <div class="control-group checkin-body-container">
                         <label class="control-label"><asp:Literal ID="lCaption" runat="server"></asp:Literal></label>
                         <div class="controls">
-                            <asp:Repeater ID="rReprintLabelPersonResults" runat="server" OnItemCommand="rReprintLabelPersonResults_ItemCommand" OnItemDataBound="rReprintLabelPersonResults_ItemDataBound">
+                            <asp:Repeater ID="rReprintLabelPersonResults" runat="server" OnItemCommand="rReprintLabelPersonResults_ItemCommand">
                                 <ItemTemplate><asp:HiddenField ID="hfAttendanceIds" runat="server" Value='<%#String.Join(",",((PersonResult)Container.DataItem).AttendanceIds )%>' /> 
                                     <Rock:BootstrapButton ID="lbSelectPersonForReprint" runat="server" Text='<%# Container.DataItem.ToString() %>' CommandName='<%# Eval("AttendanceIds") %>' CommandArgument='<%# Eval("Id") %>' CssClass="btn btn-primary btn-large btn-block btn-checkin-select text-left" DataLoadingText="Loading..." />
                                 </ItemTemplate>
