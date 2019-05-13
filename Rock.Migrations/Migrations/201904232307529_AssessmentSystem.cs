@@ -55,7 +55,7 @@ namespace Rock.Migrations
         private void MigrateSystemEmailsUp()
         {
 		            // Assessment Request
-            RockMigrationHelper.UpdateSystemEmail( "System", "Assessment Request", "", "", "", "", "", "Assessments Are Ready To Take", @"{% capture assessmentsLink %}{{ 'Global' | Attribute:'PublicApplicationRoot' }}Assessments{% endcapture %}
+            RockMigrationHelper.UpdateSystemEmail( "System", "Assessment Request", "", "", "", "", "", "Assessments Are Ready To Take", @"{% capture assessmentsLink %}{{ 'Global' | Attribute:'PublicApplicationRoot' }}/Assessments{% endcapture %}
 
 {{ 'Global' | Attribute:'EmailHeader' }}
 {{ Person.NickName }},
@@ -302,7 +302,7 @@ SELECT  CASE
             RockMigrationHelper.AddActionTypeAttributeValue("C8DE19DB-106A-4AFA-9069-C420B45B976C","36197160-7D3D-490D-AB42-7E29105AFE91",@"False"); // Request Assessment:Save And Send:Send Assessment Custom Message Email:Active
             RockMigrationHelper.AddActionTypeAttributeValue("C8DE19DB-106A-4AFA-9069-C420B45B976C","0C4C13B8-7076-4872-925A-F950886B5E16",@"a201eb57-0ad0-4b98-ad44-9d3a7c0f16ba"); // Request Assessment:Save And Send:Send Assessment Custom Message Email:Send To Email Addresses|Attribute Value
             RockMigrationHelper.AddActionTypeAttributeValue("C8DE19DB-106A-4AFA-9069-C420B45B976C","5D9B13B6-CD96-4C7C-86FA-4512B9D28386",@"Assessments Are Ready To Take"); // Request Assessment:Save And Send:Send Assessment Custom Message Email:Subject
-            RockMigrationHelper.AddActionTypeAttributeValue("C8DE19DB-106A-4AFA-9069-C420B45B976C","4D245B9E-6B03-46E7-8482-A51FBA190E4D",@"{% capture assessmentsLink %}{{ 'Global' | Attribute:'PublicApplicationRoot' }}assessments{% endcapture %}
+            RockMigrationHelper.AddActionTypeAttributeValue("C8DE19DB-106A-4AFA-9069-C420B45B976C","4D245B9E-6B03-46E7-8482-A51FBA190E4D",@"{% capture assessmentsLink %}{{ 'Global' | Attribute:'PublicApplicationRoot' }}/assessments{% endcapture %}
 
 {{ 'Global' | Attribute:'EmailHeader' }}
 {{ Person.NickName }},
@@ -511,6 +511,8 @@ SELECT  CASE
         {
             // Assessments list page, this is where the link in the emails will go.
             RockMigrationHelper.AddPage( true, "EBAA5140-4B8F-44B8-B1E8-C73B654E4B22","5FEAF34C-7FB6-4A11-8A1E-C452EC7849BD","Assessments","","FCF44690-D74C-4FB7-A01B-0EFCA6EA9E1E","fa fa-bar-chart"); // Site:External Website
+            RockMigrationHelper.AddSecurityAuthForPage( "FCF44690-D74C-4FB7-A01B-0EFCA6EA9E1E", 1, "View", false, "", 3, "420BADED-31C8-4870-AF12-6E20ABEDB9E7" ); // Page:Assessments
+            RockMigrationHelper.AddSecurityAuthForPage( "FCF44690-D74C-4FB7-A01B-0EFCA6EA9E1E", 0, "View", true, "", 2, "E9DD5267-41BD-404D-A064-F1066396E6B9" ); // Page:Assessments
             RockMigrationHelper.AddPageRoute("FCF44690-D74C-4FB7-A01B-0EFCA6EA9E1E","Assessments","F2873F65-617C-4BD3-94E0-48E2408EBDBD");// for Page:Assessments
             RockMigrationHelper.UpdateBlockType("Assessment List","Allows you to view and take any available assessments.","~/Blocks/Crm/AssessmentList.ascx","CRM","0AD1D108-4ABF-4AED-B3B7-4AAEA16D10E4");
             RockMigrationHelper.AddBlock( true, "FCF44690-D74C-4FB7-A01B-0EFCA6EA9E1E".AsGuid(),null,"F3F82256-2D66-432B-9D67-3552CD2F4C2B".AsGuid(),"0AD1D108-4ABF-4AED-B3B7-4AAEA16D10E4".AsGuid(), "Assessment List","Main",@"",@"",0,"0E22E6CB-1634-41CA-83EF-4BC7CE52F314"); // Add Block to Page: Assessments Site: External Website
