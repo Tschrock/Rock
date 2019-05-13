@@ -267,6 +267,12 @@ namespace Rock.Model
         [DataMember]
         public string PostHtml { get; set; }
 
+        /// <summary>
+        /// Gets or sets a flag indicating if this attribute shows when doing a bulk entry form.
+        /// </summary>
+        [DataMember]
+        public bool ShowOnBulk { get; set; }
+
         #endregion
 
         #region Virtual Properties

@@ -278,6 +278,7 @@
     <Compile Include="Attribute\CheckListFieldAttribute.cs" />
     <Compile Include="Attribute\ColorFieldAttribute.cs" />
     <Compile Include="Attribute\ComparisonFieldAttribute.cs" />
+    <Compile Include="Attribute\StepProgramFieldAttribute.cs" />
     <Compile Include="Attribute\ContentChannelTypeFieldAttribute.cs" />
     <Compile Include="Attribute\ContentChannelItemFieldAttribute.cs" />
     <Compile Include="Attribute\BackgroundCheckFieldAttribute.cs" />
@@ -289,6 +290,7 @@
     <Compile Include="Attribute\LavaFieldAttribute.cs" />
     <Compile Include="Attribute\RegistrationInstanceFieldAttribute.cs" />
     <Compile Include="Attribute\RegistrationTemplateFieldAttribute.cs" />
+    <Compile Include="Attribute\RegistryEntryFieldAttribute.cs" />
     <Compile Include="Attribute\ReportFieldAttribute.cs" />
     <Compile Include="Attribute\SelectFieldAttribute.cs" />
     <Compile Include="Attribute\TextValueFilterFieldAttribute.cs" />
@@ -400,6 +402,9 @@
     <Compile Include="Jobs\SendGroupScheduleNotifications.cs" />
     <Compile Include="Model\CodeGenerated\GroupMemberAssignmentService.cs" />
     <Compile Include="Model\CodeGenerated\GroupMemberScheduleTemplateService.cs" />
+    <Compile Include="Field\EntitySingleSelectionListFieldTypeBase.cs" />
+    <Compile Include="Field\Types\StepProgramFieldType.cs" />
+    <Compile Include="Field\Types\RegistryEntryFieldType.cs" />
     <Compile Include="Field\Types\ValueFilterFieldType.cs" />
     <Compile Include="Financial\HostedPaymentInfoControlOptions.cs" />
     <Compile Include="Financial\IGatewayComponent.cs" />
@@ -424,6 +429,11 @@
     <Compile Include="Model\GroupMemberAssignmentService.Partial.cs" />
     <Compile Include="Model\GroupMemberScheduleTemplate.cs" />
     <Compile Include="Model\CodeGenerated\RegistrationTemplateFeeItemService.cs" />
+    <Compile Include="Model\CodeGenerated\StepProgramService.cs" />
+    <Compile Include="Model\CodeGenerated\StepService.cs" />
+    <Compile Include="Model\CodeGenerated\StepStatusService.cs" />
+    <Compile Include="Model\CodeGenerated\StepTypePrerequisiteService.cs" />
+    <Compile Include="Model\CodeGenerated\StepTypeService.cs" />
     <Compile Include="Model\CommunicationResponse.cs" />
     <Compile Include="Model\CommunicationResponseService.partial.cs" />
     <Compile Include="Model\SmsAction.cs" />
@@ -459,6 +469,13 @@
     <Compile Include="Jobs\PostV84DataMigrations.cs" />
     <Compile Include="Lava\Shortcodes\Scripturize.cs" />
     <Compile Include="Lava\Shortcodes\LavaShortcodeMetaDataAttribute.cs" />
+    <Compile Include="Model\Step.cs" />
+    <Compile Include="Model\StepWorkflow.cs" />
+    <Compile Include="Model\StepWorkflowTrigger.cs" />
+    <Compile Include="Model\StepTypePrerequisite.cs" />
+    <Compile Include="Model\StepType.cs" />
+    <Compile Include="Model\StepStatus.cs" />
+    <Compile Include="Model\StepProgram.cs" />
     <Compile Include="Plugin\HotFixes\051_SparkData.cs" />
     <Compile Include="Model\AttributeMatrixService.Partial.cs" />
     <Compile Include="Plugin\HotFixes\052_MigrationRollupsForV8_1.cs" />
@@ -1745,6 +1762,8 @@
     <Compile Include="Web\UI\Controls\AttributeMatrixEditor.cs" />
     <Compile Include="Web\UI\Controls\DynamicPlaceholder.cs" />
     <Compile Include="Web\UI\Controls\FieldVisibilityRulesEditor.cs" />
+    <Compile Include="Web\UI\Controls\Pickers\StepStatusPicker.cs" />
+    <Compile Include="Web\UI\Controls\RegistryEntry.cs" />
     <Compile Include="Web\UI\Controls\ValueFilter.cs" />
     <Compile Include="Web\UI\Controls\Grid\EncryptedField.cs" />
     <Compile Include="Web\UI\Controls\Grid\HtmlField.cs" />
