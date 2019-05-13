@@ -33,10 +33,16 @@
         margin-top: 25px;
     }
 
+    .step-records-table-container {
+        position: absolute;
+        bottom: 0;
+        top: 75px;
+        overflow-y: scroll;
+        width: 100%;
+    }
+
     .step-records-table {
         width: 100%;
-        bottom: 0;
-        position: absolute;
     }
 
     .step-records-table td {
@@ -52,10 +58,6 @@
 
     .step-records-table td:last-of-type {
         border-right: none;
-    }
-
-    .step-records-table tr:last-of-type td {
-        border-bottom: none;
     }
 
     .step-records-table td:not(:first-of-type):hover {
@@ -152,29 +154,31 @@
                                         <div class="step-card-hover">
                                             <asp:Panel ID="pnlStepRecords" runat="server">
                                                 <asp:LinkButton runat="server" id="lbCardAddStep" OnCommand="AddStep" CommandArgument='<%# Eval("StepType.Id") %>' CssClass="card-add-step-button">
-                                                    <i class="fa fa-plus-circle fa-4x"></i>
+                                                    <i class="fa fa-plus-circle fa-2x"></i>
                                                     <br />
                                                     Add a Step
                                                 </asp:LinkButton>
-                                                <table class="step-records-table">
-                                                    <asp:repeater id="rSteps" runat="server">
-                                                        <itemtemplate>
-                                                            <tr>
-                                                                <td><%# Eval("StatusHtml") %></td>
-                                                                <td>
-                                                                    <asp:LinkButton runat="server" OnCommand="rSteps_Edit" CommandArgument='<%# Eval("StepId") %>'>
-                                                                        <i class="fa fa-pencil"></i>
-                                                                    </asp:LinkButton>
-                                                                </td>
-                                                                <td>
-                                                                    <asp:LinkButton runat="server" OnCommand="rSteps_Delete" CommandArgument='<%# Eval("StepId") %>'>
-                                                                        <i class="fa fa-times"></i>
-                                                                    </asp:LinkButton>
-                                                                </td>
-                                                            </tr>                                                        
-                                                        </itemtemplate>
-                                                    </asp:repeater>
-                                                </table>
+                                                <div class="step-records-table-container">
+                                                    <table class="step-records-table">
+                                                        <asp:repeater id="rSteps" runat="server">
+                                                            <itemtemplate>
+                                                                <tr>
+                                                                    <td><%# Eval("StatusHtml") %></td>
+                                                                    <td>
+                                                                        <asp:LinkButton runat="server" OnCommand="rSteps_Edit" CommandArgument='<%# Eval("StepId") %>'>
+                                                                            <i class="fa fa-pencil"></i>
+                                                                        </asp:LinkButton>
+                                                                    </td>
+                                                                    <td>
+                                                                        <asp:LinkButton runat="server" OnCommand="rSteps_Delete" CommandArgument='<%# Eval("StepId") %>'>
+                                                                            <i class="fa fa-times"></i>
+                                                                        </asp:LinkButton>
+                                                                    </td>
+                                                                </tr>                                                        
+                                                            </itemtemplate>
+                                                        </asp:repeater>
+                                                    </table>
+                                                </div>
                                             </asp:Panel>
                                             <asp:Panel ID="pnlPrereqs" runat="server">
                                                 <p class="prereq-list-info">This step requires the following prerequisite steps:</p>
