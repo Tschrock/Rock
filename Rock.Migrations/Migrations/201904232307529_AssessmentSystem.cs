@@ -222,7 +222,7 @@ namespace Rock.Migrations
 
             #region Request Assessment
 
-            RockMigrationHelper.UpdateWorkflowType(false,true,"Request Assessment","","BBAE05FD-8192-4616-A71E-903A927E0D90","Work","fa fa-list-ol",0,true,0,"31DDC001-C91A-4418-B375-CAB1475F7A62",0); // Request Assessment
+            RockMigrationHelper.UpdateWorkflowType(false,true,"Request Assessment","","BBAE05FD-8192-4616-A71E-903A927E0D90","Work","icon-fw fa fa-bar-chart",0,true,0,"31DDC001-C91A-4418-B375-CAB1475F7A62",0); // Request Assessment
             RockMigrationHelper.UpdateWorkflowTypeAttribute("31DDC001-C91A-4418-B375-CAB1475F7A62","C263513A-30BE-4823-ABF1-AC12A56F9644","Assessments To Take","AssessmentsToTake","",0,@"","69E8513A-D9E4-4C98-B938-48B1B24F9C08", false); // Request Assessment:Assessments To Take
             RockMigrationHelper.UpdateWorkflowTypeAttribute("31DDC001-C91A-4418-B375-CAB1475F7A62","E4EAB7B2-0B76-429B-AFE4-AD86D7428C70","Person","Person","The person who will take the assessments",1,@"","A201EB57-0AD0-4B98-AD44-9D3A7C0F16BA", false); // Request Assessment:Person
             RockMigrationHelper.UpdateWorkflowTypeAttribute("31DDC001-C91A-4418-B375-CAB1475F7A62","E4EAB7B2-0B76-429B-AFE4-AD86D7428C70","Requested By","RequestedBy","The person who requested the assessments.",2,@"","66B8DEC5-1B55-4AD1-8E4B-C719279A1947", false); // Request Assessment:Requested By
@@ -522,13 +522,13 @@ SELECT  CASE
             
             // Attrib for BlockType: Assessment List:Only Show Requested
             RockMigrationHelper.UpdateBlockTypeAttribute("0AD1D108-4ABF-4AED-B3B7-4AAEA16D10E4","1EDAFDED-DFE6-4334-B019-6EECBA89E05A","Only Show Requested","OnlyShowRequested","",@"If enabled, limits the list to show only assessments that have been requested or completed.",0,@"True","7A10C446-B0F3-43F0-9FEB-78B689593736");
-            // Attrib for BlockType: Assessment List:Hide If No Requests
-            RockMigrationHelper.UpdateBlockTypeAttribute("0AD1D108-4ABF-4AED-B3B7-4AAEA16D10E4","1EDAFDED-DFE6-4334-B019-6EECBA89E05A","Hide If No Requests","HideIfNoRequests","",@"If enabled, nothing will be shown where there are no requests (pending or completed).",2,@"False","1E5EE52F-DFD5-4406-A517-4B76E2800D2A");
             // Attrib for BlockType: Assessment List:Hide If No Active Requests
             RockMigrationHelper.UpdateBlockTypeAttribute("0AD1D108-4ABF-4AED-B3B7-4AAEA16D10E4","1EDAFDED-DFE6-4334-B019-6EECBA89E05A","Hide If No Active Requests","HideIfNoActiveRequests","",@"If enabled, nothing will be shown if there are not pending (waiting to be taken) assessment requests.",1,@"False","305AD0A5-6E35-402A-A6A2-50474733368A");
+            // Attrib for BlockType: Assessment List:Hide If No Requests
+            RockMigrationHelper.UpdateBlockTypeAttribute("0AD1D108-4ABF-4AED-B3B7-4AAEA16D10E4","1EDAFDED-DFE6-4334-B019-6EECBA89E05A","Hide If No Requests","HideIfNoRequests","",@"If enabled, nothing will be shown where there are no requests (pending or completed).",2,@"False","1E5EE52F-DFD5-4406-A517-4B76E2800D2A");
 
-            // Attrib for BlockType: Assessment List:Lava Template
-            RockMigrationHelper.UpdateBlockTypeAttribute("0AD1D108-4ABF-4AED-B3B7-4AAEA16D10E4","1D0D3794-C210-48A8-8C68-3FBEC08A6BA5","Lava Template","LavaTemplate","",@"The lava template to use to format the entire block.  <span class='tip tip-lava'></span> <span class='tip tip-html'></span>",0,@"<div class='panel panel-default'>
+            #region Attrib for BlockType: Assessment List:Lava Template
+            RockMigrationHelper.UpdateBlockTypeAttribute("0AD1D108-4ABF-4AED-B3B7-4AAEA16D10E4","1D0D3794-C210-48A8-8C68-3FBEC08A6BA5","Lava Template","LavaTemplate","",@"The lava template to use to format the entire block.  <span class='tip tip-lava'></span> <span class='tip tip-html'></span>",3,@"<div class='panel panel-default'>
     <div class='panel-heading'>Assessments</div>
     <div class='panel-body'>
             {% for assessmenttype in AssessmentTypes %}
@@ -559,84 +559,8 @@ SELECT  CASE
             {% endfor %}
     </div>
 </div>","044D444A-ECDC-4B7A-8987-91577AAB227C");
-
-            // Attrib Value for Block:Assessment List, Attribute:Only Show Requested Page: Assessments, Site: External Website
-            RockMigrationHelper.AddBlockAttributeValue("0E22E6CB-1634-41CA-83EF-4BC7CE52F314","7A10C446-B0F3-43F0-9FEB-78B689593736",@"False");
-            // Attrib Value for Block:Assessment List, Attribute:Hide If No Requests Page: Assessments, Site: External Website
-            RockMigrationHelper.AddBlockAttributeValue("0E22E6CB-1634-41CA-83EF-4BC7CE52F314","1E5EE52F-DFD5-4406-A517-4B76E2800D2A",@"False");
-            // Attrib Value for Block:Assessment List, Attribute:Lava Template Page: Assessments, Site: External Website
-            RockMigrationHelper.AddBlockAttributeValue("0E22E6CB-1634-41CA-83EF-4BC7CE52F314","044D444A-ECDC-4B7A-8987-91577AAB227C",@"<div class='panel panel-default'>
-    <div class='panel-heading'>Assessments</div>
-    <div class='panel-body'>
-            {% for assessmenttype in AssessmentTypes %}
-                {% if assessmenttype.LastRequestObject %}
-                    {% if assessmenttype.LastRequestObject.Status == 'Complete' %}
-                        <div class='panel panel-success'>
-                            <div class='panel-heading'>{{ assessmenttype.Title }}<br />
-                                Completed: {{ assessmenttype.LastRequestObject.CompletedDate | Date:'M/d/yyyy'}} <br />
-                                <a href='{{ assessmenttype.AssessmentResultsPath}}'>View Results</a>
-                            </div>
-                        </div>
-                    {% elseif assessmenttype.LastRequestObject.Status == 'Pending' %}
-                        <div class='panel panel-warning'>
-                            <div class='panel-heading'> {{ assessmenttype.Title }}<br />
-                                Requested: {{assessmenttype.LastRequestObject.Requester}} ({{ assessmenttype.LastRequestObject.RequestedDate | Date:'M/d/yyyy'}})<br />
-                                <a href='{{ assessmenttype.AssessmentPath}}'>Start Assessment</a>
-                            </div>
-                        </div>
-                    {% endif %}
-                    {% else %}
-                        <div class='panel panel-default'>
-                            <div class='panel-heading'> {{ assessmenttype.Title }}<br />
-                                Available<br />
-                                <a href='{{ assessmenttype.AssessmentPath}}'>Start Assessment</a>
-                            </div>
-                        </div>
-                {% endif %}
-            {% endfor %}
-    </div>
-</div>");
-            // Attrib Value for Block:Assessment List, Attribute:Hide If No Active Requests Page: Assessments, Site: External Website
-            RockMigrationHelper.AddBlockAttributeValue("0E22E6CB-1634-41CA-83EF-4BC7CE52F314","305AD0A5-6E35-402A-A6A2-50474733368A",@"False");
-            // Attrib Value for Block:Assessment List, Attribute:Hide If No Active Requests Page: My Account, Site: External Website
-            RockMigrationHelper.AddBlockAttributeValue("37D4A991-9F9A-47CE-9084-04466F166B6A","305AD0A5-6E35-402A-A6A2-50474733368A",@"False");
-            // Attrib Value for Block:Assessment List, Attribute:Hide If No Requests Page: My Account, Site: External Website
-            RockMigrationHelper.AddBlockAttributeValue("37D4A991-9F9A-47CE-9084-04466F166B6A","1E5EE52F-DFD5-4406-A517-4B76E2800D2A",@"False");
-            // Attrib Value for Block:Assessment List, Attribute:Lava Template Page: My Account, Site: External Website
-            RockMigrationHelper.AddBlockAttributeValue("37D4A991-9F9A-47CE-9084-04466F166B6A","044D444A-ECDC-4B7A-8987-91577AAB227C",@"<div class='panel panel-default'>
-    <div class='panel-heading'>Assessments</div>
-    <div class='panel-body'>
-            {% for assessmenttype in AssessmentTypes %}
-                {% if assessmenttype.LastRequestObject %}
-                    {% if assessmenttype.LastRequestObject.Status == 'Complete' %}
-                        <div class='panel panel-success'>
-                            <div class='panel-heading'>{{ assessmenttype.Title }}<br />
-                                Completed: {{ assessmenttype.LastRequestObject.CompletedDate | Date:'M/d/yyyy'}} <br />
-                                <a href='{{ assessmenttype.AssessmentResultsPath}}'>View Results</a>
-                            </div>
-                        </div>
-                    {% elseif assessmenttype.LastRequestObject.Status == 'Pending' %}
-                        <div class='panel panel-warning'>
-                            <div class='panel-heading'> {{ assessmenttype.Title }}<br />
-                                Requested: {{assessmenttype.LastRequestObject.Requester}} ({{ assessmenttype.LastRequestObject.RequestedDate | Date:'M/d/yyyy'}})<br />
-                                <a href='{{ assessmenttype.AssessmentPath}}'>Start Assessment</a>
-                            </div>
-                        </div>
-                    {% endif %}
-                    {% else %}
-                        <div class='panel panel-default'>
-                            <div class='panel-heading'> {{ assessmenttype.Title }}<br />
-                                Available<br />
-                                <a href='{{ assessmenttype.AssessmentPath}}'>Start Assessment</a>
-                            </div>
-                        </div>
-                {% endif %}
-            {% endfor %}
-    </div>
-</div>");
-            // Attrib Value for Block:Assessment List, Attribute:Only Show Requested Page: My Account, Site: External Website
-            RockMigrationHelper.AddBlockAttributeValue("37D4A991-9F9A-47CE-9084-04466F166B6A","7A10C446-B0F3-43F0-9FEB-78B689593736",@"False");
-
+            #endregion Attrib for BlockType: Assessment List:Lava Template
+            
             // update block order for pages with new blocks if the page,zone has multiple blocks
             Sql(@"UPDATE [Block] SET [Order] = 0 WHERE [Guid] = '87068AAB-16A7-42CC-8A31-5A957D6C4DD5'");  // Page: My Account,  Zone: Sidebar1,  Block: Actions
             Sql(@"UPDATE [Block] SET [Order] = 1 WHERE [Guid] = '8C513CAC-FB3F-40A2-A0F6-D4C50FF72EC8'");  // Page: My Account,  Zone: Sidebar1,  Block: Group List Personalized Lava
