@@ -223,7 +223,7 @@ namespace Rock.Migrations
             #region Request Assessment
 
             RockMigrationHelper.UpdateWorkflowType(false,true,"Request Assessment","","BBAE05FD-8192-4616-A71E-903A927E0D90","Work","fa fa-list-ol",0,true,0,"31DDC001-C91A-4418-B375-CAB1475F7A62",0); // Request Assessment
-            RockMigrationHelper.UpdateWorkflowTypeAttribute("31DDC001-C91A-4418-B375-CAB1475F7A62","C263513A-30BE-4823-ABF1-AC12A56F9644","Assessments To Take","AssessmentsToTake","The assessments to take.",0,@"","69E8513A-D9E4-4C98-B938-48B1B24F9C08", false); // Request Assessment:Assessments To Take
+            RockMigrationHelper.UpdateWorkflowTypeAttribute("31DDC001-C91A-4418-B375-CAB1475F7A62","C263513A-30BE-4823-ABF1-AC12A56F9644","Assessments To Take","AssessmentsToTake","",0,@"","69E8513A-D9E4-4C98-B938-48B1B24F9C08", false); // Request Assessment:Assessments To Take
             RockMigrationHelper.UpdateWorkflowTypeAttribute("31DDC001-C91A-4418-B375-CAB1475F7A62","E4EAB7B2-0B76-429B-AFE4-AD86D7428C70","Person","Person","The person who will take the assessments",1,@"","A201EB57-0AD0-4B98-AD44-9D3A7C0F16BA", false); // Request Assessment:Person
             RockMigrationHelper.UpdateWorkflowTypeAttribute("31DDC001-C91A-4418-B375-CAB1475F7A62","E4EAB7B2-0B76-429B-AFE4-AD86D7428C70","Requested By","RequestedBy","The person who requested the assessments.",2,@"","66B8DEC5-1B55-4AD1-8E4B-C719279A1947", false); // Request Assessment:Requested By
             RockMigrationHelper.UpdateWorkflowTypeAttribute("31DDC001-C91A-4418-B375-CAB1475F7A62","6B6AA175-4758-453F-8D83-FCD8044B5F36","Due Date","DueDate","When all the selected assessments should be completed.",3,@"","7FB54D8C-B6FC-4864-9F14-EEC155CF6D4C", false); // Request Assessment:Due Date
