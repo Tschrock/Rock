@@ -141,9 +141,11 @@ namespace Rock.Migrations
         {
             RockMigrationHelper.AddPage( true, "FCF44690-D74C-4FB7-A01B-0EFCA6EA9E1E", "5FEAF34C-7FB6-4A11-8A1E-C452EC7849BD", "Motivators Assessment", "", "0E6AECD6-675F-4908-9FA3-C7E46040527C", "" ); // Site:External Website
             RockMigrationHelper.UpdateBlockType( "Motivators Assessment", "Allows you to take a Motivators Assessment test and saves your results.", "~/Blocks/Crm/Motivators.ascx", "CRM", "18CF8DA8-5DE0-49EC-A279-D5507CFA5713" );
+            
             // Add Block to Page: Motivator Assessment Site: External Website
             RockMigrationHelper.AddBlock( true, "0E6AECD6-675F-4908-9FA3-C7E46040527C".AsGuid(), null, "F3F82256-2D66-432B-9D67-3552CD2F4C2B".AsGuid(), "18CF8DA8-5DE0-49EC-A279-D5507CFA5713".AsGuid(), "Motivators Assessment", "Main", @"", @"", 0, "92C58130-9CE7-44E0-8F22-DF358A0F69C2" );
-            // Attrib for BlockType: Motivators Assessment:Instructions
+
+            #region Attrib for BlockType: Motivators Assessment:Instructions
             RockMigrationHelper.UpdateBlockTypeAttribute( "18CF8DA8-5DE0-49EC-A279-D5507CFA5713", "1D0D3794-C210-48A8-8C68-3FBEC08A6BA5", "Instructions", "Instructions", "", @"The text (HTML) to display at the top of the instructions section.  <span class='tip tip-lava'></span> <span class='tip tip-html'></span>", 0, @"<h2>Welcome to the Motivators Assessment</h2>
 <p>
     {{ Person.NickName }}, this assessment was developed and researched by Dr. Gregory A. Wiens and is intended to help identify the things that you value. These motivators influence your personal, professional, social and every other part of your life because they influence what you view as important and what should or should not be paid attention to. They impact the way you lead or even if you lead. They directly sway how you view your current situation.
@@ -154,10 +156,9 @@ namespace Rock.Migrations
 <p>
     Before you begin, please take a moment and pray that the Holy Spirit would guide your thoughts, calm your mind, and help you respond to each item as honestly as you can. Don't spend much time on each item. Your first instinct is probably your best response.
 </p>" , "973511D4-7C77-42E0-8FDC-23AE5DF61177" );
-            // Attrib for BlockType: Motivators Assessment:Min Days To Retake
-            RockMigrationHelper.UpdateBlockTypeAttribute( "18CF8DA8-5DE0-49EC-A279-D5507CFA5713", "A75DFC58-7A1B-4799-BF31-451B2BBE38FF", "Min Days To Retake", "MinDaysToRetake", "", @"The number of days that must pass before the test can be taken again. Leave blank to use the Assessment Type's minimum.", 4, @"", "6DE443ED-658F-422A-8B83-6B8FA4511DED" );
-            // Attrib for BlockType: Motivators Assessment:Results Message
-            RockMigrationHelper.UpdateBlockTypeAttribute( "18CF8DA8-5DE0-49EC-A279-D5507CFA5713", "1D0D3794-C210-48A8-8C68-3FBEC08A6BA5", "Results Message", "ResultsMessage", "", @"The text (HTML) to display at the top of the results section.<span class='tip tip-lava'></span><span class='tip tip-html'></span>", 0, @"<p>
+            #endregion Attrib for BlockType: Motivators Assessment:Instructions
+            #region Attrib for BlockType: Motivators Assessment:Results Message
+            RockMigrationHelper.UpdateBlockTypeAttribute( "18CF8DA8-5DE0-49EC-A279-D5507CFA5713", "1D0D3794-C210-48A8-8C68-3FBEC08A6BA5", "Results Message", "ResultsMessage", "", @"The text (HTML) to display at the top of the results section.<span class='tip tip-lava'></span><span class='tip tip-html'></span>", 1, @"<p>
    This assessment identifies 22 different motivators (scales) which illustrate different things to which we all assign importance. These motivators listed in descending order on the report from the highest to the lowest. No one motivator is better than another. They are all critical and essential for the health of an organization. There are over 1,124,000,727,777,607,680,000 different combinations of these 22 motivators so we would hope you realize that your exceptional combination is clearly unique. We believe it is as important for you to know the motivators which are at the top as well as the ones at the bottom of your list. This is because you would best be advised to seek roles and responsibilities where your top motivators are needed. On the other hand, it would be advisable to <i>avoid roles or responsibilities where your bottom motivators would be required</i>. 
 </p>
 
@@ -218,90 +219,15 @@ This graph is based on the average composite score for each cluster of Motivator
 <p>
     Your motivators will no doubt shift and morph throughout your life.For instance, #4 may drop to #7 and vice versa.  However, it is very doubtful that #22 would ever become #1. For that reason, read through all of the motivators and appreciate the ones that you have. Seek input from those who know you to see if they agree or disagree with these results.
 </p>", "BA51DFCD-B174-463F-AE3F-6EEE73DD9338" );
-            // Attrib for BlockType: Motivators Assessment:Set Page Icon
-            RockMigrationHelper.UpdateBlockTypeAttribute( "18CF8DA8-5DE0-49EC-A279-D5507CFA5713", "9C204CD0-1233-41C5-818A-C5DA439445AA", "Set Page Icon", "SetPageIcon", "", @"The css class name to use for the heading icon.", 1, @"", "7471495D-4C68-45EA-874D-6778608E81B2" );
-            // Attrib for BlockType: Motivators Assessment:Allow Retakes
-            RockMigrationHelper.UpdateBlockTypeAttribute( "18CF8DA8-5DE0-49EC-A279-D5507CFA5713", "1EDAFDED-DFE6-4334-B019-6EECBA89E05A", "Allow Retakes", "AllowRetakes", "", @"If enabled, the person can retake the test after the minimum days passes.", 3, @"True", "3A07B385-A3C1-4C0B-80F9-F50432503C0A" );
+            #endregion Attrib for BlockType: Motivators Assessment:Results Message
             // Attrib for BlockType: Motivators Assessment:Set Page Title
-            RockMigrationHelper.UpdateBlockTypeAttribute( "18CF8DA8-5DE0-49EC-A279-D5507CFA5713", "9C204CD0-1233-41C5-818A-C5DA439445AA", "Set Page Title", "SetPageTitle", "", @"The text to display as the heading.", 0, @"EQ Inventory Assessment", "4CE9D93E-2002-425A-A8FD-679CCEE991D7" );
+            RockMigrationHelper.UpdateBlockTypeAttribute( "18CF8DA8-5DE0-49EC-A279-D5507CFA5713", "9C204CD0-1233-41C5-818A-C5DA439445AA", "Set Page Title", "SetPageTitle", "", @"The text to display as the heading.", 2, @"EQ Inventory Assessment", "4CE9D93E-2002-425A-A8FD-679CCEE991D7" );
+            // Attrib for BlockType: Motivators Assessment:Set Page Icon
+            RockMigrationHelper.UpdateBlockTypeAttribute( "18CF8DA8-5DE0-49EC-A279-D5507CFA5713", "9C204CD0-1233-41C5-818A-C5DA439445AA", "Set Page Icon", "SetPageIcon", "", @"The css class name to use for the heading icon.", 3, @"", "7471495D-4C68-45EA-874D-6778608E81B2" );
             // Attrib for BlockType: Motivators Assessment:Number of Questions
-            RockMigrationHelper.UpdateBlockTypeAttribute( "18CF8DA8-5DE0-49EC-A279-D5507CFA5713", "A75DFC58-7A1B-4799-BF31-451B2BBE38FF", "Number of Questions", "NumberofQuestions", "", @"The number of questions to show per page while taking the test", 2, @"7", "02489F19-384F-45BE-BBC4-D2ECC63D0992" );
-            
-            // Attrib Value for Block:Motivators Assessment, Attribute:Instructions Page: Motivator Assessment, Site: External Website
-            RockMigrationHelper.AddBlockAttributeValue( "92C58130-9CE7-44E0-8F22-DF358A0F69C2", "973511D4-7C77-42E0-8FDC-23AE5DF61177", @"<h2>Welcome to the Motivators Assessment</h2>
-<p>
-    {{ Person.NickName }}, this assessment was developed and researched by Dr. Gregory A. Wiens and is intended to help identify the things that you value. These motivators influence your personal, professional, social and every other part of your life because they influence what you view as important and what should or should not be paid attention to. They impact the way you lead or even if you lead. They directly sway how you view your current situation.
-</p>
-<p>
-   We all have internal mechanisms that cause us to view life very differently from others. Some of this could be attributed to our personality. However, a great deal of research has been done to identify different values, motivators or internal drivers which cause each of us to have a different perspective on people, places, and events. These values cause you to construe one situation very differently from another who value things differently.
-</p>
-<p>
-    Before you begin, please take a moment and pray that the Holy Spirit would guide your thoughts, calm your mind, and help you respond to each item as honestly as you can. Don't spend much time on each item. Your first instinct is probably your best response.
-</p" );
-            
-            // Attrib Value for Block:Motivators Assessment, Attribute:Results Message Page: Motivator Assessment, Site: External Website
-            RockMigrationHelper.AddBlockAttributeValue( "92C58130-9CE7-44E0-8F22-DF358A0F69C2", "BA51DFCD-B174-463F-AE3F-6EEE73DD9338", @"<p>
-   This assessment identifies 22 different motivators (scales) which illustrate different things to which we all assign importance. These motivators listed in descending order on the report from the highest to the lowest. No one motivator is better than another. They are all critical and essential for the health of an organization. There are over 1,124,000,727,777,607,680,000 different combinations of these 22 motivators so we would hope you realize that your exceptional combination is clearly unique. We believe it is as important for you to know the motivators which are at the top as well as the ones at the bottom of your list. This is because you would best be advised to seek roles and responsibilities where your top motivators are needed. On the other hand, it would be advisable to <i>avoid roles or responsibilities where your bottom motivators would be required</i>. 
-</p>
-
-<h2>Influential, Organizational, Intellectual, and Operational</h2>
-<p>
-Each of the 22 motivators are grouped into one of four clusters: Influential, Organizational, Intellectual, and Operational. The clusters, graphed below, include the motivators that fall within each grouping.
-</p>
-<!--  Cluster Chart -->
-    <div class=""panel panel-default"">
-      <div class=""panel-heading"">
-        <h2 class=""panel-title""><b>Composite Score</b></h2>
-      </div>
-      <div class=""panel-body"">
-    {[chart type:'horizontalBar' chartheight:'1200' chartwidth:'75' ]}
-    {% for motivatorClusterScore in MotivatorClusterScores %}
-        [[dataitem label:'{{ motivatorClusterScore.DefinedValue.Value }}' value:'{{ motivatorClusterScore.Value }}' fillcolor:'{{ motivatorClusterScore.DefinedValue | Attribute:'Color' }}' ]] 
-        [[enddataitem]]
-    {% endfor %}
-    {[endchart]}
-    
-        Source: https://healthygrowingleaders.com
-      </div>
-    </div>
-<p>
-This graph is based on the average composite score for each cluster of Motivators.
-</p>
-{% for motivatorClusterScore in MotivatorClusterScores %}
-<p>
-<b>{{ motivatorClusterScore.DefinedValue.Value }}</b>
-</br>
-{{ motivatorClusterScore.DefinedValue.Description }}
-</br>
-{{ motivatorClusterScore.DefinedValue | Attribute:'Summary' }}
-</p>
-
- {% endfor %}
-<p>
-   The following graph shows your motivators ranked from top to bottom.
-</p>
-
-  {[chart type:'horizontalBar' chartheight:'500' chartwidth:'75' ]}
-    {% for motivatorScore in MotivatorScores %}
-    {% assign cluster = motivatorScore.DefinedValue | Attribute:'Cluster' %}
-        {% if cluster and cluster != empty %}
-            [[dataitem label:'{{ motivatorScore.DefinedValue.Value }}' value:'{{ motivatorScore.Value }}' fillcolor:'{{ motivatorScore.DefinedValue | Attribute:'Color' }}' ]] 
-            [[enddataitem]]
-        {% endif %}
-    {% endfor %}
-    {[endchart]}
-<p>
-    Your motivators will no doubt shift and morph throughout your life.For instance, #4 may drop to #7 and vice versa.  However, it is very doubtful that #22 would ever become #1. For that reason, read through all of the motivators and appreciate the ones that you have. Seek input from those who know you to see if they agree or disagree with these results.
-</p>" );
-            
-            // Attrib Value for Block:Motivators Assessment, Attribute:Set Page Icon Page: Motivator Assessment, Site: External Website
-            RockMigrationHelper.AddBlockAttributeValue( "92C58130-9CE7-44E0-8F22-DF358A0F69C2", "7471495D-4C68-45EA-874D-6778608E81B2", @"" );
-            // Attrib Value for Block:Motivators Assessment, Attribute:Allow Retakes Page: Motivator Assessment, Site: External Website
-            RockMigrationHelper.AddBlockAttributeValue( "92C58130-9CE7-44E0-8F22-DF358A0F69C2", "3A07B385-A3C1-4C0B-80F9-F50432503C0A", @"True" );
-            // Attrib Value for Block:Motivators Assessment, Attribute:Set Page Title Page: Motivator Assessment, Site: External Website
-            RockMigrationHelper.AddBlockAttributeValue( "92C58130-9CE7-44E0-8F22-DF358A0F69C2", "4CE9D93E-2002-425A-A8FD-679CCEE991D7", @"Motivators Assessment" );
-            // Attrib Value for Block:Motivators Assessment, Attribute:Number of Questions Page: Motivator Assessment, Site: External Website
-            RockMigrationHelper.AddBlockAttributeValue( "92C58130-9CE7-44E0-8F22-DF358A0F69C2", "02489F19-384F-45BE-BBC4-D2ECC63D0992", @"17" );
+            RockMigrationHelper.UpdateBlockTypeAttribute( "18CF8DA8-5DE0-49EC-A279-D5507CFA5713", "A75DFC58-7A1B-4799-BF31-451B2BBE38FF", "Number of Questions", "NumberofQuestions", "", @"The number of questions to show per page while taking the test", 4, @"7", "02489F19-384F-45BE-BBC4-D2ECC63D0992" );
+            // Attrib for BlockType: Motivators Assessment:Allow Retakes
+            RockMigrationHelper.UpdateBlockTypeAttribute( "18CF8DA8-5DE0-49EC-A279-D5507CFA5713", "1EDAFDED-DFE6-4334-B019-6EECBA89E05A", "Allow Retakes", "AllowRetakes", "", @"If enabled, the person can retake the test after the minimum days passes.", 5, @"True", "3A07B385-A3C1-4C0B-80F9-F50432503C0A" );
 
             RockMigrationHelper.AddPageRoute("0E6AECD6-675F-4908-9FA3-C7E46040527C","Motivators","7D00FD4E-9E6C-42B1-BB25-7F417DF25CA4");// for Page:Motivators Assessment
             RockMigrationHelper.AddPageRoute("0E6AECD6-675F-4908-9FA3-C7E46040527C","Motivators/{rckipid}","9299B437-38C6-421F-B705-B0F2BCEC2CD0");// for Page:Motivators Assessment

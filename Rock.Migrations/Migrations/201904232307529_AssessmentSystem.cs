@@ -383,6 +383,8 @@ SELECT  CASE
         /// </summary>
         private void UpdateSpirtualGiftsResultsMessageBlockAttribute()
         {
+            RockMigrationHelper.DeleteBlockAttribute( "44272FB2-27DC-452D-8BBB-2F76266FA92E" );// Remove Spiritual Gifts "Min Days To Retake" block attribute.
+            
             RockMigrationHelper.UpdateBlockTypeAttribute( "A7E86792-F0ED-46F2-988D-25EBFCD1DC96", "1D0D3794-C210-48A8-8C68-3FBEC08A6BA5", "Results Message", "ResultsMessage", "", @"The text (HTML) to display at the top of the results section.<span class='tip tip-lava'></span><span class='tip tip-html'></span>", 0, @"
 <div class='row'>
     <div class='col-md-12'>
@@ -904,6 +906,8 @@ SELECT  CASE
         /// </summary>
         private void PagesBlocksAndAttributesUp()
         {
+            RockMigrationHelper.DeleteBlockAttribute( "3162c5cd-1244-4cb9-9099-bc484ce090d3" );// Remove DISC test "Min Days To Retake" block attribute.
+
             RockMigrationHelper.AddLayout( "F3F82256-2D66-432B-9D67-3552CD2F4C2B", "FullWidthNarrow", "Full Width Narrow", "", "BE15B7BC-6D64-4880-991D-FDE962F91196" ); // Site:External Website
 
             AssessmentListPageBlockAttributes();

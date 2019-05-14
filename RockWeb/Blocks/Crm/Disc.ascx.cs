@@ -37,7 +37,6 @@ namespace Rockweb.Blocks.Crm
     [DisplayName( "DISC" )]
     [Category( "CRM" )]
     [Description( "Allows you to take a DISC test and saves your DISC score." )]
-    [IntegerField( "Min Days To Retake", "The number of days that must pass before the test can be taken again. Leave blank to use the Assessment Type's minimum.", false )]
     [CodeEditorField( "Instructions", "The text (HTML) to display at the top of the instructions section.  <span class='tip tip-lava'></span> <span class='tip tip-html'></span>", CodeEditorMode.Html, CodeEditorTheme.Rock, 400, true, @"
             <h2>Welcome!</h2>
             <p>
@@ -64,9 +63,9 @@ namespace Rockweb.Blocks.Crm
             <p>
                 When you are ready, click the 'Start' button to proceed.
             </p>
-" )]
-    [BooleanField( "Always Allow Retakes", "Determines if the retake button should be shown.", false, order: 5 )]
-    [IntegerField( "Number of Questions", "The number of questions to show per page while taking the test", true, 1, order: 6 )]
+", order: 0 )]
+    [BooleanField( "Always Allow Retakes", "Determines if the retake button should be shown.", false, order: 1 )]
+    [IntegerField( "Number of Questions", "The number of questions to show per page while taking the test", true, 1, order: 2 )]
     public partial class Disc : Rock.Web.UI.RockBlock
     {
         #region Fields

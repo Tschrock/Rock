@@ -37,12 +37,16 @@ namespace Rockweb.Blocks.Crm
     [Category( "CRM" )]
     [Description( "Allows you to take a spiritual gifts test and saves your spiritual gifts score." )]
 
-    [TextField( "Set Page Title", "The text to display as the heading.", false, "Spiritual Gifts Assessment", order: 0 )]
-    [TextField( "Set Page Icon", "The css class name to use for the heading icon.", false, "fa fa-gift", order: 1 )]
-    [IntegerField( "Number of Questions", "The number of questions to show per page while taking the test", true, 17, order: 2 )]
-    [BooleanField( "Allow Retakes", "If enabled, the person can retake the test after the minimum days passes.", true, order: 3 )]
-    [IntegerField( "Min Days To Retake", "The number of days that must pass before the test can be taken again. Leave blank to use the Assessment Type's minimum.", false, order: 4 )]
-    [CodeEditorField( "Instructions", "The text (HTML) to display at the top of the instructions section.  <span class='tip tip-lava'></span> <span class='tip tip-html'></span>", CodeEditorMode.Html, CodeEditorTheme.Rock, 400, true, @"
+    [CodeEditorField( "Instructions", "The text (HTML) to display at the top of the instructions section.  <span class='tip tip-lava'></span> <span class='tip tip-html'></span>", CodeEditorMode.Html, CodeEditorTheme.Rock, 400, true, InstructionsDefaultValue, order: 0 )]
+    [CodeEditorField( "Results Message", "The text (HTML) to display at the top of the results section.<span class='tip tip-lava'></span><span class='tip tip-html'></span>", CodeEditorMode.Html, CodeEditorTheme.Rock, 400, true, ResultsMessageDefaultValue, order: 1 )]
+    [TextField( "Set Page Title", "The text to display as the heading.", false, "Spiritual Gifts Assessment", order: 2 )]
+    [TextField( "Set Page Icon", "The css class name to use for the heading icon.", false, "fa fa-gift", order: 3 )]
+    [IntegerField( "Number of Questions", "The number of questions to show per page while taking the test", true, 17, order: 4 )]
+    [BooleanField( "Allow Retakes", "If enabled, the person can retake the test after the minimum days passes.", true, order: 5 )]
+    public partial class GiftsAssessment : Rock.Web.UI.RockBlock
+    {
+        #region AttributeDefaultValues
+        private const string InstructionsDefaultValue = @"
 <h2>Welcome to Your Spiritual Gifts Assessment</h2>
 <p>
     {{ Person.NickName }}, the purpose of this assessment is to help you identify spiritual gifts that are most naturally
@@ -66,8 +70,8 @@ namespace Rockweb.Blocks.Crm
     Before you begin, please take a moment and pray that the Holy Spirit would guide your thoughts,
     calm your mind, and help you respond to each item as honestly as you can. Don't spend much time
     on each item. Your first instinct is probably your best response.
-</p>" )]
-    [CodeEditorField( "Results Message", "The text (HTML) to display at the top of the results section.<span class='tip tip-lava'></span><span class='tip tip-html'></span>", CodeEditorMode.Html, CodeEditorTheme.Rock, 400, true, @"
+</p>";
+        private const string ResultsMessageDefaultValue = @"
 <div class='row'>
     <div class='col-md-12'>
     <h2 class='h2'> Dominant Gifts</h2>
@@ -185,10 +189,10 @@ namespace Rockweb.Blocks.Crm
            </tbody>
         </table>
     </div>
-</div>
-" )]
-    public partial class GiftsAssessment : Rock.Web.UI.RockBlock
-    {
+</div>";
+
+        #endregion AttributeDefaultValues
+
         #region Fields
 
         //block attribute keys
@@ -198,8 +202,7 @@ namespace Rockweb.Blocks.Crm
         private const string SET_PAGE_ICON = "SetPageIcon";
         private const string RESULTS_MESSAGE = "ResultsMessage";
         private const string ALLOW_RETAKES = "AllowRetakes";
-        private const string MIN_DAYS_TO_RETAKE = "MinDaysToRetake";
-
+        
         // View State Keys
         private const string ASSESSMENT_STATE = "AssessmentState";
 
@@ -533,11 +536,7 @@ namespace Rockweb.Blocks.Crm
             pnlResult.Visible = true;
 
             var allowRetakes = GetAttributeValue( ALLOW_RETAKES ).AsBoolean();
-            var minDays = GetAttributeValue( MIN_DAYS_TO_RETAKE ).AsInteger();
-            if ( minDays == 0 )
-            {
-                minDays = assessment.AssessmentType.MinimumDaysToRetake;
-            }
+            var minDays = assessment.AssessmentType.MinimumDaysToRetake;
 
             if ( !_isQuerystringPersonKey && allowRetakes && assessment.CompletedDateTime.HasValue && assessment.CompletedDateTime.Value.AddDays( minDays ) <= RockDateTime.Now )
             {
