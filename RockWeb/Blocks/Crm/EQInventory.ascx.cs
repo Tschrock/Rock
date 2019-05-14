@@ -77,7 +77,7 @@ namespace Rockweb.Blocks.Crm
 
 <h1 class='text-center'>EQ Inventory Assessment Results</h1>
 
-<h2 id='eq-SelfAwareness'>Self Awareness</h2>
+<h3 id='eq-SelfAwareness'>Self Awareness</h3>
 <p>
     Self Awareness is being aware of what emotions you are experiencing and why you
     are experiencing these emotions. This skill is demonstrated in real time. In other
@@ -104,7 +104,7 @@ namespace Rockweb.Blocks.Crm
     of those who completed this instrument.
 </blockquote>
 
-<h2 id='eq-selfregulating'>Self Regulating</h2>
+<h3 id='eq-selfregulating'>Self Regulating</h3>
 <p>
     Self Regulating is appropriately expressing your emotions in the context of relationships
     around you. Don’t confuse this with learning to suppress your emotions; rather, think of Self
@@ -126,7 +126,7 @@ namespace Rockweb.Blocks.Crm
 </blockquote>
 
 
-<h2 id='eq-othersawareness'>Others Awareness</h2>
+<h3 id='eq-othersawareness'>Others Awareness</h3>
 <p>
     Others Awareness is being aware of what emotions others are experiencing around you and
     why they are experiencing these emotions. As with understanding your own emotions, this
@@ -148,7 +148,7 @@ namespace Rockweb.Blocks.Crm
 </blockquote>
 
 
-<h2 id='eq-othersregulating'>Others Regulating</h2>
+<h3 id='eq-othersregulating'>Others Regulating</h3>
 <p>
     Others Regulating is helping those around you express their emotions appropriately
     in the context of your relationship with them. This skill centers on helping others
@@ -169,7 +169,7 @@ namespace Rockweb.Blocks.Crm
 </blockquote>
 
 
-<h2 id='eq-additionalscales'>Additional Scales</h2>
+<h3 id='eq-additionalscales'>Additional Scales</h3>
 <p>
     The EQ*i includes two additional scales which are particularly useful for those in
     leadership roles: 1) EQ in Problem Solving and 2) EQ under stress. Frequently we
