@@ -110,6 +110,7 @@ namespace Rock.Model
 
         /// <summary>
         /// Gets or sets the number for valid duration of the <see cref="Rock.Model.AssessmentType"/>.
+        /// How long is this assessment valid before it must be taken again.
         /// </summary>
         /// <value>
         /// A <see cref="System.int"/> for the valid duration of the <see cref="Rock.Model.AssessmentType"/>..
