@@ -241,6 +241,8 @@ This graph is based on the average composite score for each cluster of Motivator
                     nbError.Text = "There is an issue locating the person associated with the request.";
                 }
             }
+
+            this.BlockUpdated += Block_BlockUpdated;
         }
 
         /// <summary>
@@ -313,6 +315,20 @@ This graph is based on the average composite score for each cluster of Motivator
             ViewState[ASSESSMENT_STATE] = AssessmentResponses;
 
             return base.SaveViewState();
+        }
+
+        /// <summary>
+        /// Handles the BlockUpdated event of the Block control.
+        /// We need to reload the page for the charts to appear.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The <see cref="EventArgs"/> instance containing the event data.</param>
+        protected void Block_BlockUpdated( object sender, EventArgs e )
+        {
+            if ( pnlResult.Visible == true )
+            {
+                this.NavigateToCurrentPageReference();
+            }
         }
 
         #endregion
