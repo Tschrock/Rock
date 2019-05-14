@@ -95,8 +95,8 @@ namespace Rock.Migrations
                 .Index( t => t.ModifiedByPersonAliasId )
                 .Index( t => t.Guid, unique: true );
 
-            AddAssessmentType( "DISC Test", "/DISC", SystemGuid.AssessmentType.DISC );
-            AddAssessmentType( "Spiritual Gifts Assessment", "/GiftsAssessment", SystemGuid.AssessmentType.GIFTS );
+            AddAssessmentType( "DISC", "/DISC", SystemGuid.AssessmentType.DISC );
+            AddAssessmentType( "Spiritual Gifts", "/GiftsAssessment", SystemGuid.AssessmentType.GIFTS );
             AddAssessmentType( "Conflict Profile", "/ConflictProfile", SystemGuid.AssessmentType.CONFLICT );
             AddAssessmentType( "Emotional Intelligence", "/EmotionalIntelligence", SystemGuid.AssessmentType.EQ );
             AddAssessmentType( "Motivators", "/Motivators", SystemGuid.AssessmentType.MOTIVATORS );
