@@ -20,8 +20,12 @@ using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Text.RegularExpressions;
+using System.Web.UI;
+
+using Newtonsoft.Json;
 
 using Rock.CheckIn;
+using Rock.Data;
 
 namespace Rock.Utility
 {
@@ -126,6 +130,152 @@ namespace Rock.Utility
             return message;
         }
         #endregion
+
+        /// <summary>
+        /// Handles printing labels for the given parameters using the
+        /// label data stored on the AttendanceData model.
+        /// </summary>
+        /// <param name="fileGuids">The file guids of the label types to print.</param>
+        /// <param name="personId">The person whose labels to print.</param>
+        /// <param name="selectedAttendanceIds">The attendance Ids that have the labels to be reprinted.</param>
+        /// <param name="control">The control to register/inject the client side printing into.</param>
+        /// <param name="printerAddress">The IP Address of a printer to send the print job to, overriding what is in the label.</param>
+        /// <returns></returns>
+        public static List<string> ReprintZebraLabels( List<Guid> fileGuids, int personId, List<int> selectedAttendanceIds, Control control, string printerAddress = null )
+        {
+            // Fetch the actual labels and print them
+            var rockContext = new RockContext();
+            var attendanceService = new Rock.Model.AttendanceService( rockContext );
+
+            // Get the selected attendance records
+            var attendanceRecords = attendanceService.GetByIds( selectedAttendanceIds );
+
+            var printFromClient = new List<CheckInLabel>();
+            var printFromServer = new List<CheckInLabel>();
+
+            // Now grab only the selected label types (matching fileGuids) from those record's AttendanceData
+            // for the selected  person
+            foreach ( var attendance in attendanceRecords )
+            {
+                var attendanceData = attendance.AttendanceData;
+                var json = attendanceData.LabelData.Trim();
+
+                // skip if the return type is not an array
+                if ( json.Substring( 0, 1 ) != "[" )
+                {
+                    continue;
+                }
+
+                // De-serialize the JSON into a list of objects
+                var checkinLabels = JsonConvert.DeserializeObject<List<CheckInLabel>>( json );
+
+                // skip if no labels were found
+                if ( checkinLabels == null )
+                {
+                    continue;
+                }
+
+                // Take only the labels that match the selected person and label types (file guids).
+                checkinLabels = checkinLabels.Where( l => l.PersonId == personId && fileGuids.Contains( l.FileGuid ) ).ToList();
+
+                // Override the printer by printing to the given printerAddress?
+                if ( !string.IsNullOrEmpty( printerAddress ) )
+                {
+                    checkinLabels.ToList().ForEach( l => l.PrinterAddress = printerAddress );
+                    printFromServer.AddRange( checkinLabels );
+                }
+                else
+                {
+                    printFromClient.AddRange( checkinLabels.Where( l => l.PrintFrom == Rock.Model.PrintFrom.Client ) );
+                    printFromServer.AddRange( checkinLabels.Where( l => l.PrintFrom == Rock.Model.PrintFrom.Server ) );
+                }
+            }
+
+            // Print client labels
+            if ( printFromClient.Any() )
+            {
+                printFromClient
+                    .OrderBy( l => l.PersonId )
+                    .ThenBy( l => l.Order )
+                    .ToList();
+
+                AddLabelScript( printFromClient.ToJson(), control );
+            }
+
+            var messages = new List<string>();
+
+            // Print server labels
+            if ( printFromServer.Any() )
+            {
+                messages = ZebraPrint.PrintLabels( printFromServer );
+            }
+
+            // No messages is "good news".
+            if ( messages.Count == 0 )
+            {
+                messages.Add( "The labels have been printed." );
+            }
+
+            return messages;
+        }
+
+        /// <summary>
+        /// Adds the label script, registering it to the given control.
+        /// </summary>
+        /// <param name="jsonObject">The json object.</param>
+        public static void AddLabelScript( string jsonObject, Control control )
+        {
+            string script = string.Format( @"
+
+        // setup deviceready event to wait for cordova
+	    if (navigator.userAgent.match(/(iPhone|iPod|iPad)/)) {{
+            document.addEventListener('deviceready', onDeviceReady, false);
+        }} else {{
+            $( document ).ready(function() {{
+                onDeviceReady();
+            }});
+        }}
+
+	    // label data
+        var labelData = {0};
+
+		function onDeviceReady() {{
+            try {{			
+                printLabels();
+            }} 
+            catch (err) {{
+                console.log('An error occurred printing labels: ' + err);
+            }}
+		}}
+		
+		function alertDismissed() {{
+		    // do something
+		}}
+		
+		function printLabels() {{
+		    ZebraPrintPlugin.printTags(
+            	JSON.stringify(labelData), 
+            	function(result) {{ 
+			        console.log('Tag printed');
+			    }},
+			    function(error) {{   
+				    // error is an array where:
+				    // error[0] is the error message
+				    // error[1] determines if a re-print is possible (in the case where the JSON is good, but the printer was not connected)
+			        console.log('An error occurred: ' + error[0]);
+                    navigator.notification.alert(
+                        'An error occurred while printing the labels.' + error[0],  // message
+                        alertDismissed,         // callback
+                        'Error',            // title
+                        'Ok'                  // buttonName
+                    );
+			    }}
+            );
+	    }}
+", jsonObject );
+            ScriptManager.RegisterStartupScript( control, control.GetType(), "addLabelScript", script, true );
+        }
+
 
         #region Private Methods
         /// <summary>

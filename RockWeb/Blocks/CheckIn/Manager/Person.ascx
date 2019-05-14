@@ -93,12 +93,16 @@
             </ul>
         </Rock:RockControlWrapper>
 
+        <!-- Reprint label functionality -->
+        <Rock:NotificationBox ID="nbReprintMessage" runat="server" Visible="false"></Rock:NotificationBox>
+        <asp:HiddenField ID="hfCurrentAttendanceIds" runat="server" />
+        <asp:HiddenField ID="hfPersonId" runat="server" />
         <asp:LinkButton ID="btnReprintLabels" runat="server" OnClick="btnReprintLabels_Click" CssClass="btn btn-default">Reprint Labels</asp:LinkButton>
-        <Rock:ModalDialog ID="mdReprintLabels" runat="server" ValidationGroup="vgReprintLabels" Title="Label Reprints" OnSaveClick="mdReprintLabels_SaveClick" SaveButtonText="Print" Visible="false">
+        <Rock:ModalDialog ID="mdReprintLabels" runat="server" ValidationGroup="vgReprintLabels" Title="Label Reprints" OnSaveClick="mdReprintLabels_PrintClick" SaveButtonText="Print" Visible="false">
             <Content>
                 <Rock:NotificationBox ID="nbReprintLabelMessages" runat="server" NotificationBoxType="Validation"></Rock:NotificationBox>
-                <Rock:RockCheckBoxList ID="cblLabels" runat="server" Label="Labels"></Rock:RockCheckBoxList>
-                <Rock:RockDropDownList ID="ddlPrinter" runat="server" Label="Printers"></Rock:RockDropDownList>
+                <Rock:RockCheckBoxList ID="cblLabels" runat="server" Label="Labels" DataTextField="Name" DataValueField="FileGuid"></Rock:RockCheckBoxList>
+                <Rock:RockDropDownList ID="ddlPrinter" runat="server" Label="Printers" DataTextField="Name" DataValueField="IPAddress"></Rock:RockDropDownList>
             </Content>
         </Rock:ModalDialog>
 
