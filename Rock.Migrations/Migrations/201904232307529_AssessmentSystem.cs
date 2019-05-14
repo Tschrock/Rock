@@ -653,13 +653,7 @@ SELECT  CASE
             RockMigrationHelper.AddPageRoute("37F17AD8-8103-4F85-865C-94E76B4470BB","ConflictProfile/{rckipid}","AFD90575-B363-4862-B4A6-1283D5C00AD9");// for Page:Conflict Profile Assessment
             RockMigrationHelper.UpdateBlockType("Conflict Profile","Allows you to take a conflict profile test and saves your conflict profile score.","~/Blocks/Crm/ConflictProfile.ascx","CRM","91473D2F-607D-4260-9C6A-DD3762FE472D");
             RockMigrationHelper.AddBlock( true, "37F17AD8-8103-4F85-865C-94E76B4470BB".AsGuid(),null,"F3F82256-2D66-432B-9D67-3552CD2F4C2B".AsGuid(),"91473D2F-607D-4260-9C6A-DD3762FE472D".AsGuid(), "Conflict Profile","Main",@"",@"",0,"D005E292-25F8-45D4-A713-2A5C811F0219"); // Add Block to Page: Conflict Profile Assessment Site: External Website
-            RockMigrationHelper.UpdateBlockTypeAttribute("91473D2F-607D-4260-9C6A-DD3762FE472D","9C204CD0-1233-41C5-818A-C5DA439445AA","Set Page Title","SetPageTitle","",@"The text to display as the heading.",0,@"Conflict Profile","C5698564-7178-43BA-B4A3-58B13DDC3AF0"); // Attrib for BlockType: Conflict Profile:Set Page Title
-            RockMigrationHelper.UpdateBlockTypeAttribute("91473D2F-607D-4260-9C6A-DD3762FE472D","9C204CD0-1233-41C5-818A-C5DA439445AA","Set Page Icon","SetPageIcon","",@"The css class name to use for the heading icon.",1,@"fa fa-gift","D5ABBD1A-61F1-4C48-8AD9-C26AC7F5CAEF"); // Attrib for BlockType: Conflict Profile:Set Page Icon
-            RockMigrationHelper.UpdateBlockTypeAttribute("91473D2F-607D-4260-9C6A-DD3762FE472D","1EDAFDED-DFE6-4334-B019-6EECBA89E05A","Allow Retakes","AllowRetakes","",@"If enabled, the person can retake the test after the minimum days passes.",3,@"True","E3965E46-603C-40E5-AB28-1B53E44561DE"); // Attrib for BlockType: Conflict Profile:Allow Retakes
-            RockMigrationHelper.UpdateBlockTypeAttribute("91473D2F-607D-4260-9C6A-DD3762FE472D","A75DFC58-7A1B-4799-BF31-451B2BBE38FF","Min Days To Retake","MinDaysToRetake","",@"The number of days that must pass before the test can be taken again. Leave blank to use the Assessment Type's minimum.",4,@"","E8147587-812D-4118-995D-E5B7A3189979"); // Attrib for BlockType: Conflict Profile:Min Days To Retake
-            RockMigrationHelper.UpdateBlockTypeAttribute("91473D2F-607D-4260-9C6A-DD3762FE472D","A75DFC58-7A1B-4799-BF31-451B2BBE38FF","Number of Questions","NumberofQuestions","",@"The number of questions to show per page while taking the test",2,@"7","6CBCA505-E5BA-4FE9-9DD8-7F3C507B12B8"); // Attrib for BlockType: Conflict Profile:Number of Questions
-            
-            // Attrib for BlockType: Conflict Profile:Instructions
+            #region Attrib for BlockType: Conflict Profile:Instructions
             RockMigrationHelper.UpdateBlockTypeAttribute("91473D2F-607D-4260-9C6A-DD3762FE472D","1D0D3794-C210-48A8-8C68-3FBEC08A6BA5","Instructions","Instructions","",@"The text (HTML) to display at the top of the instructions section.  <span class='tip tip-lava'></span> <span class='tip tip-html'></span>",0,@"
 <h2>Welcome to the Conflict Profile Assessment</h2>
 <p>
@@ -673,9 +667,9 @@ SELECT  CASE
     calm your mind, and help you respond to each item as honestly as you can. Don't spend much time
     on each item. Your first instinct is probably your best response.
 </p>","2E455190-2BAE-4E9F-8505-F393BCE52342");
-
-            // Attrib for BlockType: Conflict Profile:Results Message
-            RockMigrationHelper.UpdateBlockTypeAttribute("91473D2F-607D-4260-9C6A-DD3762FE472D","1D0D3794-C210-48A8-8C68-3FBEC08A6BA5","Results Message","ResultsMessage","",@"The text (HTML) to display at the top of the results section.<span class='tip tip-lava'></span><span class='tip tip-html'></span>",0,@"
+            #endregion Attrib for BlockType: Conflict Profile:Instructions
+            #region Attrib for BlockType: Conflict Profile:Results Message
+            RockMigrationHelper.UpdateBlockTypeAttribute("91473D2F-607D-4260-9C6A-DD3762FE472D","1D0D3794-C210-48A8-8C68-3FBEC08A6BA5","Results Message","ResultsMessage","",@"The text (HTML) to display at the top of the results section.<span class='tip tip-lava'></span><span class='tip tip-html'></span>",1,@"
 <p>
    Your scores on this report are how YOU see yourself currently dealing with conflict in the environment chosen. This may or may not be accurate depending on how you are aware of yourself in the midst of conflict. It is most helpful to discuss your scores with someone who understands both you and this assessment.  Remember, in the future, the way you approach conflict should be dictated by the situation, not just how you are used to dealing with conflict. In doing so, everyone benefits, including you.
 </p>
@@ -713,6 +707,11 @@ SELECT  CASE
     <b>YIELDING</b> is neglecting your own interests and giving in to those of the other person. This is self-sacrifice and may be charity, serving or choosing to obey another when you prefer not to.
 </p>
 ","1A855117-6489-4A15-846A-5A99F54E9747");
+            #endregion Attrib for BlockType: Conflict Profile:Results Message
+            RockMigrationHelper.UpdateBlockTypeAttribute("91473D2F-607D-4260-9C6A-DD3762FE472D","9C204CD0-1233-41C5-818A-C5DA439445AA","Set Page Title","SetPageTitle","",@"The text to display as the heading.",2,@"Conflict Profile","C5698564-7178-43BA-B4A3-58B13DDC3AF0"); // Attrib for BlockType: Conflict Profile:Set Page Title
+            RockMigrationHelper.UpdateBlockTypeAttribute("91473D2F-607D-4260-9C6A-DD3762FE472D","9C204CD0-1233-41C5-818A-C5DA439445AA","Set Page Icon","SetPageIcon","",@"The css class name to use for the heading icon.",3,@"fa fa-gift","D5ABBD1A-61F1-4C48-8AD9-C26AC7F5CAEF"); // Attrib for BlockType: Conflict Profile:Set Page Icon
+            RockMigrationHelper.UpdateBlockTypeAttribute("91473D2F-607D-4260-9C6A-DD3762FE472D","A75DFC58-7A1B-4799-BF31-451B2BBE38FF","Number of Questions","NumberofQuestions","",@"The number of questions to show per page while taking the test",4,@"7","6CBCA505-E5BA-4FE9-9DD8-7F3C507B12B8"); // Attrib for BlockType: Conflict Profile:Number of Questions
+            RockMigrationHelper.UpdateBlockTypeAttribute("91473D2F-607D-4260-9C6A-DD3762FE472D","1EDAFDED-DFE6-4334-B019-6EECBA89E05A","Allow Retakes","AllowRetakes","",@"If enabled, the person can retake the test after the minimum days passes.",5,@"True","E3965E46-603C-40E5-AB28-1B53E44561DE"); // Attrib for BlockType: Conflict Profile:Allow Retakes
         }
 
         /// <summary>
@@ -727,13 +726,27 @@ SELECT  CASE
             RockMigrationHelper.AddPageRoute("BE5F3984-C25E-47CA-A602-EE1CED99E9AC","EQAssessment/{rckipid}","C97D4D5A-F082-4F2B-A873-71F734B539CC");// for Page:Emotional Intelligence Assessment
             RockMigrationHelper.UpdateBlockType("EQ Assessment","Allows you to take a EQ Inventory test and saves your EQ Inventory score.","~/Blocks/Crm/EQInventory.ascx","CRM","040CFD6D-5155-4BC9-BAEE-A53219A7BECE");
             RockMigrationHelper.AddBlock( true, "BE5F3984-C25E-47CA-A602-EE1CED99E9AC".AsGuid(),null,"F3F82256-2D66-432B-9D67-3552CD2F4C2B".AsGuid(),"040CFD6D-5155-4BC9-BAEE-A53219A7BECE".AsGuid(), "EQ Assessment","Main",@"",@"",0,"71BE6A7A-7D51-4149-AFB1-3307DF04B2DF"); // Add Block to Page: Emotional Intelligence Assessment Site: External Website
-            RockMigrationHelper.UpdateBlockTypeAttribute("040CFD6D-5155-4BC9-BAEE-A53219A7BECE","9C204CD0-1233-41C5-818A-C5DA439445AA","Set Page Title","SetPageTitle","",@"The text to display as the heading.",0,@"EQ Inventory Assessment","E99F01A7-AF8F-4010-A456-3A9048347859"); // Attrib for BlockType: EQ Assessment:Set Page Title
-            RockMigrationHelper.UpdateBlockTypeAttribute("040CFD6D-5155-4BC9-BAEE-A53219A7BECE","9C204CD0-1233-41C5-818A-C5DA439445AA","Set Page Icon","SetPageIcon","",@"The css class name to use for the heading icon.",1,@"fa fa-gift","D5CF91C1-2CC8-46BF-8CC6-DD6AD8B07518"); // Attrib for BlockType: EQ Assessment:Set Page Icon
-            RockMigrationHelper.UpdateBlockTypeAttribute("040CFD6D-5155-4BC9-BAEE-A53219A7BECE","1EDAFDED-DFE6-4334-B019-6EECBA89E05A","Allow Retakes","AllowRetakes","",@"If enabled, the person can retake the test after the minimum days passes.",3,@"True","A0905767-79C9-4567-BA76-A3FFEE71E0B3"); // Attrib for BlockType: EQ Assessment:Allow Retakes
-            RockMigrationHelper.UpdateBlockTypeAttribute("040CFD6D-5155-4BC9-BAEE-A53219A7BECE","A75DFC58-7A1B-4799-BF31-451B2BBE38FF","Number of Questions","NumberofQuestions","",@"The number of questions to show per page while taking the test",2,@"7","8D2C5502-0AAB-4FE6-ABE9-05900439827D"); // Attrib for BlockType: EQ Assessment:Number of Questions
-            RockMigrationHelper.UpdateBlockTypeAttribute("040CFD6D-5155-4BC9-BAEE-A53219A7BECE","A75DFC58-7A1B-4799-BF31-451B2BBE38FF","Min Days To Retake","MinDaysToRetake","",@"The number of days that must pass before the test can be taken again. Leave blank to use the Assessment Type's minimum.",4,@"","B47E54AC-A66B-4EC6-B4FC-F9A7B1175E27"); // Attrib for BlockType: EQ Assessment:Min Days To Retake
+            #region Attrib for BlockType: EQ Assessment:Instructions
+            RockMigrationHelper.UpdateBlockTypeAttribute("040CFD6D-5155-4BC9-BAEE-A53219A7BECE","1D0D3794-C210-48A8-8C68-3FBEC08A6BA5","Instructions","Instructions","",@"The text (HTML) to display at the top of the instructions section.  <span class='tip tip-lava'></span> <span class='tip tip-html'></span>",0,@"
+<h2>Welcome to the EQ Inventory Assessment</h2>
+<p>
+    {{ Person.NickName }}, this assessment was developed and researched by Dr. Gregory A. Wiens.
+</p>
+<p>
+ Our TrueWiring Emotional Intelligence Inventory (EQ-W) assesses your developed skills in two domains:
+   <ol>
+      <li> understanding your own emotions </li>
+      <li> understanding the emotions of others. This instrument identifies your ability to appropriately express your emotions while encouraging others to do the same. </li>
+   </ol>
+</p>
+<p>
+    Before you begin, please take a moment and pray that the Holy Spirit would guide your thoughts,
+    calm your mind, and help you respond to each item as honestly as you can. Don't spend much time
+    on each item. Your first instinct is probably your best response.
+</p>","6C00C171-E6DC-4027-B587-0AB63AC939E3");
+            #endregion Attrib for BlockType: EQ Assessment:Instructions
             #region Attrib for BlockType: EQ Assessment:Results Message
-            RockMigrationHelper.UpdateBlockTypeAttribute("040CFD6D-5155-4BC9-BAEE-A53219A7BECE","1D0D3794-C210-48A8-8C68-3FBEC08A6BA5","Results Message","ResultsMessage","",@"The text (HTML) to display at the top of the results section.<span class='tip tip-lava'></span><span class='tip tip-html'></span>",0,@"
+            RockMigrationHelper.UpdateBlockTypeAttribute("040CFD6D-5155-4BC9-BAEE-A53219A7BECE","1D0D3794-C210-48A8-8C68-3FBEC08A6BA5","Results Message","ResultsMessage","",@"The text (HTML) to display at the top of the results section.<span class='tip tip-lava'></span><span class='tip tip-html'></span>",1,@"
 
 <h2>EQ Inventory Assessment</h2>
 
@@ -880,27 +893,10 @@ SELECT  CASE
 </blockquote>
 ","5B6219CE-84B5-4F68-BE5B-C3187EDFF2A6");
             #endregion Attrib for BlockType: EQ Assessment:Results Message
-
-            #region Attrib for BlockType: EQ Assessment:Instructions
-            RockMigrationHelper.UpdateBlockTypeAttribute("040CFD6D-5155-4BC9-BAEE-A53219A7BECE","1D0D3794-C210-48A8-8C68-3FBEC08A6BA5","Instructions","Instructions","",@"The text (HTML) to display at the top of the instructions section.  <span class='tip tip-lava'></span> <span class='tip tip-html'></span>",0,@"
-<h2>Welcome to the EQ Inventory Assessment</h2>
-<p>
-    {{ Person.NickName }}, this assessment was developed and researched by Dr. Gregory A. Wiens.
-</p>
-<p>
- Our TrueWiring Emotional Intelligence Inventory (EQ-W) assesses your developed skills in two domains:
-   <ol>
-      <li> understanding your own emotions </li>
-      <li> understanding the emotions of others. This instrument identifies your ability to appropriately express your emotions while encouraging others to do the same. </li>
-   </ol>
-</p>
-<p>
-    Before you begin, please take a moment and pray that the Holy Spirit would guide your thoughts,
-    calm your mind, and help you respond to each item as honestly as you can. Don't spend much time
-    on each item. Your first instinct is probably your best response.
-</p>","6C00C171-E6DC-4027-B587-0AB63AC939E3");
-            #endregion Attrib for BlockType: EQ Assessment:Instructions
-
+            RockMigrationHelper.UpdateBlockTypeAttribute("040CFD6D-5155-4BC9-BAEE-A53219A7BECE","9C204CD0-1233-41C5-818A-C5DA439445AA","Set Page Title","SetPageTitle","",@"The text to display as the heading.",2,@"EQ Inventory Assessment","E99F01A7-AF8F-4010-A456-3A9048347859"); // Attrib for BlockType: EQ Assessment:Set Page Title
+            RockMigrationHelper.UpdateBlockTypeAttribute("040CFD6D-5155-4BC9-BAEE-A53219A7BECE","9C204CD0-1233-41C5-818A-C5DA439445AA","Set Page Icon","SetPageIcon","",@"The css class name to use for the heading icon.",3,@"fa fa-gift","D5CF91C1-2CC8-46BF-8CC6-DD6AD8B07518"); // Attrib for BlockType: EQ Assessment:Set Page Icon
+            RockMigrationHelper.UpdateBlockTypeAttribute("040CFD6D-5155-4BC9-BAEE-A53219A7BECE","A75DFC58-7A1B-4799-BF31-451B2BBE38FF","Number of Questions","NumberofQuestions","",@"The number of questions to show per page while taking the test",4,@"7","8D2C5502-0AAB-4FE6-ABE9-05900439827D"); // Attrib for BlockType: EQ Assessment:Number of Questions
+            RockMigrationHelper.UpdateBlockTypeAttribute("040CFD6D-5155-4BC9-BAEE-A53219A7BECE","1EDAFDED-DFE6-4334-B019-6EECBA89E05A","Allow Retakes","AllowRetakes","",@"If enabled, the person can retake the test after the minimum days passes.",5,@"True","A0905767-79C9-4567-BA76-A3FFEE71E0B3"); // Attrib for BlockType: EQ Assessment:Allow Retakes
         }
 
         /// <summary>
@@ -928,8 +924,6 @@ SELECT  CASE
         {
             // Attrib for BlockType: EQ Assessment:Instructions
             RockMigrationHelper.DeleteAttribute("6C00C171-E6DC-4027-B587-0AB63AC939E3");
-            // Attrib for BlockType: EQ Assessment:Min Days To Retake
-            RockMigrationHelper.DeleteAttribute("B47E54AC-A66B-4EC6-B4FC-F9A7B1175E27");
             // Attrib for BlockType: EQ Assessment:Allow Retakes
             RockMigrationHelper.DeleteAttribute("A0905767-79C9-4567-BA76-A3FFEE71E0B3");
             // Attrib for BlockType: EQ Assessment:Set Page Icon
@@ -946,8 +940,6 @@ SELECT  CASE
             RockMigrationHelper.DeleteAttribute("6CBCA505-E5BA-4FE9-9DD8-7F3C507B12B8");
             // Attrib for BlockType: Conflict Profile:Results Message
             RockMigrationHelper.DeleteAttribute("1A855117-6489-4A15-846A-5A99F54E9747");
-            // Attrib for BlockType: Conflict Profile:Min Days To Retake
-            RockMigrationHelper.DeleteAttribute("E8147587-812D-4118-995D-E5B7A3189979");
             // Attrib for BlockType: Conflict Profile:Set Page Icon
             RockMigrationHelper.DeleteAttribute("D5ABBD1A-61F1-4C48-8AD9-C26AC7F5CAEF");
             // Attrib for BlockType: Conflict Profile:Instructions

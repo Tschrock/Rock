@@ -37,13 +37,12 @@ namespace Rockweb.Blocks.Crm
     [Category( "CRM" )]
     [Description( "Allows you to take a EQ Inventory test and saves your EQ Inventory score." )]
 
-    [TextField( "Set Page Title", "The text to display as the heading.", false, "EQ Inventory Assessment", order: 0 )]
-    [TextField( "Set Page Icon", "The css class name to use for the heading icon.", false, "fa fa-gift", order: 1 )]
-    [IntegerField( "Number of Questions", "The number of questions to show per page while taking the test", true, 7, order: 2 )]
-    [BooleanField( "Allow Retakes", "If enabled, the person can retake the test after the minimum days passes.", true, order: 3 )]
-    [IntegerField( "Min Days To Retake", "The number of days that must pass before the test can be taken again. Leave blank to use the Assessment Type's minimum.", false, order: 4 )]
-    [CodeEditorField( "Instructions", "The text (HTML) to display at the top of the instructions section.  <span class='tip tip-lava'></span> <span class='tip tip-html'></span>", CodeEditorMode.Html, CodeEditorTheme.Rock, 400, true, InstructionsDefaultValue )]
-    [CodeEditorField( "Results Message", "The text (HTML) to display at the top of the results section.<span class='tip tip-lava'></span><span class='tip tip-html'></span>", CodeEditorMode.Html, CodeEditorTheme.Rock, 400, true, ResultsMessageDefaultValue )]
+    [CodeEditorField( "Instructions", "The text (HTML) to display at the top of the instructions section.  <span class='tip tip-lava'></span> <span class='tip tip-html'></span>", CodeEditorMode.Html, CodeEditorTheme.Rock, 400, true, InstructionsDefaultValue, order: 0 )]
+    [CodeEditorField( "Results Message", "The text (HTML) to display at the top of the results section.<span class='tip tip-lava'></span><span class='tip tip-html'></span>", CodeEditorMode.Html, CodeEditorTheme.Rock, 400, true, ResultsMessageDefaultValue, order: 1 )]
+    [TextField( "Set Page Title", "The text to display as the heading.", false, "EQ Inventory Assessment", order: 2 )]
+    [TextField( "Set Page Icon", "The css class name to use for the heading icon.", false, "fa fa-gift", order: 3 )]
+    [IntegerField( "Number of Questions", "The number of questions to show per page while taking the test", true, 7, order: 4 )]
+    [BooleanField( "Allow Retakes", "If enabled, the person can retake the test after the minimum days passes.", true, order: 5 )]
     public partial class EQInventory : Rock.Web.UI.RockBlock
     {
         #region Attribute Default values
@@ -264,7 +263,7 @@ go from this point forward.</p>
         private const string SET_PAGE_ICON = "SetPageIcon";
         private const string RESULTS_MESSAGE = "ResultsMessage";
         private const string ALLOW_RETAKES = "AllowRetakes";
-        private const string MIN_DAYS_TO_RETAKE = "MinDaysToRetake";
+
         private Dictionary<int, string> NEGATIVE_OPTION = new Dictionary<int, string>
         {
             { 5, "Never" },
@@ -650,11 +649,7 @@ go from this point forward.</p>
             pnlResult.Visible = true;
 
             var allowRetakes = GetAttributeValue( ALLOW_RETAKES ).AsBoolean();
-            var minDays = GetAttributeValue( MIN_DAYS_TO_RETAKE ).AsInteger();
-            if ( minDays == 0 )
-            {
-                minDays = assessment.AssessmentType.MinimumDaysToRetake;
-            }
+            var minDays = assessment.AssessmentType.MinimumDaysToRetake;
 
             if ( !_isQuerystringPersonKey && allowRetakes && assessment.CompletedDateTime.HasValue && assessment.CompletedDateTime.Value.AddDays( minDays ) <= RockDateTime.Now )
             {

@@ -37,12 +37,16 @@ namespace Rockweb.Blocks.Crm
     [Category( "CRM" )]
     [Description( "Allows you to take a conflict profile test and saves your conflict profile score." )]
 
-    [TextField( "Set Page Title", "The text to display as the heading.", false, "Conflict Profile", order: 0 )]
-    [TextField( "Set Page Icon", "The css class name to use for the heading icon.", false, "fa fa-gift", order: 1 )]
-    [IntegerField( "Number of Questions", "The number of questions to show per page while taking the test", true, 7, order: 2 )]
-    [BooleanField( "Allow Retakes", "If enabled, the person can retake the test after the minimum days passes.", true, order: 3 )]
-    [IntegerField( "Min Days To Retake", "The number of days that must pass before the test can be taken again. Leave blank to use the Assessment Type's minimum.", false, order: 4 )]
-    [CodeEditorField( "Instructions", "The text (HTML) to display at the top of the instructions section.  <span class='tip tip-lava'></span> <span class='tip tip-html'></span>", CodeEditorMode.Html, CodeEditorTheme.Rock, 400, true, @"
+    [CodeEditorField( "Instructions", "The text (HTML) to display at the top of the instructions section.  <span class='tip tip-lava'></span> <span class='tip tip-html'></span>", CodeEditorMode.Html, CodeEditorTheme.Rock, 400, true, InstructionsDefaultValue, order: 0 )]
+    [CodeEditorField( "Results Message", "The text (HTML) to display at the top of the results section.<span class='tip tip-lava'></span><span class='tip tip-html'></span>", CodeEditorMode.Html, CodeEditorTheme.Rock, 400, true, ResultsMessageDefaultValue, order: 1 )]
+    [TextField( "Set Page Title", "The text to display as the heading.", false, "Conflict Profile", order: 2 )]
+    [TextField( "Set Page Icon", "The css class name to use for the heading icon.", false, "fa fa-gift", order: 3 )]
+    [IntegerField( "Number of Questions", "The number of questions to show per page while taking the test", true, 7, order: 4 )]
+    [BooleanField( "Allow Retakes", "If enabled, the person can retake the test after the minimum days passes.", true, order: 5 )]
+    public partial class ConflictProfile : Rock.Web.UI.RockBlock
+    {
+        #region AttributeDefaultValues
+        private const string InstructionsDefaultValue = @"
 <h2>Welcome to the Conflict Profile Assessment</h2>
 <p>
     {{ Person.NickName }}, this assessment was developed and researched by Dr. Gregory A. Wiens and Al Ells and is based on the work and writings of Kenneth Thomas and Ralph Kilmann. When dealing with conflict, one way isn’t always the right way to solve a problem. All five of the modes evaluated in this assessment are appropriate at different times. The challenge is to know which approach is appropriate at what times. It is also important to understand how to use each approach.
@@ -54,9 +58,9 @@ namespace Rockweb.Blocks.Crm
     Before you begin, please take a moment and pray that the Holy Spirit would guide your thoughts,
     calm your mind, and help you respond to each item as honestly as you can. Don't spend much time
     on each item. Your first instinct is probably your best response.
-</p>" )]
+</p>";
 
-    [CodeEditorField( "Results Message", "The text (HTML) to display at the top of the results section.<span class='tip tip-lava'></span><span class='tip tip-html'></span>", CodeEditorMode.Html, CodeEditorTheme.Rock, 400, true, @"
+        private const string ResultsMessageDefaultValue = @"
 <p>
    Your scores on this report are how YOU see yourself currently dealing with conflict in the environment chosen. This may or may not be accurate depending on how you are aware of yourself in the midst of conflict. It is most helpful to discuss your scores with someone who understands both you and this assessment.  Remember, in the future, the way you approach conflict should be dictated by the situation, not just how you are used to dealing with conflict. In doing so, everyone benefits, including you.
 </p>
@@ -92,10 +96,10 @@ namespace Rockweb.Blocks.Crm
     <b>COMPROMISING</b> is finding a middle ground in the conflict. This often involves meeting in the middle or finding some mutually agreeable point between both positions and is useful for quick solutions.<br>
     <b>AVOIDING</b> is not pursuing your own rights or those of the other person. You do not address the conflict. This may be diplomatically sidestepping an issue or avoiding a threatening situation.<br>
     <b>YIELDING</b> is neglecting your own interests and giving in to those of the other person. This is self-sacrifice and may be charity, serving or choosing to obey another when you prefer not to.
-</p>
-" )]
-    public partial class ConflictProfile : Rock.Web.UI.RockBlock
-    {
+</p>";
+
+        #endregion AttributeDefaultValues
+
         #region Fields
 
         //block attribute keys
@@ -105,8 +109,7 @@ namespace Rockweb.Blocks.Crm
         private const string SET_PAGE_ICON = "SetPageIcon";
         private const string RESULTS_MESSAGE = "ResultsMessage";
         private const string ALLOW_RETAKES = "AllowRetakes";
-        private const string MIN_DAYS_TO_RETAKE = "MinDaysToRetake";
-
+        
         // View State Keys
         private const string ASSESSMENT_STATE = "AssessmentState";
 
@@ -441,11 +444,7 @@ namespace Rockweb.Blocks.Crm
             pnlResult.Visible = true;
 
             var allowRetakes = GetAttributeValue( ALLOW_RETAKES ).AsBoolean();
-            var minDays = GetAttributeValue( MIN_DAYS_TO_RETAKE ).AsInteger();
-            if ( minDays == 0 )
-            {
-                minDays = assessment.AssessmentType.MinimumDaysToRetake;
-            }
+            var minDays = assessment.AssessmentType.MinimumDaysToRetake;
 
             if ( !_isQuerystringPersonKey && allowRetakes && assessment.CompletedDateTime.HasValue && assessment.CompletedDateTime.Value.AddDays( minDays ) <= RockDateTime.Now )
             {

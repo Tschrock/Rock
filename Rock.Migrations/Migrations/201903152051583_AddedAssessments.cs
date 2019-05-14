@@ -98,7 +98,7 @@ namespace Rock.Migrations
             AddAssessmentType( "DISC", "/DISC", SystemGuid.AssessmentType.DISC );
             AddAssessmentType( "Spiritual Gifts", "/GiftsAssessment", SystemGuid.AssessmentType.GIFTS );
             AddAssessmentType( "Conflict Profile", "/ConflictProfile", SystemGuid.AssessmentType.CONFLICT );
-            AddAssessmentType( "Emotional Intelligence", "/EmotionalIntelligence", SystemGuid.AssessmentType.EQ );
+            AddAssessmentType( "Emotional Intelligence", "/EQAssessment", SystemGuid.AssessmentType.EQ );
             AddAssessmentType( "Motivators", "/Motivators", SystemGuid.AssessmentType.MOTIVATORS );
         }
 
