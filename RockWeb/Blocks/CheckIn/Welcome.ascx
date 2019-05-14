@@ -290,7 +290,7 @@
                         <div class="checkin-search-body">
 
                             <asp:Panel ID="pnlSearchName" CssClass="clearfix center-block" runat="server">
-                                <Rock:RockTextBox ID="tbNameOrPhone" runat="server" Label="Phone or Name" CssClass="search-input namesearch input-lg" FormGroupCssClass="search-name-form-group" />
+                                <Rock:RockTextBox ID="tbNameOrPhone" runat="server" Label="Phone or Name" AutoCompleteType="Disabled" spellcheck="false" autocorrect="off" CssClass="search-input namesearch input-lg" FormGroupCssClass="search-name-form-group" />
                                 <Rock:ScreenKeyboard id="skKeyboard" runat="server" ControlToTarget="tbNameOrPhone" KeyboardType="TenKey" KeyCssClass="checkin btn-default" WrapperCssClass="center-block" ></Rock:ScreenKeyboard>
                             </asp:Panel>
 
@@ -316,7 +316,7 @@
                         <div class="controls">
                             <asp:Repeater ID="rReprintLabelPersonResults" runat="server" OnItemCommand="rReprintLabelPersonResults_ItemCommand">
                                 <ItemTemplate>
-                                    <asp:HiddenField ID="hfAttendanceIds" runat="server" Value='<%#String.Join(",",((ReprintLabelPersonResult)Container.DataItem).AttendanceIds )%>' />
+                                    <asp:HiddenField ID="hfAttendanceIds" runat="server" Value='<%#String.Join(",",((Rock.Utility.ReprintLabelPersonResult)Container.DataItem).AttendanceIds )%>' />
                                     <Rock:BootstrapButton ID="lbSelectPersonForReprint" runat="server" Text='<%# Container.DataItem.ToString() %>' CommandName='<%# Eval("AttendanceIds") %>' CommandArgument='<%# Eval("Id") %>' CssClass="btn btn-primary btn-large btn-block btn-checkin-select text-left" DataLoadingText="Loading..." />
                                 </ItemTemplate>
                             </asp:Repeater>
@@ -336,6 +336,7 @@
 
         <!-- Device Manager Reprint Label Panel showing selected person's available labels -->
         <asp:Panel ID="pnlReprintSelectedPersonLabels" runat="server" Visible="false">
+            <Rock:ModalAlert ID="maNoLabelsFound" runat="server"></Rock:ModalAlert>
             <div class="checkin-body">
                 <div class="checkin-scroll-panel">
                     <div class="scroller">

@@ -382,14 +382,15 @@ namespace RockWeb.Blocks.CheckIn.Manager
 
             Guid? personGuid = PageParameter( PERSON_GUID_PAGE_QUERY_KEY ).AsGuidOrNull();
 
-            // TODO errors
-            if ( personGuid == null || ! personGuid.HasValue )
+            if ( personGuid == null || !personGuid.HasValue )
             {
+                maNoLabelsFound.Show( "No person was found.", ModalAlertType.Alert );
                 return;
             }
 
             if ( string.IsNullOrEmpty( hfCurrentAttendanceIds.Value ) )
             {
+                maNoLabelsFound.Show( "No labels were found for re-printing.", ModalAlertType.Alert );
                 return;
             }
 
@@ -397,11 +398,24 @@ namespace RockWeb.Blocks.CheckIn.Manager
 
             var attendanceIds = hfCurrentAttendanceIds.Value.SplitDelimitedValues().AsIntegerList();
 
-            // Get the person Id from the Guid
+            // Get the person Id from the Guid in the page parameter
             var personId = new PersonService( rockContext ).Queryable().Where( p => p.Guid == personGuid.Value ).Select( p => p.Id ).FirstOrDefault();
             hfPersonId.Value = personId.ToString();
 
-            cblLabels.DataSource = GetLabelTypesForPerson( personId, attendanceIds ).OrderBy( l => l.Name );
+            var possibleLabels = ZebraPrint.GetLabelTypesForPerson( personId, attendanceIds );
+
+            if ( possibleLabels!= null && possibleLabels.Count != 0 )
+            {
+                cblLabels.DataSource = possibleLabels;
+                cblLabels.DataBind();
+            }
+            else
+            {
+                maNoLabelsFound.Show( "No labels were found for re-printing.", ModalAlertType.Alert );
+                return;
+            }
+
+            cblLabels.DataSource = ZebraPrint.GetLabelTypesForPerson( personId, attendanceIds ).OrderBy( l => l.Name );
             cblLabels.DataBind();
 
             // Bind the printers list
@@ -424,14 +438,13 @@ namespace RockWeb.Blocks.CheckIn.Manager
         /// <param name="e"></param>
         protected void mdReprintLabels_PrintClick( object sender, EventArgs e )
         {
-            // TODO Errors
             var personId = hfPersonId.ValueAsInt();
             if ( personId == 0 )
             {
                 return;
             }
 
-            if ( string.IsNullOrWhiteSpace( cblLabels.SelectedValue) )
+            if ( string.IsNullOrWhiteSpace( cblLabels.SelectedValue ) )
             {
                 nbReprintLabelMessages.Visible = true;
                 nbReprintLabelMessages.Text = "Please select at least one label.";
@@ -445,15 +458,12 @@ namespace RockWeb.Blocks.CheckIn.Manager
                 return;
             }
 
-            var rockContext = new RockContext();
-
             // Get the person Id from the Guid
             var selectedAttendanceIds = hfCurrentAttendanceIds.Value.SplitDelimitedValues().AsIntegerList();
 
             var fileGuids = cblLabels.SelectedValues.AsGuidList();
 
-            // TODO call the print method for the selected labels and printer
-            //ZebraPrint.PrintLabel();
+            // Now, finally, re-print the labels.
             List<string> messages = ZebraPrint.ReprintZebraLabels( fileGuids, personId, selectedAttendanceIds, this, ddlPrinter.SelectedValue );
             nbReprintMessage.Visible = true;
             nbReprintMessage.Text = messages.JoinStrings( "<br>" );
@@ -773,124 +783,5 @@ namespace RockWeb.Blocks.CheckIn.Manager
         }
 
         #endregion
-
-
-        #region Reprint Label Helper Methods
-
-        /// <summary>
-        /// Bind a multi selector of available labels to reprint for the given person and attendanceIds.
-        /// </summary>
-        /// <param name="personId"></param>
-        /// <param name="attendanceIds"></param>
-        private List<ReprintLabelCheckInLabelType> GetLabelTypesForPerson( int personId, List<int> attendanceIds )
-        {
-            List<ReprintLabelCheckInLabelType> labelTypes = new List<ReprintLabelCheckInLabelType>();
-
-            var rockContext = new RockContext();
-            var attendanceService = new AttendanceService( rockContext );
-            var binaryFileService = new BinaryFileService( rockContext );
-
-            // Get the attendance records for the set given to us
-            var attendanceRecords = attendanceService.GetByIds( attendanceIds );
-
-            var handledList = new Dictionary<Guid, bool>();
-
-            foreach ( var attendance in attendanceRecords )
-            {
-                var attendanceData = attendance.AttendanceData;
-                var json = attendanceData.LabelData.Trim();
-
-                // determine if the return type is an array or not
-                if ( json.Substring( 0, 1 ) == "[" )
-                {
-                    // De-serialize the JSON into a list of objects
-                    var checkinLabels = JsonConvert.DeserializeObject<List<CheckInLabel>>( json );
-                    if ( checkinLabels == null )
-                    {
-                        continue;
-                    }
-
-                    var fileGuids = checkinLabels.Where( l => l.PersonId == personId && !handledList.ContainsKey( l.FileGuid ) )
-                        .Select( l => l.FileGuid )
-                        .ToList();
-
-                    if ( fileGuids == null || fileGuids.Count == 0 )
-                    {
-                        continue;
-                    }
-
-                    var labels = binaryFileService.GetByGuids( fileGuids );
-
-                    foreach ( var label in labels )
-                    {
-                        handledList.AddOrReplace( label.Guid, true );
-                        labelTypes.Add( new ReprintLabelCheckInLabelType
-                        {
-                            Name = label.FileName,
-                            LabelFileId = ( int ) label.Id,
-                            FileGuid = label.Guid,
-                            PersonId = personId,
-                            AttendanceIds = attendanceIds
-                        } );
-                    }
-                }
-            }
-
-            return labelTypes;
-        }
-
-        #endregion
-
-        #region Reprint Label Helper Classes
-        public class ReprintLabelPersonResult
-        {
-            public int Id { get; set; }
-            public List<int> AttendanceIds { get; set; }
-            // The Guid of the person
-            public Guid PersonGuid { get; set; }
-            public string Name { get; set; }
-            public string LocationAndScheduleNames { get; set; }
-
-            public ReprintLabelPersonResult()
-            {
-            }
-
-            public ReprintLabelPersonResult( List<Attendance> attendances )
-            {
-                if ( attendances.Any() )
-                {
-                    var person = attendances.First().PersonAlias.Person;
-                    Id = person.Id;
-                    AttendanceIds = attendances.Select( a => a.Id ).ToList();
-                    PersonGuid = person.Guid;
-                    Name = person.FullName;
-
-                    LocationAndScheduleNames = attendances
-                        .Select( a => string.Format( "{0} {1}",
-                                a.Occurrence.Location.Name,
-                                a.Occurrence.Schedule != null ? a.Occurrence.Schedule.Name : string.Empty ) )
-                        .Distinct()
-                        .ToList()
-                        .AsDelimited( "\r\n" );
-                }
-            }
-
-            public override string ToString()
-            {
-                return string.Format( "{0} <span class='pull-right'>{1}</span>", Name, LocationAndScheduleNames );
-            }
-        }
-
-        public class ReprintLabelCheckInLabelType
-        {
-            public int Id { get; set; }
-            public int LabelFileId { get; set; }
-            public Guid FileGuid { get; set; }
-            public string Name { get; set; }
-            public int PersonId { get; set; }
-            public List<int> AttendanceIds { get; set; }
-        }
     }
-
-    #endregion
 }

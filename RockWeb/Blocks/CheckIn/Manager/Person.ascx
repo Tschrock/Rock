@@ -95,9 +95,10 @@
 
         <!-- Reprint label functionality -->
         <Rock:NotificationBox ID="nbReprintMessage" runat="server" Visible="false"></Rock:NotificationBox>
+        <Rock:ModalAlert ID="maNoLabelsFound" runat="server"></Rock:ModalAlert>
         <asp:HiddenField ID="hfCurrentAttendanceIds" runat="server" />
         <asp:HiddenField ID="hfPersonId" runat="server" />
-        <asp:LinkButton ID="btnReprintLabels" runat="server" OnClick="btnReprintLabels_Click" CssClass="btn btn-default">Reprint Labels</asp:LinkButton>
+        <asp:LinkButton ID="btnReprintLabels" runat="server" OnClick="btnReprintLabels_Click" CssClass="btn btn-default margin-b-md">Reprint Labels</asp:LinkButton>
         <Rock:ModalDialog ID="mdReprintLabels" runat="server" ValidationGroup="vgReprintLabels" Title="Label Reprints" OnSaveClick="mdReprintLabels_PrintClick" SaveButtonText="Print" Visible="false">
             <Content>
                 <Rock:NotificationBox ID="nbReprintLabelMessages" runat="server" NotificationBoxType="Validation"></Rock:NotificationBox>
