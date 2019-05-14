@@ -61,13 +61,10 @@ namespace Rock.Migrations
 {{ Person.NickName }},
 
 <p>
-    We're each a unique creation. We'd love to learn more about you through a simple and quick online personality profile. The results of the assessment will help us tailor our ministry to you and can also be used for building healthier teams and groups.
+    We're each a unique creation. We'd love to learn more about you through a simple and quick online personality profile. Your results will help us tailor our ministry to you and can also be used for building healthier teams and groups.
 </p>
 <p>
     The assessment takes less than ten minutes and will go a long way toward helping us get to know you better. Thanks in advance!
-</p>
-<p>
-    These assessments are ready for you to take:
 </p>
 <p>
 	<div><!--[if mso]>
@@ -228,9 +225,7 @@ namespace Rock.Migrations
             RockMigrationHelper.UpdateWorkflowTypeAttribute("31DDC001-C91A-4418-B375-CAB1475F7A62","E4EAB7B2-0B76-429B-AFE4-AD86D7428C70","Requested By","RequestedBy","The person who requested the assessments.",2,@"","66B8DEC5-1B55-4AD1-8E4B-C719279A1947", false); // Request Assessment:Requested By
             RockMigrationHelper.UpdateWorkflowTypeAttribute("31DDC001-C91A-4418-B375-CAB1475F7A62","6B6AA175-4758-453F-8D83-FCD8044B5F36","Due Date","DueDate","When all the selected assessments should be completed.",3,@"","7FB54D8C-B6FC-4864-9F14-EEC155CF6D4C", false); // Request Assessment:Due Date
             RockMigrationHelper.UpdateWorkflowTypeAttribute("31DDC001-C91A-4418-B375-CAB1475F7A62","9C204CD0-1233-41C5-818A-C5DA439445AA","No Email Warning","NoEmailWarning","Warning message when the person does not have an email address.",4,@"","B13D6F19-1436-4689-B644-FB70805C255B", false); // Request Assessment:No Email Warning
-            RockMigrationHelper.UpdateWorkflowTypeAttribute("31DDC001-C91A-4418-B375-CAB1475F7A62","C28C7BF3-A552-4D77-9408-DEDCF760CED0","Custom Message","CustomMessage","A custom message you would like to include in the request.  Otherwise the default will be used.",5,@"We're each a unique creation. We'd love to learn more about you through a simple and quick online personality profile. The results of the assessment will help us tailor our ministry to you and can also be used for building healthier teams and groups.
-
-The assessment takes less than ten minutes and will go a long way toward helping us get to know you better. Thanks in advance!","DBFB3F53-7AE1-4923-A286-3D69B60BA639", false); // Request Assessment:Custom Message
+            RockMigrationHelper.UpdateWorkflowTypeAttribute("31DDC001-C91A-4418-B375-CAB1475F7A62","C28C7BF3-A552-4D77-9408-DEDCF760CED0","Custom Message","CustomMessage","A custom message you would like to include in the request.  Otherwise the default will be used.",5,@"We're each a unique creation. We'd love to learn more about you through a simple and quick online personality profile. Your results will help us tailor our ministry to you and can also be used for building healthier teams and groups.","DBFB3F53-7AE1-4923-A286-3D69B60BA639", false); // Request Assessment:Custom Message
             RockMigrationHelper.AddAttributeQualifier("69E8513A-D9E4-4C98-B938-48B1B24F9C08","includeInactive",@"False","8FD003E0-9FBD-407F-86A8-FC72E5BAE552"); // Request Assessment:Assessments To Take:includeInactive
             RockMigrationHelper.AddAttributeQualifier("69E8513A-D9E4-4C98-B938-48B1B24F9C08","repeatColumns",@"","B0FDE78C-7E2D-42B2-857E-FF96D3AE1C3C"); // Request Assessment:Assessments To Take:repeatColumns
             RockMigrationHelper.AddAttributeQualifier("A201EB57-0AD0-4B98-AD44-9D3A7C0F16BA","EnableSelfSelection",@"False","80BC8D0A-A585-457E-89C9-FB171C464060"); // Request Assessment:Person:EnableSelfSelection
@@ -308,9 +303,6 @@ SELECT  CASE
 {{ Person.NickName }},
 
 <p>{{ Workflow | Attribute:'CustomMessage' | NewlineToBr }}</p>
-<p>
-    These assessments are ready for you to take:
-</p>
 <p>
 	<div><!--[if mso]>
 	  <v:roundrect xmlns:v=""urn:schemas-microsoft-com:vml"" xmlns:w=""urn:schemas-microsoft-com:office:word"" href=""{{ assessmentsLink }}"" style=""height:38px;v-text-anchor:middle;width:175px;"" arcsize=""11%"" strokecolor=""#e76812"" fillcolor=""#ee7624"">
