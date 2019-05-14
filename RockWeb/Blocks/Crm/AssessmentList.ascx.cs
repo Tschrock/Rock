@@ -69,7 +69,8 @@ namespace Rockweb.Blocks.Crm
         EditorTheme = CodeEditorTheme.Rock,
         EditorHeight = 400,
         IsRequired = true,
-        DefaultValue = lavaTemplateDefaultValue )]
+        DefaultValue = lavaTemplateDefaultValue,
+        Order = 3)]
 
     #endregion Block Attributes
 
