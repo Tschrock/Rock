@@ -82,15 +82,6 @@ namespace RockWeb.Blocks.Steps
         #region Control Methods
 
         /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="savedState"></param>
-        protected override void LoadViewState( object savedState )
-        {
-            BuildDynamicControls( false );
-        }
-
-        /// <summary>
         /// Raises the <see cref="E:System.Web.UI.Control.Load" /> event.
         /// </summary>
         /// <param name="e">The <see cref="T:System.EventArgs" /> object that contains the event data.</param>
@@ -98,12 +89,15 @@ namespace RockWeb.Blocks.Steps
         {
             base.OnLoad( e );
 
-            if ( !Page.IsPostBack && !ValidateRequiredModels() )
+            if ( !IsPostBack && !ValidateRequiredModels() )
             {
                 return;
             }
 
-            ShowEditDetails( Page.IsPostBack );
+            if ( !IsPostBack )
+            {
+                ShowEditDetails();
+            }
         }
 
         #endregion
@@ -140,7 +134,7 @@ namespace RockWeb.Blocks.Steps
             rockContext.SaveChanges();
 
             step.LoadAttributes( rockContext );
-            Helper.GetEditValues( dphAttributes, step );
+            avcAttributes.GetEditValues( step );
             step.SaveAttributeValues( rockContext );
 
             GoToSuccessPage( step.Id );
@@ -206,55 +200,53 @@ namespace RockWeb.Blocks.Steps
         /// <summary>
         /// Shows the edit details.
         /// </summary>
-        private void ShowEditDetails( bool isPostback )
+        private void ShowEditDetails()
         {
-            if ( !isPostback )
+            var stepType = GetStepType();
+
+            if ( stepType == null )
             {
-                var stepType = GetStepType();
-
-                if ( stepType == null )
-                {
-                    return;
-                }
-
-                rsspStatus.StepProgramId = stepType.StepProgramId;
-
-                lStepTypeTitle.Text = string.Format( "{0} {1}",
-                    stepType.IconCssClass.IsNotNullOrWhiteSpace() ?
-                        string.Format( @"<i class=""{0}""></i>", stepType.IconCssClass ) :
-                        string.Empty,
-                    stepType.Name );
-
-                rdpEndDate.Visible = stepType.HasEndDate;
-                rdpStartDate.Label = stepType.HasEndDate ? "Start Date" : "Date";
-
-                var step = GetStep();
-                if ( step != null )
-                {
-                    rdpStartDate.SelectedDate = step.StartDateTime;
-                    rdpEndDate.SelectedDate = step.EndDateTime;
-                    rsspStatus.SelectedValue = step.StepStatusId.ToStringSafe();
-                }
+                return;
             }
 
-            BuildDynamicControls( !isPostback );
+            rsspStatus.StepProgramId = stepType.StepProgramId;
+
+            lStepTypeTitle.Text = string.Format( "{0} {1}",
+                stepType.IconCssClass.IsNotNullOrWhiteSpace() ?
+                    string.Format( @"<i class=""{0}""></i>", stepType.IconCssClass ) :
+                    string.Empty,
+                stepType.Name );
+
+            rdpEndDate.Visible = stepType.HasEndDate;
+            rdpStartDate.Label = stepType.HasEndDate ? "Start Date" : "Date";
+
+            var step = GetStep();
+            if ( step != null )
+            {
+                rdpStartDate.SelectedDate = step.StartDateTime;
+                rdpEndDate.SelectedDate = step.EndDateTime;
+                rsspStatus.SelectedValue = step.StepStatusId.ToStringSafe();
+            }
+
+            BuildDynamicControls();
         }
 
         /// <summary>
         /// Build the dynamic controls based on the attributes
         /// </summary>
-        private void BuildDynamicControls( bool setValues )
+        private void BuildDynamicControls()
         {
-            var rockContext = GetRockContext();
+            var stepEntityTypeId = EntityTypeCache.GetId( typeof( Step ) );
+            var excludedAttributes = AttributeCache.All()
+                .Where( a => a.EntityTypeId == stepEntityTypeId )
+                .Where( a => a.Key == "Order" || a.Key == "Active" );
+            avcAttributes.ExcludedAttributes = excludedAttributes.ToArray();
+
             var stepType = GetStepType();
             var step = GetStep() ?? new Step { StepTypeId = stepType.Id };
-            var entityTypeCache = EntityTypeCache.Get( "Rock.Model.Step" );
 
             step.LoadAttributes();
-
-            Helper.UpdateAttributes( entityTypeCache.GetEntityType(), entityTypeCache.Id, null, null, rockContext );
-            dphAttributes.Controls.Clear();
-            Helper.AddEditControls( step, dphAttributes, setValues, BlockValidationGroup, 2 );
+            avcAttributes.AddEditControls( step );
         }
 
         #endregion

@@ -28,8 +28,6 @@ namespace Rock.Model
             <br />
             <small>{{ CompletedDateTime | Date:'M/d/yyyy' }}</small>
         {% endif %}
-    {% else %}
-        In Progress
     {% endif %}
 </p>
 {% if StepCount > 1 %}

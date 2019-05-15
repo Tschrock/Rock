@@ -45,6 +45,10 @@
         width: 100%;
     }
 
+    .step-records-table tr {
+        height: 50px;
+    }
+
     .step-records-table td {
         border: 1px solid #d4d4d4;
         vertical-align: central;

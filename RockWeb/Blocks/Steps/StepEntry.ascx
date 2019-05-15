@@ -33,7 +33,7 @@
 
                     <div class="row">
                         <div class="col-sm-12">
-                            <Rock:DynamicPlaceHolder ID="dphAttributes" runat="server" />
+                            <Rock:AttributeValuesContainer ID="avcAttributes" runat="server" NumberOfColumns="2" />
                         </div>
                     </div>
 
