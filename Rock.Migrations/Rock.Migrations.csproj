@@ -228,33 +228,9 @@
     <Compile Include="Migrations\201902272058547_PersonGivingLeaderIdUpdate.Designer.cs">
       <DependentUpon>201902272058547_PersonGivingLeaderIdUpdate.cs</DependentUpon>
     </Compile>
-    <Compile Include="Migrations\201903152051583_AddedAssessments.cs" />
-    <Compile Include="Migrations\201903152051583_AddedAssessments.Designer.cs">
-      <DependentUpon>201903152051583_AddedAssessments.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Migrations\201904041403330_AddConflictProfile.cs" />
-    <Compile Include="Migrations\201904041403330_AddConflictProfile.Designer.cs">
-      <DependentUpon>201904041403330_AddConflictProfile.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Migrations\201904081606092_AddAssessmentForExistingData.cs" />
-    <Compile Include="Migrations\201904081606092_AddAssessmentForExistingData.Designer.cs">
-      <DependentUpon>201904081606092_AddAssessmentForExistingData.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Migrations\201904120937530_AddEmotionalIntelligence.cs" />
-    <Compile Include="Migrations\201904120937530_AddEmotionalIntelligence.Designer.cs">
-      <DependentUpon>201904120937530_AddEmotionalIntelligence.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Migrations\201904232307529_AssessmentSystem.cs" />
-    <Compile Include="Migrations\201904232307529_AssessmentSystem.Designer.cs">
-      <DependentUpon>201904232307529_AssessmentSystem.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Migrations\201905011250264_AddMotivators.cs" />
-    <Compile Include="Migrations\201905011250264_AddMotivators.Designer.cs">
-      <DependentUpon>201905011250264_AddMotivators.cs</DependentUpon>
-    </Compile>
-    <Compile Include="Migrations\201905141304408_UpdateAssessmentLayout.cs" />
-    <Compile Include="Migrations\201905141304408_UpdateAssessmentLayout.Designer.cs">
-      <DependentUpon>201905141304408_UpdateAssessmentLayout.cs</DependentUpon>
+    <Compile Include="Migrations\201905142217505_Assessments.cs" />
+    <Compile Include="Migrations\201905142217505_Assessments.Designer.cs">
+      <DependentUpon>201905142217505_Assessments.cs</DependentUpon>
     </Compile>
     <Compile Include="Migrations\CreateDatabase\201311251734059_CreateDatabase.cs" />
     <Compile Include="Migrations\CreateDatabase\201311251734059_CreateDatabase.Designer.cs">
@@ -668,26 +644,8 @@
     <EmbeddedResource Include="Migrations\201902272058547_PersonGivingLeaderIdUpdate.resx">
       <DependentUpon>201902272058547_PersonGivingLeaderIdUpdate.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="Migrations\201903152051583_AddedAssessments.resx">
-      <DependentUpon>201903152051583_AddedAssessments.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Migrations\201904041403330_AddConflictProfile.resx">
-      <DependentUpon>201904041403330_AddConflictProfile.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Migrations\201904081606092_AddAssessmentForExistingData.resx">
-      <DependentUpon>201904081606092_AddAssessmentForExistingData.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Migrations\201904120937530_AddEmotionalIntelligence.resx">
-      <DependentUpon>201904120937530_AddEmotionalIntelligence.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Migrations\201904232307529_AssessmentSystem.resx">
-      <DependentUpon>201904232307529_AssessmentSystem.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Migrations\201905011250264_AddMotivators.resx">
-      <DependentUpon>201905011250264_AddMotivators.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Migrations\201905141304408_UpdateAssessmentLayout.resx">
-      <DependentUpon>201905141304408_UpdateAssessmentLayout.cs</DependentUpon>
+    <EmbeddedResource Include="Migrations\201905142217505_Assessments.resx">
+      <DependentUpon>201905142217505_Assessments.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Migrations\CreateDatabase\201311251734059_CreateDatabase.resx">
       <DependentUpon>201311251734059_CreateDatabase.cs</DependentUpon>
