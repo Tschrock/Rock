@@ -29,6 +29,7 @@ using Rock.Model;
 using Rock.Transactions;
 using Rock.Web.UI;
 using Rock.Web.UI.Controls;
+using Rock.Field.Types;
 
 namespace RockWeb.Blocks.Cms
 {
@@ -227,7 +228,8 @@ Guid - ContentChannelItem Guid
                 }
             }
 
-            nbDetailPage.Text = this.GetAttributeValue( "DetailPage" );
+            var ppFieldType = new PageReferenceFieldType();
+            ppFieldType.SetEditValue( ppDetailPage, null, GetAttributeValue( "DetailPage" ) );
             tbContentChannelQueryParameter.Text = this.GetAttributeValue( "ContentChannelQueryParameter" );
             ceLavaTemplate.Text = this.GetAttributeValue( "LavaTemplate" );
             nbOutputCacheDuration.Text = this.GetAttributeValue( "OutputCacheDuration" );
@@ -299,7 +301,8 @@ Guid - ContentChannelItem Guid
         {
             this.SetAttributeValue( "ContentChannel", ddlContentChannel.SelectedValue );
             this.SetAttributeValue( "Status", cblStatus.SelectedValuesAsInt.AsDelimited( "," ) );
-            this.SetAttributeValue( "DetailPage", nbDetailPage.Text );
+            var ppFieldType = new PageReferenceFieldType();
+            this.SetAttributeValue( "DetailPage", ppFieldType.GetEditValue( ppDetailPage, null ) );
             this.SetAttributeValue( "ContentChannelQueryParameter", tbContentChannelQueryParameter.Text );
             this.SetAttributeValue( "LavaTemplate", ceLavaTemplate.Text );
             this.SetAttributeValue( "OutputCacheDuration", nbOutputCacheDuration.Text );
@@ -468,7 +471,14 @@ Guid - ContentChannelItem Guid
                 var mergeFields = Rock.Lava.LavaHelper.GetCommonMergeFields( this.RockPage, this.CurrentPerson, new Rock.Lava.CommonMergeFieldsOptions { GetLegacyGlobalMergeFields = false } );
                 mergeFields.Add( "RockVersion", Rock.VersionInfo.VersionInfo.GetRockProductVersionNumber() );
                 mergeFields.Add( "Item", contentChannelItem );
-                mergeFields.Add( "DetailPage", GetAttributeValue( "DetailPage" ) );
+                int detailPage = 0;
+                var page = PageCache.Get( GetAttributeValue( "DetailPage" ) );
+                if ( page != null )
+                {
+                    detailPage = page.Id;
+                }
+
+                mergeFields.Add( "DetailPage", detailPage );
 
                 string metaDescriptionValue = GetMetaValueFromAttribute( this.GetAttributeValue( "MetaDescriptionAttribute" ), contentChannelItem );
 
@@ -479,10 +489,10 @@ Guid - ContentChannelItem Guid
                 }
 
                 AddHtmlMeta( "og:type", this.GetAttributeValue( "OpenGraphType" ) );
-                AddHtmlMeta( "og:title", GetMetaValueFromAttribute( this.GetAttributeValue( "OpenGraphTitleAttribute" ), contentChannelItem ) );
+                AddHtmlMeta( "og:title", GetMetaValueFromAttribute( this.GetAttributeValue( "OpenGraphTitleAttribute" ), contentChannelItem ) ?? contentChannelItem.Title );
                 AddHtmlMeta( "og:description", GetMetaValueFromAttribute( this.GetAttributeValue( "OpenGraphDescriptionAttribute" ), contentChannelItem ) );
                 AddHtmlMeta( "og:image", GetMetaValueFromAttribute( this.GetAttributeValue( "OpenGraphImageAttribute" ), contentChannelItem ) );
-                AddHtmlMeta( "twitter:title", GetMetaValueFromAttribute( this.GetAttributeValue( "TwitterTitleAttribute" ), contentChannelItem ) );
+                AddHtmlMeta( "twitter:title", GetMetaValueFromAttribute( this.GetAttributeValue( "TwitterTitleAttribute" ), contentChannelItem ) ?? contentChannelItem.Title );
                 AddHtmlMeta( "twitter:description", GetMetaValueFromAttribute( this.GetAttributeValue( "TwitterDescriptionAttribute" ), contentChannelItem ) );
                 AddHtmlMeta( "twitter:image", GetMetaValueFromAttribute( this.GetAttributeValue( "TwitterImageAttribute" ), contentChannelItem ) );
                 var twitterCard = this.GetAttributeValue( "TwitterCard" );
@@ -542,6 +552,7 @@ Guid - ContentChannelItem Guid
         private ContentChannelItem GetContentChannelItem( string contentChannelItemKey )
         {
             int? itemCacheDuration = GetAttributeValue( "ItemCacheDuration" ).AsIntegerOrNull();
+            Guid? contentChannelGuid = GetAttributeValue( "ContentChannel" ).AsGuidOrNull();
 
             ContentChannelItem contentChannelItem = null;
 
@@ -551,7 +562,7 @@ Guid - ContentChannelItem Guid
                 return null;
             }
 
-            string itemCacheKey = ITEM_CACHE_KEY_PREFIX + contentChannelItemKey;
+            string itemCacheKey = ITEM_CACHE_KEY_PREFIX + contentChannelGuid + "_" + contentChannelItemKey;
 
             if ( itemCacheDuration.HasValue && itemCacheDuration.Value > 0 )
             {
@@ -577,7 +588,16 @@ Guid - ContentChannelItem Guid
             }
             else
             {
-                contentChannelItem = new ContentChannelItemService( rockContext ).Queryable().Where( a => a.ContentChannelItemSlugs.Any( s => s.Slug == contentChannelItemKey ) ).FirstOrDefault();
+                var contentChannelQuery = new ContentChannelItemService( rockContext ).Queryable();
+                if ( contentChannelGuid.HasValue )
+                {
+
+                    contentChannelQuery = contentChannelQuery.Where( c => c.ContentChannel.Guid == contentChannelGuid );
+                }
+
+                contentChannelItem = contentChannelQuery
+                    .Where( a => a.ContentChannelItemSlugs.Any( s => s.Slug == contentChannelItemKey ) )
+                    .FirstOrDefault();
             }
 
             if ( contentChannelItem != null && itemCacheDuration.HasValue && itemCacheDuration.Value > 0 )
@@ -608,22 +628,21 @@ Guid - ContentChannelItem Guid
             }
             else
             {
-                if ( Request.QueryString.HasKeys() )
+                var currentRoute = ( ( System.Web.Routing.Route ) Page.RouteData.Route );
+                // if this is the standard "page/{PageId}" route, don't grab the Item from the route since it would just be the pageId
+                if ( currentRoute == null || currentRoute.Url != "page/{PageId}" )
+                {
+                    // if no specific Parameter was specified, get whatever the last Parameter in the Route is
+                    var key = this.Page.RouteData.Values.Keys.LastOrDefault();
+                    if ( key.IsNotNullOrWhiteSpace() )
+                    {
+                        contentChannelItemKey = this.Page.RouteData.Values[key].ToString();
+                    }
+                }
+                else if ( Request.QueryString.HasKeys() )
                 {
                     contentChannelItemKey = this.PageParameter( Request.QueryString.Keys[0] );
                 }
-                else
-                {
-                    var currentRoute = ( ( System.Web.Routing.Route ) Page.RouteData.Route );
-
-                    // if this is the standard "page/{PageId" route, don't grab the Item from the route since it would just be the pageId
-                    if ( currentRoute == null || currentRoute.Url != "page/{PageId}" )
-                    {
-                        // if no specific Parameter was specified, and there was no QueryString, get whatever the last Parameter in the Route is
-                        contentChannelItemKey = this.PageParameters().Select( a => a.Value.ToString() ).LastOrDefault();
-                    }
-                }
-
             }
 
             return contentChannelItemKey;

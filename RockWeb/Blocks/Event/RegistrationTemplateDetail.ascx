@@ -34,7 +34,7 @@
                 </div>
             </div>
             <Rock:PanelDrawer ID="pdAuditDetails" runat="server"></Rock:PanelDrawer>
-            <div class="panel-body container-fluid">
+            <div class="panel-body">
 
                 <asp:ValidationSummary ID="vsDetails" runat="server" HeaderText="Please correct the following:" CssClass="alert alert-validation" />
                 <Rock:NotificationBox ID="nbValidationError" runat="server" NotificationBoxType="Danger" Heading="Please correct the following:" Visible="false" />
@@ -48,6 +48,11 @@
                         </div>
                         <div class="col-md-6">
                             <Rock:RockCheckBox ID="cbIsActive" runat="server" Text="Active" />
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <Rock:DataTextBox ID="tbDescription" runat="server" SourceTypeName="Rock.Model.RegistrationTemplate, Rock" PropertyName="Description" TextMode="MultiLine" Rows="3" />
                         </div>
                     </div>
 
@@ -400,6 +405,11 @@
                             </Rock:RockControlWrapper>
                         </div>
                     </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <Rock:RockLiteral ID="lDescription" runat="server" Label="Description" />
+                        </div>
+                    </div>
 
                     <div class="actions">
                         <asp:LinkButton ID="btnEdit" runat="server" AccessKey="m" ToolTip="Alt+m" Text="Edit" CssClass="btn btn-primary" OnClick="btnEdit_Click" />
@@ -454,7 +464,7 @@
                         <Rock:RockCheckBox ID="cbCommonValue" runat="server" Label="Common Value" Text="Yes" Visible="false" ValidationGroup="Field"
                             Help="When registering more than one person, should the value of this attribute default to the value entered for first person registered?" />
                         <Rock:RockCheckBox ID="cbShowOnGrid" runat="server" Label="Show on Grid" Text="Yes" Visible="false" ValidationGroup="Field"
-                            Help="Should this value be displayed on the list of registrants?" />
+                            Help="Should this value be displayed on the list of registrants? (Note: not all person fields are supported and therefore not shown on the grid)" />
                     </div>
                     <div class="col-md-3">
                         <Rock:RockCheckBox ID="cbUsePersonCurrentValue" runat="server" Label="Use Current Value" Text="Yes" Visible="false" ValidationGroup="Field"

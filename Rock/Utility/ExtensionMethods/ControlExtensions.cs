@@ -16,10 +16,12 @@
 //
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Web.UI.WebControls;
+
 using Rock.Web.Cache;
 
 namespace Rock
@@ -147,6 +149,31 @@ namespace Rock
                     if ( parentControl is T )
                     {
                         return parentControl as T;
+                    }
+
+                    parentControl = parentControl.Parent;
+                }
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        /// Finds the first parent control matching the specified condition
+        /// </summary>
+        /// <param name="control">The control.</param>
+        /// <param name="condition">The condition.</param>
+        /// <returns></returns>
+        public static System.Web.UI.Control FindFirstParentWhere( this System.Web.UI.Control control, Func<System.Web.UI.Control, bool> condition )
+        {
+            if ( control != null )
+            {
+                var parentControl = control.Parent;
+                while ( parentControl != null )
+                {
+                    if ( condition( parentControl ) )
+                    {
+                        return parentControl;
                     }
 
                     parentControl = parentControl.Parent;
@@ -474,7 +501,10 @@ namespace Rock
                 }
                 else
                 {
-                    dictionary.Add( Convert.ToInt32( value ), name.SplitCase() );
+                    // if the Enum has a [Description] attribute, use the description text
+                    var description = fieldInfo.GetCustomAttribute<DescriptionAttribute>()?.Description ?? name.SplitCase();
+
+                    dictionary.Add( Convert.ToInt32( value ), description );
                 }
             }
 

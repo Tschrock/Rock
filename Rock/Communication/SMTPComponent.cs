@@ -21,10 +21,11 @@ using System.Linq;
 using System.Net.Mail;
 using System.Net.Mime;
 using System.Text.RegularExpressions;
-using Rock.Web.Cache;
+
 using Rock.Data;
 using Rock.Model;
 using Rock.Transactions;
+using Rock.Web.Cache;
 
 namespace Rock.Communication.Transport
 {
@@ -551,6 +552,12 @@ namespace Rock.Communication.Transport
                     {
                         recipient.Status = CommunicationRecipientStatus.Failed;
                         recipient.StatusNote = "No Email Address";
+                        valid = false;
+                    }
+                    else if ( !person.IsEmailActive )
+                    {
+                        recipient.Status = CommunicationRecipientStatus.Failed;
+                        recipient.StatusNote = "Recipient Email Address is not active";
                         valid = false;
                     }
                     else if ( person.EmailPreference == Model.EmailPreference.DoNotEmail )

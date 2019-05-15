@@ -14,8 +14,6 @@
 // limitations under the License.
 // </copyright>
 //
-using System;
-
 namespace Rock.SystemGuid
 {
     /// <summary>
@@ -178,6 +176,11 @@ namespace Rock.SystemGuid
         /// The financial source of On-site Collection
         /// </summary>
         public const string FINANCIAL_SOURCE_TYPE_ONSITE_COLLECTION = "BE7ECF50-52BC-4774-808D-574BA842DB98";
+
+        /// <summary>
+        /// The financial source of Text-to-Give (Give action of the SMS actions)
+        /// </summary>
+        public const string FINANCIAL_SOURCE_TYPE_SMS_GIVE = "8BA95E24-D291-499E-A535-4DCAC365689B";
 
         #endregion
 

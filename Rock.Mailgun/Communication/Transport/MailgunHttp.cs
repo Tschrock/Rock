@@ -294,6 +294,7 @@ namespace Rock.Communication.Transport
                 {
                     // Resolve any possible merge fields in the replyTo address
                     replyTo.Name = "h:Reply-To";
+                    replyTo.Type = ParameterType.GetOrPost;
                     replyTo.Value = communication.ReplyToEmail.ResolveMergeFields( mergeFields, currentPerson );
                 }
 
@@ -498,6 +499,12 @@ namespace Rock.Communication.Transport
                     {
                         recipient.Status = CommunicationRecipientStatus.Failed;
                         recipient.StatusNote = "No Email Address";
+                        valid = false;
+                    }
+                    else if ( !person.IsEmailActive )
+                    {
+                        recipient.Status = CommunicationRecipientStatus.Failed;
+                        recipient.StatusNote = "Recipient Email Address is not active";
                         valid = false;
                     }
                     else if ( person.EmailPreference == Model.EmailPreference.DoNotEmail )

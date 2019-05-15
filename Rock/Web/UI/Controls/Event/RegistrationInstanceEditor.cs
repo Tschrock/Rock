@@ -15,16 +15,13 @@
 // </copyright>
 //
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Web.UI;
-using System.Web.UI.HtmlControls;
 using System.Web.UI.WebControls;
+
 using Rock;
 using Rock.Data;
 using Rock.Model;
-using Rock.Web.Cache;
-using Rock.Workflow;
 
 namespace Rock.Web.UI.Controls
 {
@@ -825,7 +822,7 @@ namespace Rock.Web.UI.Controls
                 _htmlAdditionalReminderDetails.ID = this.ID + "_htmlAdditionalReminderDetails";
                 _htmlAdditionalReminderDetails.Toolbar = HtmlEditor.ToolbarConfig.Light;
                 _htmlAdditionalReminderDetails.Label = "Additional Reminder Details";
-                _htmlAdditionalReminderDetails.Help = "These confirmation details will be appended to those from the registration template when displayed at the end of the registration process.";
+                _htmlAdditionalReminderDetails.Help = "These reminder details will be included in the reminder notification.";
                 _htmlAdditionalReminderDetails.Height = 200;
                 Controls.Add( _htmlAdditionalReminderDetails );
 

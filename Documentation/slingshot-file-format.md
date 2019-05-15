@@ -160,7 +160,7 @@ The following are new, proposed file format definitions that are being considere
 
 `PersonId,EntityId,EntityType`
 
-## person-relationship.csv
+## person-knownrelationship.csv
 
 `FromPersonId,ToPersonId,GroupRole`
 
@@ -168,37 +168,55 @@ The following are new, proposed file format definitions that are being considere
 
 `PersonId,UserName,SecurityType`
 
-## registrationTemplate.csv
+## registrationtemplate.csv
 
 `Id,Name,Category,GroupTypeId,AllowMultipleRegistrants,AllowGroupPlacement,MaxRegistrants,RegistrantsSameFamily,Notify,SetCostOnInstance,Cost,MinimumInitialPayment,AllowExternalRegistrationUpdates,AddPersonNote,LoginRequired,FinancialGateway,BatchNamePrefix,PaymentReminderTimeSpan,RegistrationTerm,RegistrantTerm,DiscountTerm,FeeTerm`
 
-## registrationTemplate-fee.csv
+## registrationtemplate-fee.csv
 
 `Id,RegistrationTemplateId,Name,Type,DiscountApplies`
 
-## registrationTemplate-feeitem.csv
+## registrationtemplate-feeitem.csv
 
 `RegistrationTemplateFeeId,Name,Cost`
 
-## registrationTemplate-discount.csv
+## registrationtemplate-discount.csv
 
 `Id,RegistrationTemplateId,Code,AutoApplyDiscount,DiscountPercentage,DiscountAmount`
 
-## registrationTemplate-form.csv
+## registrationtemplate-form.csv
 
 `Id,RegistrationTemplateId,Name`
 
-## registrationTemplate-formfield.csv
+## registrationtemplate-formfield.csv
 
 `RegistrationTemplateFormId,FieldSource,PersonFieldType,PreText,PostText,IsGridField,IsRequired`
 
-## registrationInstance.csv
+## registrationinstance.csv
 
 `Id,Name,RegistrationTemplateId,StartDateTime,EndDateTime,SendReminderDateTime,MaxAttendees,AccountId,ContactPhone,ContactEmail,PersonId,AdditionalReminderDetails,AdditionalConfirmationDetails`
 
 
+# Proposed 4/11/2019
 
+The following are new, proposed file format definitions that are being considered for addition to the Slingshot importer for "Business" data.
 
+## business.csv
 
+`Id,Name,RecordStatus,InactiveReason,Email,EmailPreference,CampusId`
 
+## business-address.csv
+
+`BusinessId,Street1,Street2,City,State,PostalCode,Country,Latitude,Longitude,AddressType`
+
+## business-phone.csv
+
+`BusinessId,PhoneType,PhoneNumber,IsMessagingEnabled,IsUnlisted`
+
+## business-contact.csv
+
+`PersonId,BusinessId`
+
+Example:
+`14,3213213210`
 

@@ -21,6 +21,7 @@ using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Data.Entity;
+using System.Data.Entity.Infrastructure;
 using System.Data.Entity.ModelConfiguration;
 using System.Data.Entity.SqlServer;
 using System.IO;
@@ -511,6 +512,15 @@ namespace Rock.Model
         /// </value>
         [DataMember]
         public DateTime? DeceasedDate { get; set; }
+
+        /// <summary>
+        /// Gets or sets the person's default financial account gift designation.
+        /// </summary>
+        /// <value>
+        /// The financial account id.
+        /// </value>
+        [DataMember]
+        public int? ContributionFinancialAccountId { get; set; }
 
         #endregion
 
@@ -1006,30 +1016,59 @@ namespace Rock.Model
         public virtual Group PrimaryFamily { get; set; }
 
         /// <summary>
+        /// Gets or sets the person's default financial account gift designation.
+        /// </summary>
+        /// <value>
+        /// The financial account.
+        /// </value>
+        [LavaIgnore]
+        public virtual FinancialAccount ContributionFinancialAccount { get; set; }
+
+        /// <summary>
         /// Gets the Person's birth date. Note: Use SetBirthDate to set the Birthdate
         /// </summary>
         /// <value>
         /// A <see cref="System.DateTime"/> representing the Person's birthdate.  If no birthdate is available, null is returned. If the year is not available then the birthdate is returned with the DateTime.MinValue.Year.
         /// </value>
         [DataMember]
-        [DatabaseGenerated( DatabaseGeneratedOption.Computed )]
         [Column( TypeName = "Date" )]
         public DateTime? BirthDate
         {
             get {
-                // NOTE: This is the In-Memory get, LinqToSql will get the value from the database
-                if ( BirthDay == null || BirthMonth == null )
-                {
-                    return null;
-                }
-                else
-                {
-                    return new DateTime( BirthYear ?? DateTime.MinValue.Year, BirthMonth.Value, BirthDay.Value );
-                }
+                _birthDate = CalculateBirthDate();
+                return _birthDate;
             }
 
             private set {
-                // don't do anything here since EF uses this for loading the Birthdate From the database. Use SetBirthDate to set the birthdate
+                _birthDate = value;
+            }
+        }
+
+        private DateTime? _birthDate ;
+
+        /// <summary>
+        /// Calculates the birthdate from the BirthYear, BirthMonth, and BirthDay.
+        /// Will return null if BirthMonth or BirthDay is null.
+        /// If BirthYear is null then DateTime.MinValue.Year (Year = 1) is used.
+        /// </summary>
+        /// <returns></returns>
+        private DateTime? CalculateBirthDate()
+        {
+             if ( BirthDay == null || BirthMonth == null )
+                {
+                    return null;
+                }
+            else
+            {
+                if ( BirthMonth <= 12 )
+                {
+                    if ( BirthDay <= DateTime.DaysInMonth( BirthYear ?? DateTime.MinValue.Year, BirthMonth.Value ) )
+                    {
+                        return new DateTime( BirthYear ?? DateTime.MinValue.Year, BirthMonth.Value, BirthDay.Value );
+                    }
+                }
+
+                return null;
             }
         }
 
@@ -1810,7 +1849,7 @@ namespace Rock.Model
         /// </summary>
         /// <param name="dbContext">The database context.</param>
         /// <param name="entry">The entry.</param>
-        public override void PreSaveChanges( Rock.Data.DbContext dbContext, System.Data.Entity.Infrastructure.DbEntityEntry entry )
+        public override void PreSaveChanges( Rock.Data.DbContext dbContext, DbEntityEntry entry )
         {
             var rockContext = ( RockContext ) dbContext;
 
@@ -1902,6 +1941,9 @@ namespace Rock.Model
                 }
             }
 
+            // Calculates the BirthDate and sets it
+            this.BirthDate = this.CalculateBirthDate();
+
             CalculateSignals();
 
             if ( this.IsValid )
@@ -1914,7 +1956,7 @@ namespace Rock.Model
 
             switch ( entry.State )
             {
-                case System.Data.Entity.EntityState.Added:
+                case EntityState.Added:
                     {
                         HistoryChanges.AddChange( History.HistoryVerb.Add, History.HistoryChangeType.Record, "Person" ).SetNewValue( this.FullName );
 
@@ -1964,7 +2006,7 @@ namespace Rock.Model
                         break;
                     }
 
-                case System.Data.Entity.EntityState.Modified:
+                case EntityState.Modified:
                     {
                         History.EvaluateChange( HistoryChanges, "Record Type", entry.OriginalValues["RecordTypeValueId"].ToStringSafe().AsIntegerOrNull(), RecordTypeValue, RecordTypeValueId );
                         History.EvaluateChange( HistoryChanges, "Record Status", entry.OriginalValues["RecordStatusValueId"].ToStringSafe().AsIntegerOrNull(), RecordStatusValue, RecordStatusValueId );
@@ -2042,7 +2084,7 @@ namespace Rock.Model
                         break;
                     }
 
-                case System.Data.Entity.EntityState.Deleted:
+                case EntityState.Deleted:
                     {
                         HistoryChanges.AddChange( History.HistoryVerb.Delete, History.HistoryChangeType.Record, null );
 
@@ -2983,6 +3025,7 @@ namespace Rock.Model
             this.HasOptional( p => p.Photo ).WithMany().HasForeignKey( p => p.PhotoId ).WillCascadeOnDelete( false );
             this.HasOptional( p => p.GivingGroup ).WithMany().HasForeignKey( p => p.GivingGroupId ).WillCascadeOnDelete( false );
             this.HasOptional( p => p.PrimaryFamily ).WithMany().HasForeignKey( p => p.PrimaryFamilyId ).WillCascadeOnDelete( false );
+            this.HasOptional( p => p.ContributionFinancialAccount ).WithMany().HasForeignKey( p => p.ContributionFinancialAccountId ).WillCascadeOnDelete( false );
         }
     }
 

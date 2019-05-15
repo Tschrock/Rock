@@ -23,13 +23,12 @@
 
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Data.Entity;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Web.Http;
-using System.Web.Http.OData;
+
 using Rock;
 using Rock.Data;
 using Rock.Financial;
@@ -132,24 +131,40 @@ namespace Rock.Rest.Controllers
 
             var automatedPaymentProcessor = new AutomatedPaymentProcessor( GetPersonAliasId( rockContext ), automatedPaymentArgs, rockContext, enableDuplicateChecking, enableScheduleAdherenceProtection );
 
-            if ( !automatedPaymentProcessor.AreArgsValid( out errorMessage ) ||
-                automatedPaymentProcessor.IsRepeatCharge( out errorMessage ) ||
-                !automatedPaymentProcessor.IsAccordingToSchedule( out errorMessage ) )
+            if ( !automatedPaymentProcessor.AreArgsValid( out errorMessage ) )
             {
                 var errorResponse = ControllerContext.Request.CreateErrorResponse( HttpStatusCode.BadRequest, errorMessage );
                 throw new HttpResponseException( errorResponse );
             }
 
+            if ( automatedPaymentProcessor.IsRepeatCharge( out errorMessage ) ||
+                !automatedPaymentProcessor.IsAccordingToSchedule( out errorMessage ) )
+            {
+                var errorResponse = ControllerContext.Request.CreateErrorResponse( HttpStatusCode.Conflict, errorMessage );
+                throw new HttpResponseException( errorResponse );
+            }
+
             var transaction = automatedPaymentProcessor.ProcessCharge( out errorMessage );
+            var gatewayException = automatedPaymentProcessor.GetMostRecentException();
 
             if ( !string.IsNullOrEmpty( errorMessage ) )
             {
+                if ( gatewayException != null )
+                {
+                    throw gatewayException;
+                }
+
                 var errorResponse = ControllerContext.Request.CreateErrorResponse( HttpStatusCode.InternalServerError, errorMessage );
                 throw new HttpResponseException( errorResponse );
             }
 
             if ( transaction == null )
             {
+                if ( gatewayException != null )
+                {
+                    throw gatewayException;
+                }
+
                 var errorResponse = ControllerContext.Request.CreateErrorResponse( HttpStatusCode.InternalServerError, "No transaction was created" );
                 throw new HttpResponseException( errorResponse );
             }

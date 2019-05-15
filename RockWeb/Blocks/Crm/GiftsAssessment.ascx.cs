@@ -229,13 +229,11 @@ namespace Rockweb.Blocks.Crm
         /// </value>
         public decimal PercentComplete
         {
-            get
-            {
+            get {
                 return _percentComplete;
             }
 
-            set
-            {
+            set {
                 _percentComplete = value;
             }
         }
@@ -355,6 +353,18 @@ namespace Rockweb.Blocks.Crm
                         pnlResult.Visible = false;
                         nbError.Visible = true;
                         nbError.Text = "You can take the test without the request.";
+                    }
+                }
+                else
+                {
+                    pnlInstructions.Visible = false;
+                    pnlQuestion.Visible = false;
+                    pnlResult.Visible = false;
+                    nbError.Visible = true;
+
+                    if ( _isQuerystringPersonKey )
+                    {
+                        nbError.Text = "There is an issue locating the person associated with the request.";
                     }
                 }
             }

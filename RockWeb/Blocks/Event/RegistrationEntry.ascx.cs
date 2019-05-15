@@ -733,7 +733,7 @@ namespace RockWeb.Blocks.Event
             if ( _saveNavigationHistory )
             {
                 // make sure that a URL with navigation history parameters is really from a browser navigation and not a Link or Refresh
-                hfAllowNavigate.Value = true.ToTrueFalse();
+                hfAllowNavigate.Value = ( CurrentPanel == PanelIndex.PanelSummary ? false : true ).ToTrueFalse();
                 try
                 {
                     if ( CurrentPanel != PanelIndex.PanelRegistrant )
@@ -824,6 +824,15 @@ namespace RockWeb.Blocks.Event
                             break;
                         }
                 }
+            }
+            else if ( CurrentPanel == PanelIndex.PanelSummary && !hfAllowNavigate.Value.AsBoolean() )
+            {
+                Dictionary<string, string> qryParams = new Dictionary<string, string>();
+                if ( RegistrationInstanceState != null )
+                {
+                    qryParams.Add( REGISTRATION_INSTANCE_ID_PARAM_NAME, RegistrationInstanceState.Id.ToString() );
+                }
+                this.NavigateToCurrentPageReference( qryParams );
             }
             else
             {
@@ -1311,7 +1320,7 @@ namespace RockWeb.Blocks.Event
         {
             if ( RegistrationState != null )
             {
-                RegistrationState.Registrants.ForEach( r => r.DiscountApplies = true );
+                RegistrationState.Registrants.ForEach( r => r.DiscountApplies = false );
 
                 RegistrationTemplateDiscount discount = null;
                 bool validDiscount = true;
@@ -1773,7 +1782,8 @@ namespace RockWeb.Blocks.Event
 
             if ( RegistrationState != null )
             {
-                if ( !RegistrationState.RegistrationId.HasValue && RegistrationInstanceState != null && RegistrationInstanceState.MaxAttendees > 0 )
+                // Calculate the available slots. If maxAttendees is 0 that means unlimited since this is not a nullable.
+                if ( !RegistrationState.RegistrationId.HasValue && RegistrationInstanceState != null && RegistrationInstanceState.MaxAttendees != 0 )
                 {
                     var existingRegistrantIds = RegistrationState.Registrants.Select( r => r.Id ).ToList();
                     var otherRegistrantsCount = new RegistrationRegistrantService( new RockContext() ).Queryable()
@@ -1847,84 +1857,87 @@ namespace RockWeb.Blocks.Event
         /// <param name="registrantCount">The number of registrants that registration should have.</param>
         private void SetRegistrantState( int registrantCount )
         {
-            if ( RegistrationState != null )
+            if ( RegistrationState == null )
             {
-                decimal cost = RegistrationTemplate.Cost;
-                if ( ( RegistrationTemplate.SetCostOnInstance ?? false ) && RegistrationInstanceState != null )
-                {
-                    cost = RegistrationInstanceState.Cost ?? 0.0m;
-                }
-
-                // If this is the first registrant being added and all are in the same family, default it to the current person
-                if ( RegistrationState.RegistrantCount == 0 && registrantCount == 1 && CurrentPerson != null && RegistrationTemplate.RegistrantsSameFamily == RegistrantsSameFamily.Yes )
-                {
-                    var registrant = new RegistrantInfo( RegistrationInstanceState, CurrentPerson );
-                    if ( RegistrationTemplate.ShowCurrentFamilyMembers )
-                    {
-                        // If currentfamily members can be selected, the firstname and lastname fields will be
-                        // disabled so values need to be set (in case those fields did not have the 'showCurrentValue'
-                        // option selected
-                        foreach ( var field in RegistrationTemplate.Forms
-                            .SelectMany( f => f.Fields )
-                            .Where( f =>
-                                ( f.PersonFieldType == RegistrationPersonFieldType.FirstName ||
-                                f.PersonFieldType == RegistrationPersonFieldType.LastName ) &&
-                                f.FieldSource == RegistrationFieldSource.PersonField ) )
-                        {
-                            registrant.FieldValues.AddOrReplace(
-                                field.Id,
-                                new FieldValueObject( field, field.PersonFieldType == RegistrationPersonFieldType.FirstName ? CurrentPerson.NickName : CurrentPerson.LastName ) );
-                        }
-                    }
-
-                    registrant.Cost = cost;
-                    registrant.FamilyGuid = RegistrationState.FamilyGuid;
-                    if ( RegistrationState.Registrants.Count >= RegistrationState.SlotsAvailable )
-                    {
-                        registrant.OnWaitList = true;
-                    }
-
-                    RegistrationState.Registrants.Add( registrant );
-                }
-
-                // While the number of registrants belonging to registration is less than the selected count, add another registrant
-                while ( RegistrationState.RegistrantCount < registrantCount )
-                {
-                    var registrant = new RegistrantInfo { Cost = cost };
-                    if ( RegistrationTemplate.RegistrantsSameFamily == RegistrantsSameFamily.No )
-                    {
-                        registrant.FamilyGuid = Guid.NewGuid();
-                    }
-                    else if ( RegistrationTemplate.RegistrantsSameFamily == RegistrantsSameFamily.Yes )
-                    {
-                        registrant.FamilyGuid = RegistrationState.FamilyGuid;
-                    }
-
-                    if ( RegistrationState.Registrants.Count >= RegistrationState.SlotsAvailable )
-                    {
-                        registrant.OnWaitList = true;
-                    }
-
-                    RegistrationState.Registrants.Add( registrant );
-                }
-
-                // Get the number of registrants that needs to be removed.
-                int removeCount = RegistrationState.RegistrantCount - registrantCount;
-                if ( removeCount > 0 )
-                {
-                    // If removing any, reverse the order of registrants, so that most recently added will be removed first
-                    RegistrationState.Registrants.Reverse();
-
-                    // Try to get the registrants to remove. Most recently added will be taken first
-                    foreach ( var registrant in RegistrationState.Registrants.Take( removeCount ).ToList() )
-                    {
-                        RegistrationState.Registrants.Remove( registrant );
-                    }
-
-                    // Reset the order after removing any registrants
-                    RegistrationState.Registrants.Reverse();
-                }
+                return;
             }
+
+            decimal cost = RegistrationTemplate.Cost;
+            if ( ( RegistrationTemplate.SetCostOnInstance ?? false ) && RegistrationInstanceState != null )
+            {
+                cost = RegistrationInstanceState.Cost ?? 0.0m;
+            }
+
+            // If this is the first registrant being added and all are in the same family, default it to the current person
+            if ( RegistrationState.RegistrantCount == 0 && registrantCount == 1 && CurrentPerson != null && RegistrationTemplate.RegistrantsSameFamily == RegistrantsSameFamily.Yes )
+            {
+                var registrant = new RegistrantInfo( RegistrationInstanceState, CurrentPerson );
+                if ( RegistrationTemplate.ShowCurrentFamilyMembers )
+                {
+                    // If currentfamily members can be selected, the firstname and lastname fields will be
+                    // disabled so values need to be set (in case those fields did not have the 'showCurrentValue'
+                    // option selected
+                    foreach ( var field in RegistrationTemplate.Forms
+                        .SelectMany( f => f.Fields )
+                        .Where( f =>
+                            ( f.PersonFieldType == RegistrationPersonFieldType.FirstName ||
+                            f.PersonFieldType == RegistrationPersonFieldType.LastName ) &&
+                            f.FieldSource == RegistrationFieldSource.PersonField ) )
+                    {
+                        registrant.FieldValues.AddOrReplace(
+                            field.Id,
+                            new FieldValueObject( field, field.PersonFieldType == RegistrationPersonFieldType.FirstName ? CurrentPerson.NickName : CurrentPerson.LastName ) );
+                    }
+                }
+
+                registrant.Cost = cost;
+                registrant.FamilyGuid = RegistrationState.FamilyGuid;
+                if ( RegistrationState.Registrants.Count >= RegistrationState.SlotsAvailable )
+                {
+                    registrant.OnWaitList = true;
+                }
+
+                RegistrationState.Registrants.Add( registrant );
+            }
+
+            // While the number of registrants belonging to registration is less than the selected count, add another registrant
+            while ( RegistrationState.RegistrantCount < registrantCount )
+            {
+                var registrant = new RegistrantInfo { Cost = cost };
+                if ( RegistrationTemplate.RegistrantsSameFamily == RegistrantsSameFamily.No )
+                {
+                    registrant.FamilyGuid = Guid.NewGuid();
+                }
+                else if ( RegistrationTemplate.RegistrantsSameFamily == RegistrantsSameFamily.Yes )
+                {
+                    registrant.FamilyGuid = RegistrationState.FamilyGuid;
+                }
+
+                if ( RegistrationState.Registrants.Count >= RegistrationState.SlotsAvailable )
+                {
+                    registrant.OnWaitList = true;
+                }
+
+                RegistrationState.Registrants.Add( registrant );
+            }
+
+            // Get the number of registrants that needs to be removed.
+            int removeCount = RegistrationState.RegistrantCount - registrantCount;
+            if ( removeCount > 0 )
+            {
+                // If removing any, reverse the order of registrants, so that most recently added will be removed first
+                RegistrationState.Registrants.Reverse();
+
+                // Try to get the registrants to remove. Most recently added will be taken first
+                foreach ( var registrant in RegistrationState.Registrants.Take( removeCount ).ToList() )
+                {
+                    RegistrationState.Registrants.Remove( registrant );
+                }
+
+                // Reset the order after removing any registrants
+                RegistrationState.Registrants.Reverse();
+            }
+            
         }
 
         #endregion
@@ -3358,8 +3371,18 @@ namespace RockWeb.Blocks.Event
                     History.EvaluateChange( batchChanges, "Control Amount", batch.ControlAmount.FormatAsCurrency(), newControlAmount.FormatAsCurrency() );
                     batch.ControlAmount = newControlAmount;
 
+                    var financialTransactionService = new FinancialTransactionService( rockContext );
+
+                    // If this is a new Batch, SaveChanges so that we can get the Batch.Id
+                    if ( batch.Id == 0 )
+                    {
+                        rockContext.SaveChanges();
+                    }
+
                     transaction.BatchId = batch.Id;
-                    batch.Transactions.Add( transaction );
+
+                    // use the financialTransactionService to add the transaction instead of batch.Transactions to avoid lazy-loading the transactions already associated with the batch
+                    financialTransactionService.Add( transaction );
 
                     rockContext.SaveChanges();
                 } );
@@ -3698,7 +3721,7 @@ namespace RockWeb.Blocks.Event
         /// <returns>true or the value of ShowOnWaitlist</returns>
         private bool FormHasWaitFields()
         {
-            if ( RegistrationTemplate != null && RegistrationState != null && RegistrationState.Registrants.Count > CurrentRegistrantIndex )
+            if ( RegistrationTemplate != null && RegistrationState != null && RegistrationState.Registrants.Count > CurrentRegistrantIndex && FormCount > CurrentFormIndex )
             {
                 var registrant = RegistrationState.Registrants[CurrentRegistrantIndex];
                 if ( registrant.OnWaitList )
@@ -4018,7 +4041,7 @@ namespace RockWeb.Blocks.Event
         {
             CurrentPanel = currentPanelIndex;
 
-            if ( CurrentPanel == PanelIndex.PanelSummary )
+            if ( CurrentPanel == PanelIndex.PanelSummary && !( RegistrationState.RegistrationId.HasValue && RegistrationState.DiscountCode.IsNotNullOrWhiteSpace() ) )
             {
                 AutoApplyDiscounts();
             }
@@ -4357,6 +4380,8 @@ namespace RockWeb.Blocks.Event
                     if ( CurrentFormIndex < FormCount )
                     {
                         ParseRegistrantControls();
+                        decimal currentStep = ( FormCount * CurrentRegistrantIndex ) + CurrentFormIndex + 1;
+                        PercentComplete = ( currentStep / ProgressBarSteps ) * 100.0m;
                     }
 
                     break;
@@ -4912,6 +4937,7 @@ namespace RockWeb.Blocks.Event
                         lUseLoggedInPersonFirstName.Text = CurrentPerson.NickName;
                         lUseLoggedInPersonLastName.Text = CurrentPerson.LastName;
                         lUseLoggedInPersonEmail.Text = CurrentPerson.Email;
+                        tbUseLoggedInPersonEmail.Text = CurrentPerson.Email;
                         lUseLoggedInPersonEmail.Visible = !CurrentPerson.Email.IsNullOrWhiteSpace();
                         tbUseLoggedInPersonEmail.Visible = CurrentPerson.Email.IsNullOrWhiteSpace();
                     }
@@ -5403,8 +5429,6 @@ namespace RockWeb.Blocks.Event
         {
             if ( RegistrationState != null )
             {
-                RegistrationState.Registrants.ForEach( r => r.DiscountApplies = true );
-
                 var discounts = RegistrationTemplate.Discounts
                         .Where( d => d.AutoApplyDiscount )
                         .OrderBy( d => d.Order )
@@ -5453,6 +5477,7 @@ namespace RockWeb.Blocks.Event
 
                     if ( validDiscount && discount.MaxRegistrants.HasValue )
                     {
+                        RegistrationState.Registrants.ForEach( r => r.DiscountApplies = false );
                         for ( int i = 0; i < RegistrationState.Registrants.Count; i++ )
                         {
                             RegistrationState.Registrants[i].DiscountApplies = i < discount.MaxRegistrants.Value;
