@@ -389,6 +389,8 @@
     <Compile Include="Attribute\WorkflowAttributeAttribute.cs" />
     <Compile Include="Attribute\WorkflowTextOrAttributeAttribute.cs" />
     <Compile Include="Attribute\WorkflowTypeFieldAttribute.cs" />
+    <Compile Include="Chart\FlotChartDataSet.cs" />
+    <Compile Include="Chart\TimeSeriesChartDataPoint.cs" />
     <Compile Include="Communication\SmsActions\SmsActionComponent.cs" />
     <Compile Include="Communication\SmsActions\SmsActionContainer.cs" />
     <Compile Include="Communication\SmsActions\SmsActionLaunchWorkflow.cs" />
@@ -541,6 +543,7 @@
     <Compile Include="Utility\ExtensionMethods\DictionaryFieldExtensions.cs" />
     <Compile Include="Utility\ExtensionMethods\EnumUtilityExtensions.cs" />
     <Compile Include="Utility\ExtensionMethods\ScheduleExtensions.cs" />
+    <Compile Include="Utility\JsonInterfaceContractResolver.cs" />
     <Compile Include="Utility\RockObsolete.cs" />
     <Compile Include="SystemGuid\SystemSetting.cs" />
     <Compile Include="SystemKey\GroupTypeAttributeKey.cs" />
