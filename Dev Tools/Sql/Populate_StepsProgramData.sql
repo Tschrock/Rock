@@ -1,41 +1,46 @@
 use rock_spark_steps
 go
 
---
--- Script to populate a Rock RMS database with sample data for the Steps module.
---
--- This script assumes the following:
--- * The Person table is populated.
--- * Step Types are arranged so that prerequisite steps occur first in the sort order.
---
+/*
+ Script to populate a Rock RMS database with sample data for the Steps module.
+
+ This script assumes the following:
+ - The Person table is populated.
+ - Step Types are arranged so that prerequisite steps occur first in the sort order.
+*/
 
 -- Parameters
 declare
 	-- Set this flag to indicate if existing sample data should be deleted.
-	@deleteExistingData bit = 1
-    -- Set this value to the maximum number of steps that can be created by this script.
-	,@maxStepCount int = 1000
-	-- Set this value to the maximum number of days between consecutive step achievements.
-	,@maxDaysBetweenSteps int = 365
-	-- Set this value to the number of years before today that the earliest steps will be created.
-	,@yearsBack int = 5
-	-- Set this value to the maximum number of people for whom steps will be created.
+	@deleteExistingPrograms bit = 0
+	,@deleteExistingSteps bit = 1
+    -- Set this value to the number of people for whom steps will be created.
 	,@maxPersonCount int = 100
-	-- Set this Step Foreign Key value to enable sample data records to be easily identified.
+	-- Set this value to the maximum number of days between consecutive step achievements.
+	,@maxDaysBetweenSteps int = 120
+	-- Set this value to place a tag in the ForeignKey field of the sample data records for easier identification.
 	,@stepSampleDataForeignKey nvarchar(100) = 'Steps Sample Data'
+
+-- Local variables
+declare
+	@createdDateTime datetime = (select convert(date, SYSDATETIME()))
+	,@createdByPersonAliasId int = (select pa.id from PersonAlias pa inner join Person p on pa.PersonId = p.Id where p.FirstName = 'Admin' and p.LastName = 'Admin');
 
 set nocount on
 
 print N'Create Steps Sample Data: started.';
 
-print N'Creating Programs...';
-
 --
 -- Create Step Programs with associated Step Types.
 --
-DECLARE @categoryGuid AS UNIQUEIDENTIFIER = '43DC43A8-420B-4012-BAA0-0A0DDF2D4A9A';
-DECLARE @programGuid AS UNIQUEIDENTIFIER = '2CAFBB12-901F-4880-A3E4-848F25CAF1A6';
+DECLARE @adultCategoryGuid AS UNIQUEIDENTIFIER = '43DC43A8-420B-4012-BAA0-0A0DDF2D4A9A';
+DECLARE @youthCategoryGuid AS UNIQUEIDENTIFIER = 'EAB10217-F288-4B29-B56F-50BD4BA5FB08';
+
+DECLARE @sacramentsProgramGuid AS UNIQUEIDENTIFIER = '2CAFBB12-901F-4880-A3E4-848F25CAF1A6';
 DECLARE @baptismStepTypeGuid AS UNIQUEIDENTIFIER = '23E73F78-587A-483F-99EF-855FD6AD1B11';
+DECLARE @eucharistStepTypeGuid AS UNIQUEIDENTIFIER = '5EA01E79-5D17-4E87-A94F-8C4DD22131B5';
+DECLARE @annointingStepTypeGuid AS UNIQUEIDENTIFIER = '48141631-38F6-40C0-8470-5253208CEA9A';
+DECLARE @confessionStepTypeGuid AS UNIQUEIDENTIFIER = '5F754006-7F8C-4BED-94A8-FC61CEEC6B43';
 DECLARE @marriageStepTypeGuid AS UNIQUEIDENTIFIER = 'D03B3C65-C128-4918-A300-509B94B90175';
 DECLARE @holyOrdersStepTypeGuid AS UNIQUEIDENTIFIER = '0099C701-6C1E-418E-A94F-C247A2FE4BA5';
 DECLARE @confirmationStepTypeGuid AS UNIQUEIDENTIFIER = 'F109169F-C1F6-46ED-9091-274540E3F3E2';
@@ -43,13 +48,55 @@ DECLARE @baptismTedGuid AS UNIQUEIDENTIFIER = '02BB71C9-5FE9-45B8-B230-51C7A8475
 DECLARE @marriage1TedGuid AS UNIQUEIDENTIFIER = '414EBE88-2CD2-40E1-893B-216DEA2CB25E';
 DECLARE @marriage2TedGuid AS UNIQUEIDENTIFIER = '314F5303-C803-442B-AE39-DAA7BC30CCEE';
 DECLARE @tedPersonAliasId AS INT = 16;
-DECLARE @successStatusGuid AS UNIQUEIDENTIFIER = 'A5C2A14F-9ED9-4DF4-A1C8-8ADF75E18833';
-DECLARE @dangerStatusGuid AS UNIQUEIDENTIFIER = 'B591240C-4D4D-49DA-82E3-F8C1738B8EC6';
+DECLARE @sacramentsStatusSuccessGuid AS UNIQUEIDENTIFIER = 'A5C2A14F-9ED9-4DF4-A1C8-8ADF75E18833';
+DECLARE @sacramentsStatusDangerGuid AS UNIQUEIDENTIFIER = 'B591240C-4D4D-49DA-82E3-F8C1738B8EC6';
 DECLARE @prereqGuid AS UNIQUEIDENTIFIER = 'D96A2C67-2D76-4697-838F-3514CA11485E';
 
---DELETE FROM StepType WHERE Guid IN (@marriageStepTypeGuid, @baptismStepTypeGuid);
+DECLARE @alphaProgramGuid AS UNIQUEIDENTIFIER = 'F7C2BA07-579B-4800-BBE1-B14B73E21E12';
+DECLARE @attenderStepTypeGuid AS UNIQUEIDENTIFIER = '24A70E5C-9871-452E-9403-3B43C003AA87';
+DECLARE @volunteerStepTypeGuid AS UNIQUEIDENTIFIER = '31DB3478-840B-4541-972D-059690AD623E';
+DECLARE @leaderStepTypeGuid AS UNIQUEIDENTIFIER = '95DF3AC6-AFBF-4BEA-AF86-805335A1C4CB';
+DECLARE @alphaStatusStartedGuid AS UNIQUEIDENTIFIER = 'F29CF8A1-76A9-4436-9726-810DF0BC95C7';
+DECLARE @alphaStatusCompletedGuid AS UNIQUEIDENTIFIER = '7BA5F14D-BB38-4AAB-AB69-3A7F49494A55';
 
-IF NOT EXISTS (SELECT * FROM Category WHERE Guid = @categoryGuid)
+if ( @deleteExistingPrograms = 1 )
+begin
+	print N'Removing existing programs...';
+
+	delete from StepType where Guid IN
+		(@baptismStepTypeGuid
+		 ,@confirmationStepTypeGuid
+		 ,@eucharistStepTypeGuid
+		 ,@confessionStepTypeGuid
+		 ,@annointingStepTypeGuid
+		 ,@holyOrdersStepTypeGuid
+		 ,@marriageStepTypeGuid
+		 ,@attenderStepTypeGuid
+		 ,@volunteerStepTypeGuid
+		 ,@leaderStepTypeGuid );
+
+	delete from StepProgram where Guid IN
+		(@sacramentsProgramGuid
+		 ,@alphaProgramGuid)
+
+	delete from Category where Guid IN
+		(@adultCategoryGuid
+		 ,@youthCategoryGuid)
+
+	delete from Step where [ForeignKey] = @stepSampleDataForeignKey;
+end
+
+if ( @deleteExistingSteps = 1 )
+begin
+	print N'Removing existing steps...';
+
+	delete from Step where [ForeignKey] = @stepSampleDataForeignKey;
+end
+
+print N'Creating Programs...';
+
+-- Add Categories
+IF NOT EXISTS (SELECT * FROM Category WHERE Guid = @adultCategoryGuid)
 BEGIN
 	INSERT INTO Category (
 		IsSystem,
@@ -60,36 +107,80 @@ BEGIN
 	) VALUES (
 		1,
 		( SELECT Id FROM EntityType WHERE Name = 'Rock.Model.StepProgram' ),
-		'Sacraments Category',
-		@categoryGuid,
-		0
+		'Adult',
+		@adultCategoryGuid,
+		1
 	);
 END
-
-IF NOT EXISTS (SELECT * FROM StepProgram WHERE Guid = @programGuid)
+IF NOT EXISTS (SELECT * FROM Category WHERE Guid = @youthCategoryGuid)
 BEGIN
-	INSERT INTO StepProgram (
-		Guid,
+	INSERT INTO Category (
+		IsSystem,
+		EntityTypeId,
 		Name,
-		Description,
-		IconCssClass,
-		IsActive,
-		[Order],
-		CategoryId,
-		DefaultListView
+		Guid,
+		[Order]
 	) VALUES (
-		@programGuid,
-		'Sacraments Program',
-		'The description of the program',
-		'fa fa-bible',
 		1,
-		0,
-		( SELECT Id FROM Category WHERE Guid = @categoryGuid ),
-		0
+		( SELECT Id FROM EntityType WHERE Name = 'Rock.Model.StepProgram' ),
+		'Youth',
+		@youthCategoryGuid,
+		2
 	);
 END
 
-IF NOT EXISTS (SELECT * FROM StepStatus WHERE Guid = @successStatusGuid)
+-- Add Step Programs
+declare @sqlInsertStepProgram nvarchar(1000)
+set @sqlInsertStepProgram = '
+BEGIN
+	IF NOT EXISTS (SELECT * FROM StepProgram WHERE Guid = @programGuid)
+	BEGIN
+		INSERT INTO StepProgram (
+			Guid
+			,Name
+			,Description
+			,IconCssClass
+			,IsActive
+			,[Order]
+			,CategoryId
+			,DefaultListView
+			,CreatedDateTime
+			,CreatedByPersonAliasId
+			,ForeignKey
+		) VALUES (
+			@programGuid
+			,@programName
+			,@description
+			,@iconCssClass
+			,@isActive
+			,@order
+			,( SELECT Id FROM Category WHERE Guid = @categoryGuid )
+			,0
+			,''' + convert(varchar, @createdDateTime, 120) + ''',' + convert(varchar, @createdByPersonAliasId) + ',''' + @stepSampleDataForeignKey + '''' + '
+		);
+	END
+END
+';
+declare @sqlInsertStepProgramParams nvarchar(1000)
+set @sqlInsertStepProgramParams = N'@programGuid uniqueidentifier, @programName nvarchar(250), @description nvarchar(max), @categoryGuid uniqueidentifier, @order int, @iconCssClass nvarchar(100), @isActive bit = 1'
+
+execute sp_executesql @sqlInsertStepProgram, @sqlInsertStepProgramParams
+	,@programGuid = @sacramentsProgramGuid
+	,@programName = 'Sacraments'
+	,@description = 'The sacraments represent significant milestones in the Christian faith journey.'
+	,@categoryGuid = @adultCategoryGuid
+	,@order = 1
+	,@iconCssClass = 'fa fa-bible'
+execute sp_executesql @sqlInsertStepProgram, @sqlInsertStepProgramParams
+	,@programGuid = @alphaProgramGuid
+	,@programName = 'Alpha'
+	,@description = 'Alpha is a series of interactive sessions that freely explore the basics of the Christian faith.'
+	,@categoryGuid = @adultCategoryGuid
+	,@order = 1
+	,@iconCssClass = 'fa fa-question'
+
+-- Add Step Statuses
+IF NOT EXISTS (SELECT * FROM StepStatus WHERE Guid = @sacramentsStatusSuccessGuid)
 BEGIN
 	INSERT INTO StepStatus (
 		StepProgramId,
@@ -100,17 +191,17 @@ BEGIN
 		[Order],
 		Guid
 	) VALUES (
-		( SELECT Id FROM StepProgram WHERE Guid = @programGuid ),
-		'DONE!',
+		( SELECT Id FROM StepProgram WHERE Guid = @sacramentsProgramGuid ),
+		'Completed',
 		1,
 		'success',
 		1,
 		1,
-		@successStatusGuid
+		@sacramentsStatusSuccessGuid
 	);
 END
 
-IF NOT EXISTS (SELECT * FROM StepStatus WHERE Guid = @dangerStatusGuid)
+IF NOT EXISTS (SELECT * FROM StepStatus WHERE Guid = @sacramentsStatusDangerGuid)
 BEGIN
 	INSERT INTO StepStatus (
 		StepProgramId,
@@ -121,194 +212,173 @@ BEGIN
 		[Order],
 		Guid
 	) VALUES (
-		( SELECT Id FROM StepProgram WHERE Guid = @programGuid ),
-		'ahh...',
+		( SELECT Id FROM StepProgram WHERE Guid = @sacramentsProgramGuid ),
+		'Pending',
 		0,
 		'danger',
 		1,
 		2,
-		@dangerStatusGuid
+		@sacramentsStatusDangerGuid
 	);
 END
 
-IF NOT EXISTS (SELECT * FROM StepType WHERE Guid = @baptismStepTypeGuid)
+IF NOT EXISTS (SELECT * FROM StepStatus WHERE Guid = @alphaStatusStartedGuid)
 BEGIN
-	INSERT INTO StepType (
+	INSERT INTO StepStatus (
 		StepProgramId,
 		Name,
-		AllowManualEditing,
-		AllowMultiple,
-		HasEndDate,
-		ShowCountOnBadge,
+		IsCompleteStatus,
+		StatusColor,
 		IsActive,
 		[Order],
-		Guid,
-		IconCssClass
-	) VALUES (
-		( SELECT Id FROM StepProgram WHERE Guid = @programGuid ),
-		'Baptism',
-		0,
-		0,
-		0,
-		1,
-		1,
-		1,
-		@baptismStepTypeGuid,
-		'fa fa-tint'
-	);
-END
-
-IF NOT EXISTS (SELECT * FROM StepType WHERE Guid = @marriageStepTypeGuid)
-BEGIN
-	INSERT INTO StepType (
-		StepProgramId,
-		Name,
-		AllowManualEditing,
-		AllowMultiple,
-		HasEndDate,
-		ShowCountOnBadge,
-		IsActive,
-		[Order],
-		Guid,
-		IconCssClass
-	) VALUES (
-		( SELECT Id FROM StepProgram WHERE Guid = @programGuid ),
-		'Marriage',
-		0,
-		1,
-		1,
-		1,
-		1,
-		2,
-		@marriageStepTypeGuid,
-		'fa fa-ring'
-	);
-END
-
-IF NOT EXISTS (SELECT * FROM StepType WHERE Guid = @confirmationStepTypeGuid)
-BEGIN
-	INSERT INTO StepType (
-		StepProgramId,
-		Name,
-		AllowManualEditing,
-		AllowMultiple,
-		HasEndDate,
-		ShowCountOnBadge,
-		IsActive,
-		[Order],
-		Guid,
-		IconCssClass
-	) VALUES (
-		( SELECT Id FROM StepProgram WHERE Guid = @programGuid ),
-		'Confirmation',
-		0,
-		0,
-		0,
-		1,
-		1,
-		4,
-		@confirmationStepTypeGuid,
-		'fa fa-bible'
-	);
-END
-
-IF NOT EXISTS (SELECT * FROM StepType WHERE Guid = @holyOrdersStepTypeGuid)
-BEGIN
-	INSERT INTO StepType (
-		StepProgramId,
-		Name,
-		AllowManualEditing,
-		AllowMultiple,
-		HasEndDate,
-		ShowCountOnBadge,
-		IsActive,
-		[Order],
-		Guid,
-		IconCssClass
-	) VALUES (
-		( SELECT Id FROM StepProgram WHERE Guid = @programGuid ),
-		'Holy Orders',
-		0,
-		0,
-		0,
-		1,
-		1,
-		4,
-		@holyOrdersStepTypeGuid,
-		'fa fa-cross'
-	);
-END
-
--- Insert attributes for step types
-DECLARE @textFieldTypeId AS INT = (SELECT Id FROM FieldType WHERE Class = 'Rock.Field.Types.TextFieldType');
-DECLARE @intFieldTypeId AS INT = (SELECT Id FROM FieldType WHERE Class = 'Rock.Field.Types.IntegerFieldType');
-DECLARE @stepEntityTypeId AS INT = (SELECT Id FROM EntityType WHERE Name = 'Rock.Model.Step');
-DECLARE @baptismBaptismalGuid AS UNIQUEIDENTIFIER = '1CBE6BE4-9699-4660-B859-D240ABDB0FA8';
-DECLARE @baptismPrepYearGuid AS UNIQUEIDENTIFIER = 'E36B38CD-D958-4552-A0D3-DF529C3283FD';
-
-IF NOT EXISTS (SELECT * FROM Attribute WHERE Guid = @baptismBaptismalGuid)
-BEGIN
-	INSERT INTO Attribute (
-		IsSystem,
-		FieldTypeId,
-		EntityTypeId,
-		EntityTypeQualifierColumn,
-		EntityTypeQualifierValue,
-		[Key],
-		Name,
-		[Order],
-		IsGridColumn,
-		IsMultiValue,
-		IsRequired,
 		Guid
 	) VALUES (
+		( SELECT Id FROM StepProgram WHERE Guid = @alphaProgramGuid ),
+		'Started',
+		0,
+		'success',
 		1,
-		@textFieldTypeId,
-		@stepEntityTypeId,
-		'StepTypeId',
-		(SELECT Id FROM StepType WHERE Guid = @baptismStepTypeGuid),
-		'BaptismalName',
-		'Baptismal Name',
 		1,
-		0,
-		0,
-		0,
-		@baptismBaptismalGuid
+		@alphaStatusStartedGuid
 	);
 END
-
-IF NOT EXISTS (SELECT * FROM Attribute WHERE Guid = @baptismPrepYearGuid)
+IF NOT EXISTS (SELECT * FROM StepStatus WHERE Guid = @alphaStatusCompletedGuid)
 BEGIN
-	INSERT INTO Attribute (
-		IsSystem,
-		FieldTypeId,
-		EntityTypeId,
-		EntityTypeQualifierColumn,
-		EntityTypeQualifierValue,
-		[Key],
+	INSERT INTO StepStatus (
+		StepProgramId,
 		Name,
+		IsCompleteStatus,
+		StatusColor,
+		IsActive,
 		[Order],
-		IsGridColumn,
-		IsMultiValue,
-		IsRequired,
 		Guid
 	) VALUES (
+		( SELECT Id FROM StepProgram WHERE Guid = @alphaProgramGuid ),
+		'Completed',
 		1,
-		@intFieldTypeId,
-		@stepEntityTypeId,
-		'StepTypeId',
-		(SELECT Id FROM StepType WHERE Guid = @baptismStepTypeGuid),
-		'PrepYear',
-		'Prep Year',
+		'success',
 		1,
-		0,
-		0,
-		0,
-		@baptismPrepYearGuid
+		1,
+		@alphaStatusCompletedGuid
 	);
 END
 
--- Add step data for Ted Decker
+-- Add Step Types
+declare @sqlInsertStepType nvarchar(1000)
+set @sqlInsertStepType = '
+BEGIN
+	IF NOT EXISTS (SELECT * FROM StepType WHERE Guid = @stepTypeGuid)
+	BEGIN
+		INSERT INTO StepType (
+			StepProgramId
+			,Name
+			,AllowMultiple
+			,HasEndDate			
+			,IsActive
+			,[Order]
+			,Guid
+			,IconCssClass
+			,AllowManualEditing
+			,ShowCountOnBadge
+			,CreatedDateTime
+			,CreatedByPersonAliasId
+			,ForeignKey
+		) VALUES (
+			( SELECT Id FROM StepProgram WHERE Guid = @programGuid )
+			,@stepTypeName
+			,@allowMultiple
+			,@hasEndDate
+			,@isActive
+			,@order
+			,@stepTypeGuid
+			,@iconCssClass
+		    ,0
+		    ,1
+			,''' + convert(varchar, @createdDateTime, 120) + ''',' + convert(varchar, @createdByPersonAliasId) + ',''' + @stepSampleDataForeignKey + '''' + '
+		);
+	END
+END
+';
+declare @sqlInsertStepTypeParams nvarchar(1000)
+set @sqlInsertStepTypeParams = N'@stepTypeGuid uniqueidentifier, @programGuid uniqueidentifier, @stepTypeName nvarchar(250), @order int, @iconCssClass nvarchar(100), @allowMultiple bit = 0, @hasEndDate bit = 0, @isActive bit = 1'
+
+execute sp_executesql @sqlInsertStepType, @sqlInsertStepTypeParams
+	,@stepTypeGuid = @baptismStepTypeGuid
+	,@programGuid =  @sacramentsProgramGuid
+	,@stepTypeName = 'Baptism'
+	,@order = 1
+	,@iconCssClass = 'fa fa-tint'
+
+execute sp_executesql @sqlInsertStepType, @sqlInsertStepTypeParams
+	,@stepTypeGuid = @confirmationStepTypeGuid
+	,@programGuid =  @sacramentsProgramGuid
+	,@stepTypeName = 'Confirmation'
+	,@order = 2
+	,@iconCssClass = 'fa fa-bible'
+
+execute sp_executesql @sqlInsertStepType, @sqlInsertStepTypeParams
+	,@stepTypeGuid = @eucharistStepTypeGuid
+	,@programGuid =  @sacramentsProgramGuid
+	,@stepTypeName = 'Eucharist'
+	,@order = 3
+	,@iconCssClass = 'fa fa-cookie'
+
+execute sp_executesql @sqlInsertStepType, @sqlInsertStepTypeParams
+	,@stepTypeGuid = @confessionStepTypeGuid
+	,@programGuid =  @sacramentsProgramGuid
+	,@stepTypeName = 'Confession'
+	,@order = 4
+	,@iconCssClass = 'fa fa-praying-hands'
+
+execute sp_executesql @sqlInsertStepType, @sqlInsertStepTypeParams
+	,@stepTypeGuid = @annointingStepTypeGuid
+	,@programGuid =  @sacramentsProgramGuid
+	,@stepTypeName = 'Annointing of the Sick'
+	,@order = 5
+	,@iconCssClass = 'fa fa-comment-medical'
+
+execute sp_executesql @sqlInsertStepType, @sqlInsertStepTypeParams
+	,@stepTypeGuid = @marriageStepTypeGuid
+	,@programGuid =  @sacramentsProgramGuid
+	,@stepTypeName = 'Marriage'
+	,@order = 6
+	,@iconCssClass = 'fa fa-ring'
+	,@allowMultiple = 1
+	,@hasEndDate = 1
+
+execute sp_executesql @sqlInsertStepType, @sqlInsertStepTypeParams
+	,@stepTypeGuid = @holyOrdersStepTypeGuid
+	,@programGuid =  @sacramentsProgramGuid
+	,@stepTypeName = 'Holy Orders'
+	,@order = 7
+	,@iconCssClass = 'fa fa-cross'
+
+execute sp_executesql @sqlInsertStepType, @sqlInsertStepTypeParams
+	,@stepTypeGuid = @attenderStepTypeGuid
+	,@programGuid =  @alphaProgramGuid
+	,@stepTypeName = 'Attender'
+	,@order = 1
+	,@iconCssClass = 'fa fa-user'
+	,@allowMultiple = 1
+	,@hasEndDate = 1
+execute sp_executesql @sqlInsertStepType, @sqlInsertStepTypeParams
+	,@stepTypeGuid = @volunteerStepTypeGuid
+	,@programGuid =  @alphaProgramGuid
+	,@stepTypeName = 'Volunteer'
+	,@order = 2
+	,@iconCssClass = 'fa fa-hand-paper'
+	,@allowMultiple = 1
+	,@hasEndDate = 1
+execute sp_executesql @sqlInsertStepType, @sqlInsertStepTypeParams
+	,@stepTypeGuid = @leaderStepTypeGuid
+	,@programGuid =  @alphaProgramGuid
+	,@stepTypeName = 'Leader'
+	,@order = 3
+	,@iconCssClass = 'fa fa-user-graduate'
+	,@allowMultiple = 1
+	,@hasEndDate = 1
+
+-- Add data for specific test scenarios.
 IF NOT EXISTS (SELECT * FROM Step WHERE Guid = @baptismTedGuid)
 BEGIN
 	INSERT INTO Step (
@@ -343,7 +413,7 @@ BEGIN
 		'12/4/1980',
 		@marriage1TedGuid,
 		1,
-		( SELECT Id FROM StepStatus WHERE Guid = @dangerStatusGuid )
+		( SELECT Id FROM StepStatus WHERE Guid = @sacramentsStatusDangerGuid )
 	);
 END
 
@@ -362,7 +432,7 @@ BEGIN
 		'12/4/2005',
 		@marriage2TedGuid,
 		2,
-		( SELECT Id FROM StepStatus WHERE Guid = @successStatusGuid )
+		( SELECT Id FROM StepStatus WHERE Guid = @sacramentsStatusSuccessGuid )
 	);
 END
 
@@ -381,39 +451,14 @@ BEGIN
 	)
 END
 
+-- Add a randomized set of Steps.
 print N'Creating Steps...';
 
--- Local variables.
-declare
-    @stepCounter int = 0
-    ,@personAliasId int
-    ,@stepTypeId int
-	,@stepProgramId int
-    ,@startDateTime datetime
-	,@nextStepDateTime datetime
-    ,@campusId int
-	,@maxStepTypeCount int
-	,@stepsToAddCount int
-
-declare
-	@createdDateTime datetime = (select convert(date, SYSDATETIME()))
-	,@createdByPersonAliasId int = (select pa.id from PersonAlias pa inner join Person p on pa.PersonId = p.Id where p.FirstName = 'Admin' and p.LastName = 'Admin');
-
-declare
-    @daysBack int = @yearsBack * 366
-
-declare
-    @stepTypeIds table ( id Int, rowNo Int );
-
-declare
-	@stepStatusIds table ( id int
-						   ,stepProgramId int
-						   ,isCompleteStatus bit );
-declare
-    @stepProgramIds table ( id Int );
-
-declare
-    @personAliasIds table ( id Int );
+declare @programIds table ( id Int )
+declare @programIdProcessList table ( id Int );
+declare @stepTypeIds table ( id Int, rowNo Int );
+declare	@stepStatusIds table ( id int,stepProgramId int,isCompleteStatus bit );
+declare @personAliasIds table ( id Int not null );
 
 declare
      @stepTable table (
@@ -435,19 +480,12 @@ declare
     );
 
 begin
-
-	-- Remove existing data.
-	if ( @deleteExistingData = 1 )
-	begin
-		delete from Step where [ForeignKey] = @stepSampleDataForeignKey;
-	end
-
 	-- Get a complete set of active Step Types ordered by Program and structure order.
-	insert into @stepProgramIds
+	insert into @programIds
 		select Id
 		from [StepProgram] sp
 		where exists (select top 1 Id from StepType where StepProgramId = sp.Id )
-	  order by [Order];
+	    order by [Order];
 
 	insert into @stepStatusIds
 		select Id
@@ -455,105 +493,160 @@ begin
 				,IsCompleteStatus
 		from [StepStatus]
 
-	declare @itemCount int;
+	declare @maxProgramCount int;
 
-	set @itemCount = ( select count(*) from @stepProgramIds )
+	set @maxProgramCount = ( select count(*) from @programIds )
 
-	if ( @itemCount = 0 )
+	if ( @maxProgramCount = 0 )
 		throw 50000, 'Populate Steps data failed. There are no configured Step Programs in this database.', 1;
     
-	print N'--> Adding steps for ' + CAST(@itemCount AS nvarchar(10)) + ' program(s).';
+	--print N'--> Adding steps for ' + CAST(@maxPersonCount AS nvarchar(10)) + ' people, ' + CAST(@maxProgramCount AS nvarchar(10)) + ' programs.';
 
-	-- Get a random selection of people.
+	-- Get a random selection of people that are not system users or specific users for which test data already exists.
 	insert into @personAliasIds
 		select top (@maxPersonCount)
-			   Id
-		from PersonAlias
+			   pa.Id
+		from PersonAlias pa
+			 inner join Person p on pa.PersonId = p.Id
+		where p.IsSystem = 0
+			  and p.LastName NOT IN ('Anonymous')
+			  and pa.Id NOT IN ( @tedPersonAliasId )
 		order by newid();
-	
-	set @startDateTime = DATEADD(DAY, -@daysBack, SYSDATETIME())	
-	set @stepCounter = 1;
-	declare @nextStepTypeId int = 0;
-	declare @statusId int = 0;
-	declare @addDays int;
 
-    WHILE @stepCounter <= @maxStepCount
-    BEGIN
+declare
+    @stepCounter int = 0
+    ,@personAliasId int
+    ,@stepTypeId int
+	,@stepProgramId int
+    ,@startDateTime datetime = SYSDATETIME()
+	,@newStepDateTime datetime
+    ,@campusId int
+	,@maxStepTypeCount int
+	,@stepsToAddCount int	
+	,@programsToAddCount int
+	,@nextStepTypeId int = 0
+	,@statusId int = 0
+	,@offsetDays int
+	,@personCounter int = 0
+	,@completedDateTime datetime
+	,@isCompleted bit
 
-        -- Randomly select a Person, Program and number of Steps to achieve.
-		-- Steps are added in Program sequence order to ensure that prerequisite steps are completed first.
-		set @stepProgramId = (select top 1 Id from @stepProgramIds order by newid())
-		set @personAliasId =  (select top 1 Id from @personAliasIds order by newid())
-		set @nextStepDateTime = @startDateTime
-		set @campusId = (select top 1 Id from Campus order by newid()) 
+	-- Loop through the set of people, adding at least 1 step for each person.
+	set @personAliasId =  (select top 1 Id from @personAliasIds)
 
-		set @maxStepTypeCount = (SELECT COUNT(Id) from StepType where StepProgramId = @stepProgramId);
+    while @personAliasId is not null
+    begin
+		set @personCounter += 1;
 
-		-- Randomly select the number of Steps that this person will achieve in the Program, from 1 to @maxStepTypeCount.
-		set @stepsToAddCount = (SELECT FLOOR(RAND()*(@maxStepTypeCount)+1))
+		-- Loop through the set of programs, adding at least 1 program for this person.
+		set @programsToAddCount = (SELECT FLOOR(RAND()*(@maxProgramCount)+1))
 
-		insert into @stepTypeIds
-			 select top (@stepsToAddCount)
+		-- Randomly select the Programs that this person will participate in, from 1 to @maxProgramCount.
+		set @programsToAddCount = (SELECT FLOOR(RAND()*(@maxProgramCount)+1))
+
+		insert into @programIdProcessList
+				select top (@programsToAddCount)
 				Id
-				,ROW_NUMBER() OVER(order by [Order]) rowNo
-			 from StepType
-			 where StepProgramId = @stepProgramId order by [Order]
+				from @programIds
+				order by newid()
 
-		set @stepTypeId = (select top 1 Id from @stepTypeIds)
+		set @stepProgramId = (select top 1 Id from @programIds)
 
-	    while ( @stepTypeId is not null AND @stepCounter <= @maxStepCount)
-		begin
+		while ( @stepProgramId is not null)
+		begin							
+			set @newStepDateTime = @startDateTime
+			set @campusId = (select top 1 Id from Campus order by newid()) 
+
+			set @maxStepTypeCount = (SELECT COUNT(Id) from StepType where StepProgramId = @stepProgramId);
+
+			-- Randomly select the Steps that this person will achieve in the Program, from 1 to @maxStepTypeCount.
+			-- This creates a distribution weighted toward achievement of earlier Steps, which is the likely scenario for most Programs.
+			-- Add a row number so that the Steps can be added from last to first, to ensure that some data always exists in the current year.
+			set @stepsToAddCount = (SELECT FLOOR(RAND()*(@maxStepTypeCount)+1))
+
+print N'Addings Steps: PersonAliasId: ' + CAST(@personAliasId AS nvarchar(10)) + ', ProgramId=' + CAST(@stepProgramId AS nvarchar(10)) + ', Steps='+ CAST(@stepsToAddCount AS nvarchar(10));
+
+			insert into @stepTypeIds
+					select top (@stepsToAddCount)
+					Id
+					,ROW_NUMBER() OVER(order by [Order] DESC) rowNo
+					from StepType
+					where StepProgramId = @stepProgramId order by [Order]
+		
+			set @stepTypeId = (select top 1 Id from @stepTypeIds order by rowNo)
+
+			while ( @stepTypeId is not null)
+			begin			
+				if (@stepCounter > 0 and @stepCounter % 100 = 0)
+				begin
+					print N'--> (' + CAST(@stepCounter AS nvarchar(10)) + ' added)...';
+				end
+
+				-- Get the next Step Type to process.
+				delete from @stepTypeIds
+					where Id = @stepTypeId
 			
-		if (@stepCounter % 100 = 0)
-			print N'--> (' + CAST(@stepCounter AS nvarchar(10)) + ' added)...';
+				set @nextStepTypeId = (select top 1 Id from @stepTypeIds order by [rowNo])
 
-			-- Get the next Step Type to process.
-			delete from @stepTypeIds
-				where Id = @stepTypeId
-			
-			set @nextStepTypeId = (select top 1 Id from @stepTypeIds order by [rowNo])
+				-- Set the step status. If not the last step, make sure the status represents a completion.
+				if ( @nextStepTypeId is null )
+					set @statusId = ( select top 1 Id from @stepStatusIds where stepProgramId = @stepProgramId order by newid() )
+				else
+					set @statusId = ( select top 1 Id from @stepStatusIds where stepProgramId = @stepProgramId and isCompleteStatus = 1 order by newid() )
 
-			-- Set the step status. If not the last step, make sure the status represents a completion.
-			if ( @nextStepTypeId is null )
-				set @statusId = ( select top 1 Id from @stepStatusIds where stepProgramId = @stepProgramId order by newid() )
-			else
-				set @statusId = ( select top 1 Id from @stepStatusIds where stepProgramId = @stepProgramId and isCompleteStatus = 1 order by newid() )
+				select @isCompleted = ( select isCompleteStatus from @stepStatusIds where id = @statusId )
 
-		    -- Add a random number of days to the date of the previous step taken by this person.
-			set @addDays = (SELECT FLOOR(RAND()*(@maxDaysBetweenSteps)+1))
-			set @nextStepDateTime = DATEADD(DAY, @addDays, @nextStepDateTime);
+				-- Subtract a random number of days from the current step date to get a suitable date for the preceding step in the program.
+				set @offsetDays = (SELECT FLOOR(RAND()*(@maxDaysBetweenSteps)+1))
+				set @newStepDateTime = DATEADD(DAY, -1 * @offsetDays, @newStepDateTime);
 
-			insert into @stepTable
-   						([StepTypeId]
-						,[StepStatusId] 
-						,[PersonAliasId]
-						,[CampusId]
-						,[CompletedDateTime]
-						,[StartDateTime]
-						,[Order]
-						,[Guid]
-						,[CreatedDateTime]
-						,[CreatedByPersonAliasId]
-						,[ForeignKey])		
-				 values (@stepTypeId
-						,@statusId
-						,@personAliasId
-						,@campusId
-						,@nextStepDateTime
-						,@nextStepDateTime
-						,0
-						,NEWID()
-						,@createdDateTime
-						,@createdByPersonAliasId
-						,@stepSampleDataForeignKey)
+				-- Set the completion date for a completed step.
+				if ( @isCompleted = 1 )
+					set @completedDateTime = @newStepDateTime
+				else
+					set @completedDateTime = null
+
+print N'Add Step: PersonAliasId=' + CAST(@personAliasId AS nvarchar(10)) + ', ProgramId=' + CAST(@stepProgramId AS nvarchar(10)) + ', StepTypeId='+ CAST(@stepTypeId AS nvarchar(10)) + ', Status=' + CAST(@statusId AS nvarchar(10));
+
+				insert into @stepTable
+   							([StepTypeId]
+							,[StepStatusId] 
+							,[PersonAliasId]
+							,[CampusId]
+							,[StartDateTime]
+							,[CompletedDateTime]							
+							,[Order]
+							,[Guid]
+							,[CreatedDateTime]
+							,[CreatedByPersonAliasId]
+							,[ForeignKey])		
+						values (@stepTypeId
+							,@statusId
+							,@personAliasId
+							,@campusId
+							,@newStepDateTime
+							,@completedDateTime							
+							,0
+							,NEWID()
+							,@createdDateTime
+							,@createdByPersonAliasId
+							,@stepSampleDataForeignKey)
         
-			set @stepCounter += 1;
-			set @stepTypeId = @nextStepTypeId;        
-	    end
+				set @stepCounter += 1;
+				set @stepTypeId = @nextStepTypeId;        
+			end
+
+			-- Get the next Program to process.
+			delete from @programIdProcessList where Id = @stepProgramId
+			set @stepProgramId = (select top 1 Id from @programIdProcessList)
+		end
+  
+        -- Get the next person.
+		delete from @personAliasIds where Id = @personAliasId
+		set @personAliasId = (select top 1 Id from @personAliasIds)
 	end
 	
-	set @stepCounter -= 1;
-	print N'--> Created ' + CAST(@stepCounter AS nvarchar(10)) + ' steps.';
+	print N'--> Created ' + CAST(@stepCounter AS nvarchar(10)) + ' steps for ' + CAST(@personCounter AS nvarchar(10)) + ' people.';
     
 	insert into Step
 		        ([StepTypeId]
@@ -581,7 +674,7 @@ begin
 				,[CreatedByPersonAliasId]
 				,[ForeignKey]
 		from @stepTable
-		--order by StartDateTime
+		order by [PersonAliasId], [CompletedDateTime]
 	
 	print N'Create Steps Sample Data: completed.';
 
