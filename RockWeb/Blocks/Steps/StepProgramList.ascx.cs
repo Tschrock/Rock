@@ -360,7 +360,9 @@ namespace RockWeb.Blocks.Steps
         /// </summary>
         private void BindGrid()
         {
-            var stepProgramsQry = new StepProgramService( new RockContext() )
+            var dataContext = new RockContext();
+
+            var stepProgramsQry = new StepProgramService( dataContext )
                 .Queryable();
 
             // Filter by: Category
@@ -395,9 +397,23 @@ namespace RockWeb.Blocks.Steps
             stepProgramsQry = stepProgramsQry.OrderBy( b => b.Order );
 
             // Retrieve the Step Program data models and create corresponding view models to display in the grid.
-            var stepPrograms = stepProgramsQry.ToList();
+            var stepService = new StepService( dataContext );
 
-            gStepProgram.DataSource = stepPrograms.Select( x => StepProgramListItemViewModel.NewFromDataModel( x ) ).ToList();
+            var completedStepsQry = stepService.Queryable().Where( x => x.StepStatus != null && x.StepStatus.IsCompleteStatus );
+
+            var stepPrograms = stepProgramsQry.Select( x =>
+                new StepProgramListItemViewModel
+                {
+                    Id = x.Id,
+                    Name = x.Name,
+                    IconCssClass = x.IconCssClass,
+                    Category = x.Category.Name,
+                    StepTypeCount = x.StepTypes.Count,
+                    StepCompletedCount = completedStepsQry.Count( y => y.StepType.StepProgramId == x.Id )
+                } )
+                .ToList();
+
+            gStepProgram.DataSource = stepPrograms;
 
             gStepProgram.DataBind();
         }
@@ -411,34 +427,12 @@ namespace RockWeb.Blocks.Steps
         /// </summary>
         public class StepProgramListItemViewModel
         {
-            public StepProgram Program { get; set; }
-
             public int Id { get; set; }
             public string Name { get; set; }
             public string IconCssClass { get; set; }
             public string Category { get; set; }
             public int StepTypeCount { get; set; }
             public int StepCompletedCount { get; set; }
-
-            public static StepProgramListItemViewModel NewFromDataModel( StepProgram stepProgram )
-            {
-                var newItem = new StepProgramListItemViewModel();
-
-                newItem.Id = stepProgram.Id;
-                newItem.Name = stepProgram.Name;
-                newItem.Category = stepProgram.Category.Name;
-                newItem.IconCssClass = stepProgram.IconCssClass;
-
-                if ( stepProgram.StepTypes != null )
-                {
-                    newItem.StepTypeCount = stepProgram.StepTypes.Count;
-                }
-
-                // TODO: Calculate total steps taken.
-                newItem.StepCompletedCount = 777;
-
-                return newItem;
-            }
         }
 
         #endregion Helper Classes
