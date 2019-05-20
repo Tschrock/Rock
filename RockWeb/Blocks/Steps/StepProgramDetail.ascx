@@ -154,7 +154,7 @@
                         <Rock:RockCheckBox ID="cbIsActive" runat="server" Label="Is Active" ValidationGroup="StepStatus" />
                         <Rock:RockCheckBox ID="cbIsCompleted"
                             runat="server"
-                            Label="Is Completed"
+                            Label="Is Complete"
                             Help="Does this status indicate that the step has been completed?"
                             ValidationGroup="StepStatus" />
                         <Rock:ColorPicker ID="cpStatus"
