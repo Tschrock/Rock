@@ -33,7 +33,6 @@ using Rock.Web;
 using Rock.Web.Cache;
 using Rock.Web.UI;
 using Rock.Web.UI.Controls;
-using Attribute = Rock.Model.Attribute;
 
 namespace RockWeb.Blocks.Steps
 {
@@ -132,7 +131,7 @@ namespace RockWeb.Blocks.Steps
         /// </returns>
         protected override object SaveViewState()
         {
-            // Create a custom contract resolver to specifically ignore some complex properties that would otherwise add significant amounts of unneeded ViewState data.
+            // Create a custom contract resolver to specifically ignore some complex properties that add significant amounts of unnecessary ViewState data.
             var resolver = new Rock.Utility.DynamicPropertyMapContractResolver();
 
             resolver.IgnoreProperty( typeof( StepStatus ), "StepProgram", "Steps", "UrlEncodedKey" );
@@ -156,36 +155,12 @@ namespace RockWeb.Blocks.Steps
         protected override void OnInit( EventArgs e )
         {
             base.OnInit( e );
-            bool editAllowed = IsUserAuthorized( Authorization.ADMINISTRATE );
 
-            gStatuses.DataKeyNames = new string[] { "Guid" };
-            gStatuses.Actions.ShowAdd = true;
-            gStatuses.Actions.AddClick += gStatuses_Add;
-            gStatuses.GridRebind += gStatuses_GridRebind;
-
-            gWorkflows.DataKeyNames = new string[] { "Guid" };
-            gWorkflows.Actions.ShowAdd = true;
-            gWorkflows.Actions.AddClick += gWorkflows_Add;
-            gWorkflows.GridRebind += gWorkflows_GridRebind;
-
-            btnDelete.Attributes["onclick"] = string.Format( "javascript: return Rock.dialogs.confirmDelete(event, '{0}', 'Deleting this Step Program will also delete all of the associated steps. Are you sure you want to continue?');", StepProgram.FriendlyTypeName );
-
-            btnSecurity.EntityTypeId = EntityTypeCache.Get( typeof( Rock.Model.StepProgram ) ).Id;
-
-            this.InitializeChartFilter();
-
-            // Set up Block Settings change notification.
-            this.BlockUpdated += Block_BlockUpdated;
-            this.AddConfigurationUpdateTrigger( upStepProgram );
-        }
-
-        /// <summary>
-        /// Set the initial value of controls
-        /// </summary>
-        private void IntializeChartFilter()
-        {
-            // Set the default Date Range from the block settings.
-            drpSlidingDateRange.DelimitedValues = GetAttributeValue( AttributeKey.SlidingDateRange ) ?? "-1||";
+            InitializeStatusesGrid();
+            InitializeWorkflowsGrid();
+            InitializeActionButtons();
+            InitializeChartFilter();
+            InitializeSettingsNotification( upStepProgram );
         }
 
         /// <summary>
@@ -237,6 +212,59 @@ namespace RockWeb.Blocks.Steps
             return breadCrumbs;
         }
 
+        /// <summary>
+        /// Initialize the Statuses grid.
+        /// </summary>
+        private void InitializeStatusesGrid()
+        {
+            gStatuses.DataKeyNames = new string[] { "Guid" };
+            gStatuses.Actions.ShowAdd = true;
+            gStatuses.Actions.AddClick += gStatuses_Add;
+            gStatuses.GridRebind += gStatuses_GridRebind;
+        }
+
+        /// <summary>
+        /// Initialize the Workflows grid.
+        /// </summary>
+        private void InitializeWorkflowsGrid()
+        {
+            gWorkflows.DataKeyNames = new string[] { "Guid" };
+            gWorkflows.Actions.ShowAdd = true;
+            gWorkflows.Actions.AddClick += gWorkflows_Add;
+            gWorkflows.GridRebind += gWorkflows_GridRebind;
+        }
+
+        /// <summary>
+        /// Initialize the action buttons that affect the entire record.
+        /// </summary>
+        private void InitializeActionButtons()
+        {
+            btnDelete.Attributes["onclick"] = string.Format( "javascript: return Rock.dialogs.confirmDelete(event, '{0}', 'All associated Step Types and Step Participants will also be deleted!');", StepProgram.FriendlyTypeName );
+
+            btnSecurity.EntityTypeId = EntityTypeCache.Get( typeof( Rock.Model.StepProgram ) ).Id;
+        }
+
+        /// <summary>
+        /// Set the initial value of controls
+        /// </summary>
+        private void IntializeChartFilter()
+        {
+            // Set the default Date Range from the block settings.
+            drpSlidingDateRange.DelimitedValues = GetAttributeValue( AttributeKey.SlidingDateRange ) ?? "-1||";
+        }
+
+        /// <summary>
+        /// Initialize handlers for block configuration changes.
+        /// </summary>
+        /// <param name="triggerPanel"></param>
+        private void InitializeSettingsNotification( UpdatePanel triggerPanel )
+        {
+            // Set up Block Settings change notification.
+            this.BlockUpdated += Block_BlockUpdated;
+
+            this.AddConfigurationUpdateTrigger( triggerPanel );
+        }
+
         #endregion
 
         #region Events
@@ -256,36 +284,6 @@ namespace RockWeb.Blocks.Steps
         protected void btnEdit_Click( object sender, EventArgs e )
         {
             this.StartEditMode();
-        }
-
-        /// <summary>
-        /// Handles the Click event of the btnDelete control.
-        /// </summary>
-        /// <param name="sender">The source of the event.</param>
-        /// <param name="e">The <see cref="EventArgs" /> instance containing the event data.</param>
-        protected void btnDeleteConfirm_Click( object sender, EventArgs e )
-        {
-            this.DeleteRecord();
-        }
-
-        /// <summary>
-        /// Handles the Click event of the btnDeleteCancel control.
-        /// </summary>
-        /// <param name="sender">The source of the event.</param>
-        /// <param name="e">The <see cref="EventArgs"/> instance containing the event data.</param>
-        protected void btnDeleteCancel_Click( object sender, EventArgs e )
-        {
-            this.ShowDeleteConfirmation( false );
-        }
-
-        /// <summary>
-        /// Handles the Click event of the btnDelete control.
-        /// </summary>
-        /// <param name="sender">The source of the event.</param>
-        /// <param name="e">The <see cref="EventArgs"/> instance containing the event data.</param>
-        protected void btnDelete_Click( object sender, EventArgs e )
-        {
-            this.ShowDeleteConfirmation( true );
         }
 
         /// <summary>
@@ -571,7 +569,7 @@ namespace RockWeb.Blocks.Steps
             if ( workflowTrigger != null )
             {
                 wpWorkflowType.SetValue( workflowTrigger.WorkflowTypeId );
-                ddlTriggerType.SelectedValue = workflowTrigger.TriggerType.ConvertToInt().ToString();
+                ddlTriggerType.SelectedValue = workflowTrigger.TriggerType.ToString();
             }
 
 
@@ -618,11 +616,6 @@ namespace RockWeb.Blocks.Steps
                 switch ( sStepWorkflowTriggerType )
                 {
                     case StepWorkflowTrigger.WorkflowTriggerCondition.Manual:
-                        //case StepWorkflowTriggerType.RequestAssigned:
-                        //case StepWorkflowTriggerType.RequestTransferred:
-                        //case StepWorkflowTriggerType.RequestConnected:
-                        //case StepWorkflowTriggerType.PlacementGroupAssigned:
-                        //case StepWorkflowTriggerType.Manual:
                         {
                             ddlPrimaryQualifier.Visible = false;
                             ddlPrimaryQualifier.Items.Clear();
@@ -630,25 +623,6 @@ namespace RockWeb.Blocks.Steps
                             ddlSecondaryQualifier.Items.Clear();
                             break;
                         }
-
-                    //case StepWorkflowTrigger.WorkflowTriggerCondition.StateChanged:
-                    //{
-                    //    ddlPrimaryQualifier.Label = "From";
-                    //    ddlPrimaryQualifier.Visible = true;
-                    //    ddlPrimaryQualifier.BindToEnum<ConnectionState>();
-                    //    ddlPrimaryQualifier.Items.Insert( 0, new ListItem( string.Empty, string.Empty ) );
-                    //    ddlSecondaryQualifier.Label = "To";
-                    //    ddlSecondaryQualifier.Visible = true;
-                    //    ddlSecondaryQualifier.BindToEnum<ConnectionState>();
-                    //    ddlSecondaryQualifier.Items.Insert( 0, new ListItem( string.Empty, string.Empty ) );
-                    //    if ( !cbFutureFollowUp.Checked )
-                    //    {
-                    //        ddlPrimaryQualifier.Items.RemoveAt( 3 );
-                    //        ddlSecondaryQualifier.Items.RemoveAt( 3 );
-                    //    }
-                    //    break;
-                    //}
-
                     case StepWorkflowTrigger.WorkflowTriggerCondition.StatusChanged:
                         {
                             var statusList = new StepStatusService( rockContext ).Queryable().Where( s => s.StepProgramId == stepProgramId ).ToList();
@@ -670,25 +644,6 @@ namespace RockWeb.Blocks.Steps
                             }
                             break;
                         }
-
-                        //case StepWorkflowTriggerType.ActivityAdded:
-                        //{
-                        //    var activityList = new ConnectionActivityTypeService( rockContext )
-                        //        .Queryable().AsNoTracking()
-                        //        .Where( a => a.stepProgramId == stepProgramId )
-                        //        .ToList();
-                        //    ddlPrimaryQualifier.Label = "Activity Type";
-                        //    ddlPrimaryQualifier.Visible = true;
-                        //    ddlPrimaryQualifier.Items.Clear();
-                        //    ddlPrimaryQualifier.Items.Add( new ListItem( string.Empty, string.Empty ) );
-                        //    foreach ( var activity in activityList )
-                        //    {
-                        //        ddlPrimaryQualifier.Items.Add( new ListItem( activity.Name, activity.Id.ToString().ToUpper() ) );
-                        //    }
-                        //    ddlSecondaryQualifier.Visible = false;
-                        //    ddlSecondaryQualifier.Items.Clear();
-                        //    break;
-                        //}
                 }
 
                 if ( workflowTrigger != null )
@@ -811,17 +766,6 @@ namespace RockWeb.Blocks.Steps
         }
 
         /// <summary>
-        /// Show or hide the delete confirmation action for the current record.
-        /// </summary>
-        private void ShowDeleteConfirmation( bool isVisible )
-        {
-            btnDelete.Visible = !isVisible;
-            btnEdit.Visible = !isVisible;
-
-            pnlDeleteConfirm.Visible = isVisible;
-        }
-
-        /// <summary>
         /// Enter record edit mode.
         /// </summary>
         private void StartEditMode()
@@ -904,6 +848,7 @@ namespace RockWeb.Blocks.Steps
             if ( stepProgramId == 0 )
             {
                 stepProgram = new StepProgram();
+
                 stepProgramService.Add( stepProgram );
             }
             else
@@ -915,15 +860,14 @@ namespace RockWeb.Blocks.Steps
                                                 .FirstOrDefault();
 
                 var uiWorkflows = WorkflowsState.Select( l => l.Guid );
+
                 foreach ( var trigger in stepProgram.StepWorkflowTriggers.Where( l => !uiWorkflows.Contains( l.Guid ) ).ToList() )
                 {
                     stepProgram.StepWorkflowTriggers.Remove( trigger );
-
-                    // TODO: What should happen here? Rely on cascading delete? There is no StepWorkflowTriggerService class to manage this.
-                    //stepWorkflowTriggerService.Delete( trigger );
                 }
 
                 var uiStatuses = StatusesState.Select( r => r.Guid );
+
                 foreach ( var StepStatus in stepProgram.StepStatuses.Where( r => !uiStatuses.Contains( r.Guid ) ).ToList() )
                 {
                     stepProgram.StepStatuses.Remove( StepStatus );
@@ -940,6 +884,7 @@ namespace RockWeb.Blocks.Steps
 
             stepProgram.DefaultListView = rblDefaultListView.SelectedValue.ConvertToEnum<StepProgram.ViewMode>( StepProgram.ViewMode.Cards );
 
+            // Update Statuses
             foreach ( var stepStatusState in this.StatusesState )
             {
                 var stepStatus = stepProgram.StepStatuses.Where( a => a.Guid == stepStatusState.Guid ).FirstOrDefault();
@@ -954,23 +899,30 @@ namespace RockWeb.Blocks.Steps
                 stepStatus.StepProgramId = stepProgram.Id;
             }
 
-            //foreach ( StepWorkflow StepWorkflowState in WorkflowsState )
-            //{
-            //    StepWorkflow StepWorkflow = stepProgram.StepWorkflows.Where( a => a.Guid == StepWorkflowState.Guid ).FirstOrDefault();
-            //    if ( StepWorkflow == null )
-            //    {
-            //        StepWorkflow = new StepWorkflow();
-            //        stepProgram.StepWorkflows.Add( StepWorkflow );
-            //    }
-            //    else
-            //    {
-            //        StepWorkflowState.Id = StepWorkflow.Id;
-            //        StepWorkflowState.Guid = StepWorkflow.Guid;
-            //    }
+            // Update Workflow Triggers
+            foreach ( var stateTrigger in WorkflowsState )
+            {
+                var workflowTrigger = stepProgram.StepWorkflowTriggers.Where( a => a.Guid == stateTrigger.Guid ).FirstOrDefault();
 
-            //    StepWorkflow.CopyPropertiesFrom( StepWorkflowState );
-            //    StepWorkflow.stepProgramId = stepProgramId;
-            //}
+                if ( workflowTrigger == null )
+                {
+                    workflowTrigger = new StepWorkflowTrigger();
+
+                    stepProgram.StepWorkflowTriggers.Add( workflowTrigger );
+                }
+                else
+                {
+                    stateTrigger.Id = workflowTrigger.Id;
+                    stateTrigger.Guid = workflowTrigger.Guid;
+                }
+
+                workflowTrigger.TriggerType = stateTrigger.TriggerType;
+                workflowTrigger.WorkflowTypeId = stateTrigger.WorkflowTypeId;
+                workflowTrigger.WorkflowName = stateTrigger.WorkflowName;
+
+                workflowTrigger.StepProgramId = stepProgramId;
+                workflowTrigger.StepTypeId = null;
+            }
 
             if ( !stepProgram.IsValid )
             {
@@ -1010,8 +962,6 @@ namespace RockWeb.Blocks.Steps
                 this.ShowBlockException( nbEditModeMessage, ex );
                 return;
             }
-
-            //StepWorkflowService.RemoveCachedTriggers();
 
             // If the save was successful, reload the page using the new record Id.
             var qryParams = new Dictionary<string, string>();
@@ -1125,7 +1075,7 @@ namespace RockWeb.Blocks.Steps
 
             WorkflowsState = stepProgram.StepWorkflowTriggers.ToList();
             StatusesState = stepProgram.StepStatuses.ToList();
-            
+
             BindStepWorkflowsGrid();
             BindStepStatusesGrid();
         }

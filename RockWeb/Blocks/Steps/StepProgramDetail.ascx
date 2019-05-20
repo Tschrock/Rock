@@ -8,12 +8,6 @@
 
 <asp:UpdatePanel ID="upStepProgram" runat="server">
     <ContentTemplate>
-        <asp:Panel ID="pnlDeleteConfirm" runat="server" CssClass="panel panel-body" Visible="false">
-            <Rock:NotificationBox ID="nbDeleteConfirm" runat="server" NotificationBoxType="Warning" Text="Deleting a Step Program will delete all of the associated Step Types. Are you sure you want to delete this Step Program?" />
-            <asp:LinkButton ID="btnDeleteConfirm" runat="server" Text="Confirm Delete" CssClass="btn btn-danger" OnClick="btnDeleteConfirm_Click" />
-            <asp:LinkButton ID="btnDeleteCancel" runat="server" Text="Cancel" CssClass="btn btn-primary" OnClick="btnDeleteCancel_Click" />
-        </asp:Panel>
-
         <asp:Panel ID="pnlDetails" CssClass="panel panel-block" runat="server" Visible="false">
             <asp:HiddenField ID="hfStepProgramId" runat="server" />
 
@@ -82,7 +76,7 @@
                     <div class="actions">
                         <asp:LinkButton ID="btnEdit" runat="server" AccessKey="e" ToolTip="Alt+e" Text="Edit" CssClass="btn btn-primary" OnClick="btnEdit_Click" CausesValidation="false" />
                         <Rock:ModalAlert ID="mdDeleteWarning" runat="server" />
-                        <asp:LinkButton ID="btnDelete" runat="server" Text="Delete" CssClass="btn btn-link" OnClick="btnDelete_Click" CausesValidation="false" />
+                        <asp:LinkButton ID="btnDelete" runat="server" Text="Delete" CssClass="btn btn-link" CausesValidation="false" />
                         <span class="pull-right">
                             <Rock:SecurityButton ID="btnSecurity" runat="server" class="btn btn-sm btn-security" />
                         </span>
