@@ -46,6 +46,17 @@ namespace Rock.Chart
         }
 
         /// <summary>
+        /// Does the data set contain any data points?
+        /// </summary>
+        public bool HasData
+        {
+            get
+            {
+                return _DataPoints != null && _DataPoints.Any();
+            }
+        }
+
+        /// <summary>
         /// Get the list of unique series names contained in this data set.
         /// </summary>
         /// <returns></returns>
