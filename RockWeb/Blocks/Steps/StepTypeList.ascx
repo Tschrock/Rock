@@ -1,6 +1,6 @@
 ﻿<%@ Control Language="C#" AutoEventWireup="true" CodeFile="StepTypeList.ascx.cs" Inherits="RockWeb.Blocks.Steps.StepTypeList" %>
 
-<asp:UpdatePanel ID="upStepTypeList" runat="server">
+<asp:UpdatePanel ID="upMain" runat="server">
     <ContentTemplate>
 
         <Rock:ModalAlert ID="mdGridWarning" runat="server" />
@@ -39,7 +39,8 @@
                                     <Rock:RockBoundField DataField="Name" HeaderText="Name" SortExpression="Name" Visible="true" ExcelExportBehavior="AlwaysInclude" />
                                     <Rock:BoolField DataField="HasDuration" HeaderText="Spans Time" DataFormatString="{0:#;#;-}" />
                                     <Rock:BoolField DataField="AllowMultipleInstances" HeaderText="Allow Multiple" DataFormatString="{0:#;#;-}" />
-                                    <Rock:RockBoundField DataField="StepCompletedCount" HeaderText="Steps Taken" DataFormatString="{0:#;#;-}" />
+                                    <Rock:RockBoundField DataField="StartedCount" HeaderText="Started" DataFormatString="{0:#;#;-}" />
+                                    <Rock:RockBoundField DataField="CompletedCount" HeaderText="Completed" DataFormatString="{0:#;#;-}" />
                                     <Rock:LinkButtonField ID="lbBulkEntry" Text="<i class='fa fa-truck'></i>" CssClass="btn btn-default btn-sm btn-square" OnClick="gStepType_BulkEntry" HeaderStyle-HorizontalAlign="Center" ItemStyle-HorizontalAlign="Center" />
                                     <Rock:SecurityField />
                                     <Rock:DeleteField OnClick="gStepType_Delete" />

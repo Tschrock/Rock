@@ -14,6 +14,10 @@
 // limitations under the License.
 // </copyright>
 //
+using System;
+using System.ComponentModel;
+using System.Linq;
+using System.Web.UI;
 using Rock;
 using Rock.Attribute;
 using Rock.Data;
@@ -22,10 +26,6 @@ using Rock.Security;
 using Rock.Web.Cache;
 using Rock.Web.UI;
 using Rock.Web.UI.Controls;
-using System;
-using System.ComponentModel;
-using System.Linq;
-using System.Web.UI;
 
 namespace RockWeb.Blocks.Steps
 {
@@ -109,9 +109,16 @@ namespace RockWeb.Blocks.Steps
 
         #endregion Page Parameter Keys
 
-        #region Base Control Methods
+        #region Private Variables
 
-        private StepProgram _program = null;
+        private StepProgram _Program = null;
+        private RockContext _DataContext = null;
+
+        private readonly string _EntityKeyName = "StepTypeId";
+
+        #endregion
+
+        #region Base Control Methods
 
         /// <summary>
         /// Raises the <see cref="E:System.Web.UI.Control.Init" /> event.
@@ -121,26 +128,230 @@ namespace RockWeb.Blocks.Steps
         {
             base.OnInit( e );
 
-            this.InitializeStepProgram();
+            this.InitializeBlockContext();
 
-            // Initialize Filter
+            this.InitializeFilter();
+
+            this.InitializeGrid();
+
+            this.InitializeSettingsNotification( upMain );
+        }
+
+        /// <summary>
+        /// Raises the <see cref="E:System.Web.UI.Control.Load" /> event.
+        /// </summary>
+        /// <param name="e">The <see cref="T:System.EventArgs" /> object that contains the event data.</param>
+        protected override void OnLoad( EventArgs e )
+        {
+            this.ShowBlockDetail();
+
+            base.OnLoad( e );
+        }
+
+        #endregion Base Control Methods
+
+        #region Control Events
+
+        /// <summary>
+        /// Handles the BlockUpdated event of the control.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The <see cref="EventArgs"/> instance containing the event data.</param>
+        protected void Block_BlockUpdated( object sender, EventArgs e )
+        {
+            this.InitializeBlockContext();
+
+            this.ConfigureGridFromBlockSettings();
+
+            this.BindGrid();
+        }
+
+        #endregion Control Events
+
+        #region Filter Events
+
+        /// <summary>
+        /// Handles the ApplyFilterClick event of the rFilter control.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The <see cref="EventArgs" /> instance containing the event data.</param>
+        protected void rFilter_ApplyFilterClick( object sender, EventArgs e )
+        {
+            this.ApplyGridFilter();
+        }
+
+        /// <summary>
+        /// Handles the ClearFilterClick event of the rFilter control.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The <see cref="EventArgs"/> instance containing the event data.</param>
+        protected void rFilter_ClearFilterClick( object sender, EventArgs e )
+        {
+            this.ClearGridFilter();
+        }
+
+        /// <summary>
+        /// ts the filter display filter value.
+        /// </summary>
+        /// <param name="sender">The sender.</param>
+        /// <param name="e">The e.</param>
+        protected void rFilter_DisplayFilterValue( object sender, GridFilter.DisplayFilterValueArgs e )
+        {
+            this.SaveFilterSettings();
+
+            e.Value = this.GetFilterValueDescription( e.Key );
+        }
+
+        #endregion
+
+        #region Grid Events
+
+        /// <summary>
+        /// Handles the Add event of the gStepType control.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The <see cref="EventArgs" /> instance containing the event data.</param>
+        protected void gStepType_Add( object sender, EventArgs e )
+        {
+            NavigateToLinkedPage( AttributeKey.DetailPage, _EntityKeyName, 0 );
+        }
+
+        /// <summary>
+        /// Handles the Edit event of the gStepType control.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The <see cref="RowEventArgs" /> instance containing the event data.</param>
+        protected void gStepType_Edit( object sender, RowEventArgs e )
+        {
+            NavigateToLinkedPage( AttributeKey.DetailPage, _EntityKeyName, e.RowKeyId );
+        }
+
+        /// <summary>
+        /// Handles the Edit event of the gStepType control.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The <see cref="RowEventArgs" /> instance containing the event data.</param>
+        protected void gStepType_BulkEntry( object sender, RowEventArgs e )
+        {
+            NavigateToLinkedPage( AttributeKey.BulkEntryPage, _EntityKeyName, e.RowKeyId );
+        }
+
+        /// <summary>
+        /// Handles the Delete event of the gStepType control.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The <see cref="RowEventArgs" /> instance containing the event data.</param>
+        protected void gStepType_Delete( object sender, RowEventArgs e )
+        {
+            this.DeleteStepType( e.RowKeyId );
+        }
+
+        /// <summary>
+        /// Handles the GridReorder event of the gStepType control.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The <see cref="GridReorderEventArgs" /> instance containing the event data.</param>
+        void gStepType_GridReorder( object sender, GridReorderEventArgs e )
+        {
+            this.ReorderStepType( e.OldIndex, e.NewIndex );
+        }
+
+        /// <summary>
+        /// Handles the GridRebind event of the gStepType control.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The <see cref="EventArgs" /> instance containing the event data.</param>
+        private void gStepType_GridRebind( object sender, EventArgs e )
+        {
+            this.BindGrid();
+        }
+
+        #endregion Grid Events
+
+        #region Internal Methods
+
+        /// <summary>
+        /// Retrieve a singleton data context for data operations in this block.
+        /// </summary>
+        /// <returns></returns>
+        private RockContext GetDataContext()
+        {
+            if ( _DataContext == null )
+            {
+                _DataContext = new RockContext();
+            }
+
+            return _DataContext;
+        }
+
+        /// <summary>
+        /// Initialize handlers for block configuration changes.
+        /// </summary>
+        /// <param name="triggerPanel"></param>
+        private void InitializeSettingsNotification( UpdatePanel triggerPanel )
+        {
+            // Set up Block Settings change notification.
+            this.BlockUpdated += Block_BlockUpdated;
+
+            this.AddConfigurationUpdateTrigger( triggerPanel );
+        }
+
+        /// <summary>
+        /// Set a configuration status message for the block.
+        /// If a message is visible, the item list is hidden.
+        /// </summary>
+        /// <param name="message"></param>
+        private void SetConfigurationStatusMessage( string message )
+        {
+            if ( string.IsNullOrWhiteSpace( message ) )
+            {
+                nbStepProgramWarning.Visible = false;
+                pnlList.Visible = true;
+            }
+            else
+            {
+                nbStepProgramWarning.Text = message;
+                nbStepProgramWarning.Visible = true;
+                pnlList.Visible = false;
+            }
+        }
+
+        /// <summary>
+        /// Initialize the list filter.
+        /// </summary>
+        private void InitializeFilter()
+        {
             if ( !Page.IsPostBack )
             {
-                BindFilter();
+                if ( _Program != null )
+                {
+                    rFilter.UserPreferenceKeyPrefix = string.Format( "{0}-", _Program.Id );
+                }
+
+                this.BindFilter();
             }
 
             rFilter.ApplyFilterClick += rFilter_ApplyFilterClick;
             rFilter.DisplayFilterValue += rFilter_DisplayFilterValue;
+        }
 
-            // Initialize Grid
+        private void InitializeGrid()
+        {
+            if ( _Program == null )
+            {
+                return;
+            }
+
             gStepType.DataKeyNames = new string[] { "Id" };
             gStepType.Actions.AddClick += gStepType_Add;
             gStepType.GridReorder += gStepType_GridReorder;
             gStepType.GridRebind += gStepType_GridRebind;
             gStepType.RowItemText = "Step Type";
+            gStepType.ExportSource = ExcelExportSource.DataSource;
+            gStepType.ExportFilename = _Program.Name;
 
-            // Initialize Grid: Secured actions
-            bool canAddEditDelete = IsUserAuthorized( Authorization.EDIT );
+            // Verify authorization to edit either the block or the parent step program.
+            bool canAddEditDelete = IsUserAuthorized( Authorization.EDIT ) || _Program.IsAuthorized( Authorization.EDIT, this.CurrentPerson );
             bool canAdministrate = IsUserAuthorized( Authorization.ADMINISTRATE );
 
             gStepType.Actions.ShowAdd = canAddEditDelete;
@@ -157,12 +368,7 @@ namespace RockWeb.Blocks.Steps
 
             securityField.Visible = canAdministrate;
 
-            // Initialize Grid: Apply block configuration settings.
             this.ConfigureGridFromBlockSettings();
-
-            // Set up Block Settings change notification.
-            this.BlockUpdated += Block_BlockUpdated;
-            this.AddConfigurationUpdateTrigger( upStepTypeList );
         }
 
         /// <summary>
@@ -181,11 +387,11 @@ namespace RockWeb.Blocks.Steps
         }
 
         /// <summary>
-        /// Initialize the parent Step Program of the Steps shown in the block.
+        /// Initialize the essential context in which this block is operating.
         /// </summary>
-        private void InitializeStepProgram()
+        private void InitializeBlockContext()
         {
-            _program = null;
+            _Program = null;
 
             // Try to load the Step Program from the cache.
             var programGuid = GetAttributeValue( AttributeKey.StepProgram ).AsGuid();
@@ -207,215 +413,120 @@ namespace RockWeb.Blocks.Steps
 
             if ( !string.IsNullOrEmpty( sharedItemKey ) )
             {
-                _program = RockPage.GetSharedItem( sharedItemKey ) as StepProgram;
+                _Program = RockPage.GetSharedItem( sharedItemKey ) as StepProgram;
             }
 
             // Retrieve the program from the data store and cache for subsequent use.
-            if ( _program == null )
+            if ( _Program == null )
             {
-                var stepProgramService = new StepProgramService( new RockContext() );
+                var dataContext = this.GetDataContext();
+
+                var stepProgramService = new StepProgramService( dataContext );
 
                 if ( programGuid != Guid.Empty )
                 {
-                    _program = stepProgramService.Queryable().Where( g => g.Guid == programGuid ).FirstOrDefault();
+                    _Program = stepProgramService.Queryable().Where( g => g.Guid == programGuid ).FirstOrDefault();
                 }
                 else if ( programId != 0 )
                 {
-                    _program = stepProgramService.Queryable().Where( g => g.Id == programId ).FirstOrDefault();
+                    _Program = stepProgramService.Queryable().Where( g => g.Id == programId ).FirstOrDefault();
                 }
 
-                if ( _program != null )
+                if ( _Program != null )
                 {
-                    RockPage.SaveSharedItem( sharedItemKey, _program );
+                    RockPage.SaveSharedItem( sharedItemKey, _Program );
                 }
             }
 
+        }
+
+        /// <summary>
+        /// Sets the availability of the block for viewing and editing based on the state of the underlying data.
+        /// </summary>
+        private void RefreshBlockAvailabilityState()
+        {
             // Verify the Step Program is valid.
-            if ( _program == null )
+            if ( _Program == null )
             {
                 this.SetConfigurationStatusMessage( "There is no Step Program available in this context." );
                 return;
             }
 
             // Check for View permissions.
-            if ( !_program.IsAuthorized( Authorization.VIEW, CurrentPerson ) )
+            if ( !_Program.IsAuthorized( Authorization.VIEW, CurrentPerson ) )
             {
                 this.SetConfigurationStatusMessage( "Sorry, you are not authorized to view this content." );
                 return;
             }
 
-            rFilter.UserPreferenceKeyPrefix = string.Format( "{0}-", _program.Id );
-            rFilter.ApplyFilterClick += rFilter_ApplyFilterClick;
-
-            gStepType.DataKeyNames = new string[] { "Id" };
-            gStepType.Actions.AddClick += gStepType_Add;
-            gStepType.GridRebind += gStepType_GridRebind;
-            gStepType.RowItemText = "Step Type";
-            gStepType.ExportFilename = _program.Name;
-            gStepType.ExportSource = ExcelExportSource.DataSource;
-
-            // Verify authorization to edit either the block or the step program.
-            bool canEditBlock = IsUserAuthorized( Authorization.EDIT ) || _program.IsAuthorized( Authorization.EDIT, this.CurrentPerson );
-
-            gStepType.Actions.ShowAdd = canEditBlock;
-            gStepType.IsDeleteEnabled = canEditBlock;
-
             // Reset the configuration status message.
             SetConfigurationStatusMessage( null );
         }
 
-        private void SetConfigurationStatusMessage( string message )
-        {
-            if ( string.IsNullOrWhiteSpace( message ) )
-            {
-                nbStepProgramWarning.Visible = false;
-                pnlList.Visible = true;
-            }
-            else
-            {
-                nbStepProgramWarning.Text = message;
-                nbStepProgramWarning.Visible = true;
-                pnlList.Visible = false;
-            }
-        }
-
         /// <summary>
-        /// Raises the <see cref="E:System.Web.UI.Control.Load" /> event.
+        /// Initialize Shows the 
         /// </summary>
-        /// <param name="e">The <see cref="T:System.EventArgs" /> object that contains the event data.</param>
-        protected override void OnLoad( EventArgs e )
+        private void ShowBlockDetail()
         {
-            if ( !Page.IsPostBack )
+            if ( Page.IsPostBack )
             {
-                BindGrid();
+                return;
             }
 
-            base.OnLoad( e );
+            this.RefreshBlockAvailabilityState();
+
+            this.BindGrid();
         }
 
-        #endregion Base Control Methods
-
-        #region Control Events
-
         /// <summary>
-        /// Handles the BlockUpdated event of the control.
+        /// Set the ordinal position of an item in the list.
         /// </summary>
-        /// <param name="sender">The source of the event.</param>
-        /// <param name="e">The <see cref="EventArgs"/> instance containing the event data.</param>
-        protected void Block_BlockUpdated( object sender, EventArgs e )
+        /// <param name="oldIndex"></param>
+        /// <param name="newIndex"></param>
+        private void ReorderStepType( int oldIndex, int newIndex )
         {
-            this.InitializeStepProgram();
+            if ( _Program == null )
+            {
+                return;
+            }
 
-            this.ConfigureGridFromBlockSettings();
+            var rockContext = this.GetDataContext();
 
-            BindGrid();
+            var service = new StepTypeService( rockContext );
+
+            var stepTypes = service.Queryable()
+                .Where( x => x.StepProgramId == _Program.Id )
+                .OrderBy( b => b.Order )
+                .ToList();
+
+            service.Reorder( stepTypes, oldIndex, newIndex );
+
+            rockContext.SaveChanges();
+
+            this.BindGrid();
         }
 
-        #endregion Control Events
-
-        #region Filter Events
-
-        /// <summary>
-        /// Handles the ApplyFilterClick event of the rFilter control.
-        /// </summary>
-        /// <param name="sender">The source of the event.</param>
-        /// <param name="e">The <see cref="EventArgs" /> instance containing the event data.</param>
-        protected void rFilter_ApplyFilterClick( object sender, EventArgs e )
+        private void ApplyGridFilter()
         {
-            rFilter.SaveUserPreference( FilterSettingName.Name, txbNameFilter.Text );
-            rFilter.SaveUserPreference( FilterSettingName.AllowMultiple, ddlAllowMultipleFilter.SelectedValue );
-            rFilter.SaveUserPreference( FilterSettingName.SpansTime, ddlHasDurationFilter.SelectedValue );
+            this.SaveFilterSettings();
 
-            BindGrid();
+            this.BindGrid();
         }
 
-        /// <summary>
-        /// Handles the ClearFilterClick event of the rFilter control.
-        /// </summary>
-        /// <param name="sender">The source of the event.</param>
-        /// <param name="e">The <see cref="EventArgs"/> instance containing the event data.</param>
-        protected void rFilter_ClearFilterClick( object sender, EventArgs e )
+        private void ClearGridFilter()
         {
             rFilter.DeleteUserPreferences();
 
             BindFilter();
         }
 
-        /// <summary>
-        /// ts the filter display filter value.
-        /// </summary>
-        /// <param name="sender">The sender.</param>
-        /// <param name="e">The e.</param>
-        protected void rFilter_DisplayFilterValue( object sender, GridFilter.DisplayFilterValueArgs e )
+        private void DeleteStepType( int stepTypeId )
         {
-            rFilter.SaveUserPreference( FilterSettingName.Name, txbNameFilter.Text );
-            rFilter.SaveUserPreference( FilterSettingName.AllowMultiple, ddlAllowMultipleFilter.SelectedValue );
-            rFilter.SaveUserPreference( FilterSettingName.SpansTime, ddlHasDurationFilter.SelectedValue );
-
-            if ( e.Key == FilterSettingName.Name )
-            {
-                e.Value = string.Format( "Contains \"{0}\"", txbNameFilter.Text );
-            }
-            else if ( e.Key == FilterSettingName.AllowMultiple )
-            {
-                e.Value = ddlAllowMultipleFilter.SelectedValue;
-            }
-            else if ( e.Key == FilterSettingName.SpansTime )
-            {
-                e.Value = ddlHasDurationFilter.SelectedValue;
-            }
-            else
-            {
-                e.Value = string.Empty;
-            }
-        }
-
-        #endregion
-
-        #region Grid Events
-
-        /// <summary>
-        /// Handles the Add event of the gStepType control.
-        /// </summary>
-        /// <param name="sender">The source of the event.</param>
-        /// <param name="e">The <see cref="EventArgs" /> instance containing the event data.</param>
-        protected void gStepType_Add( object sender, EventArgs e )
-        {
-            NavigateToLinkedPage( AttributeKey.DetailPage, "StepTypeId", 0 );
-        }
-
-        /// <summary>
-        /// Handles the Edit event of the gStepType control.
-        /// </summary>
-        /// <param name="sender">The source of the event.</param>
-        /// <param name="e">The <see cref="RowEventArgs" /> instance containing the event data.</param>
-        protected void gStepType_Edit( object sender, RowEventArgs e )
-        {
-            NavigateToLinkedPage( AttributeKey.DetailPage, "StepTypeId", e.RowKeyId );
-        }
-
-        /// <summary>
-        /// Handles the Edit event of the gStepType control.
-        /// </summary>
-        /// <param name="sender">The source of the event.</param>
-        /// <param name="e">The <see cref="RowEventArgs" /> instance containing the event data.</param>
-        protected void gStepType_BulkEntry( object sender, RowEventArgs e )
-        {
-            NavigateToLinkedPage( AttributeKey.BulkEntryPage, "StepTypeId", e.RowKeyId );
-        }
-
-        /// <summary>
-        /// Handles the Delete event of the gStepType control.
-        /// </summary>
-        /// <param name="sender">The source of the event.</param>
-        /// <param name="e">The <see cref="RowEventArgs" /> instance containing the event data.</param>
-        protected void gStepType_Delete( object sender, RowEventArgs e )
-        {
-            var rockContext = new RockContext();
+            var rockContext = this.GetDataContext();
 
             var stepTypeService = new StepTypeService( rockContext );
 
-            var stepProgram = stepTypeService.Get( e.RowKeyId );
+            var stepProgram = stepTypeService.Get( stepTypeId );
 
             if ( stepProgram == null )
             {
@@ -433,44 +544,11 @@ namespace RockWeb.Blocks.Steps
 
             stepTypeService.Delete( stepProgram );
 
-            rockContext.SaveChanges();
-
             BindGrid();
         }
 
         /// <summary>
-        /// Handles the GridReorder event of the gStepType control.
-        /// </summary>
-        /// <param name="sender">The source of the event.</param>
-        /// <param name="e">The <see cref="GridReorderEventArgs" /> instance containing the event data.</param>
-        void gStepType_GridReorder( object sender, GridReorderEventArgs e )
-        {
-            var rockContext = new RockContext();
-            var service = new StepTypeService( rockContext );
-            var stepPrograms = service.Queryable().OrderBy( b => b.Order );
-
-            service.Reorder( stepPrograms.ToList(), e.OldIndex, e.NewIndex );
-            rockContext.SaveChanges();
-
-            BindGrid();
-        }
-
-        /// <summary>
-        /// Handles the GridRebind event of the gStepType control.
-        /// </summary>
-        /// <param name="sender">The source of the event.</param>
-        /// <param name="e">The <see cref="EventArgs" /> instance containing the event data.</param>
-        private void gStepType_GridRebind( object sender, EventArgs e )
-        {
-            BindGrid();
-        }
-
-        #endregion Grid Events
-
-        #region Internal Methods
-
-        /// <summary>
-        /// Binds the filter.
+        /// Binds data to the filter controls.
         /// </summary>
         private void BindFilter()
         {
@@ -480,20 +558,55 @@ namespace RockWeb.Blocks.Steps
         }
 
         /// <summary>
+        /// Save the current filter settings.
+        /// </summary>
+        private void SaveFilterSettings()
+        {
+            rFilter.SaveUserPreference( FilterSettingName.Name, txbNameFilter.Text );
+            rFilter.SaveUserPreference( FilterSettingName.AllowMultiple, ddlAllowMultipleFilter.SelectedValue );
+            rFilter.SaveUserPreference( FilterSettingName.SpansTime, ddlHasDurationFilter.SelectedValue );
+        }
+
+        /// <summary>
+        /// Gets the user-friendly description for a filter field setting.
+        /// </summary>
+        /// <param name="filterSettingName"></param>
+        /// <returns></returns>
+        private string GetFilterValueDescription( string filterSettingName )
+        {
+            if ( filterSettingName == FilterSettingName.Name )
+            {
+                return string.Format( "Contains \"{0}\"", txbNameFilter.Text );
+            }
+            else if ( filterSettingName == FilterSettingName.AllowMultiple )
+            {
+                return ddlAllowMultipleFilter.SelectedValue;
+            }
+            else if ( filterSettingName == FilterSettingName.SpansTime )
+            {
+                return ddlHasDurationFilter.SelectedValue;
+            }
+
+            return string.Empty;
+        }
+
+        /// <summary>
         /// Binds the grid.
         /// </summary>
         private void BindGrid()
         {
-            if ( _program == null )
+            if ( _Program == null )
             {
                 return;
             }
 
-            var stepTypesQry = new StepTypeService( new RockContext() )
+            var dataContext = this.GetDataContext();
+
+            var stepTypesQry = new StepTypeService( dataContext )
                 .Queryable();
 
             // Filter by: Step Programs
-            stepTypesQry = stepTypesQry.Where( x => x.StepProgramId == _program.Id );
+            stepTypesQry = stepTypesQry.Where( x => x.StepProgramId == _Program.Id );
 
             // Filter by: Name
             var name = rFilter.GetUserPreference( FilterSettingName.Name ).ToStringSafe();
@@ -523,9 +636,25 @@ namespace RockWeb.Blocks.Steps
             stepTypesQry = stepTypesQry.OrderBy( b => b.Order );
 
             // Retrieve the Step Type data models and create corresponding view models to display in the grid.
-            var stepTypes = stepTypesQry.ToList();
+            var stepService = new StepService( dataContext );
 
-            gStepType.DataSource = stepTypes.Select( x => StepTypeListItemViewModel.NewFromDataModel( x ) ).ToList();
+            var startedStepsQry = stepService.Queryable();
+            var completedStepsQry = stepService.Queryable().Where( x => x.StepStatus != null && x.StepStatus.IsCompleteStatus );
+
+            var stepTypes = stepTypesQry.Select( x =>
+                new StepTypeListItemViewModel
+                {
+                    Id = x.Id,
+                    Name = x.Name,
+                    IconCssClass = x.IconCssClass,
+                    AllowMultipleInstances = x.AllowMultiple,
+                    HasDuration = x.HasEndDate,
+                    StartedCount = startedStepsQry.Count( y => y.StepTypeId == x.Id ),
+                    CompletedCount = completedStepsQry.Count( y => y.StepTypeId == x.Id )
+                } )
+                .ToList();
+
+            gStepType.DataSource = stepTypes;
 
             gStepType.DataBind();
         }
@@ -539,31 +668,13 @@ namespace RockWeb.Blocks.Steps
         /// </summary>
         public class StepTypeListItemViewModel
         {
-            public StepType Program { get; set; }
-
             public int Id { get; set; }
             public string Name { get; set; }
             public string IconCssClass { get; set; }
             public bool AllowMultipleInstances { get; set; }
             public bool HasDuration { get; set; }
-            public int StepCompletedCount { get; set; }
-
-            public static StepTypeListItemViewModel NewFromDataModel( StepType stepProgram )
-            {
-                var newItem = new StepTypeListItemViewModel();
-
-                newItem.Id = stepProgram.Id;
-                newItem.Name = stepProgram.Name;
-                newItem.IconCssClass = stepProgram.IconCssClass;
-
-                newItem.AllowMultipleInstances = stepProgram.AllowMultiple;
-                newItem.HasDuration = stepProgram.HasEndDate;
-
-                // TODO: Calculate total steps taken.
-                newItem.StepCompletedCount = 777;
-
-                return newItem;
-            }
+            public int StartedCount { get; set; }
+            public int CompletedCount { get; set; }
         }
 
         #endregion Helper Classes
@@ -571,7 +682,7 @@ namespace RockWeb.Blocks.Steps
         #region ISecondaryBlock
 
         /// <summary>
-        /// Sets the visible.
+        /// Sets the visibility of this block in response to a directive from a primary block.
         /// </summary>
         /// <param name="visible">if set to <c>true</c> [visible].</param>
         public void SetVisible( bool visible )
