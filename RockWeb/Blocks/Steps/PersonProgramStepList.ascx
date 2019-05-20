@@ -1,5 +1,7 @@
 ﻿<%@ Control Language="C#" AutoEventWireup="true" CodeFile="PersonProgramStepList.ascx.cs" Inherits="RockWeb.Blocks.Steps.PersonProgramStepList" %>
 
+<asp:Literal ID="lStepsPerRowCss" runat="server" />
+
 <asp:UpdatePanel ID="upContent" runat="server">
     <ContentTemplate>
 
@@ -43,12 +45,12 @@
                         <div class="col-xs-12">
                             <div class="grid grid-panel">
                                 <Rock:GridFilter ID="gfGridFilter" runat="server">
-                                    <Rock:RockTextBox ID="tbStepTypeName" runat="server" Label="Step Type Name"></Rock:RockTextBox>
-                                    <Rock:RockTextBox ID="tbStepStatus" runat="server" Label="Step Status"></Rock:RockTextBox>
+                                    <Rock:RockTextBox ID="tbStepTypeName" runat="server"></Rock:RockTextBox>
+                                    <Rock:RockTextBox ID="tbStepStatus" runat="server"></Rock:RockTextBox>
                                 </Rock:GridFilter>
                                 <Rock:Grid ID="gStepList" runat="server" RowItemText="Step" AllowSorting="true" OnRowSelected="gStepList_RowSelected">
                                     <Columns>
-                                        <Rock:RockLiteralField HeaderText="Step Type" ID="lStepType" SortExpression="StepTypeName" OnDataBound="lStepType_DataBound" />
+                                        <Rock:RockLiteralField ID="lStepType" SortExpression="StepTypeName" OnDataBound="lStepType_DataBound" />
                                         <Rock:DateField DataField="CompletedDateTime" HeaderText="Completion Date" SortExpression="CompletedDateTime" ItemStyle-HorizontalAlign="Left" HeaderStyle-HorizontalAlign="Left" />
                                         <Rock:RockLiteralField HeaderText="Summary" ID="lSummary" SortExpression="Summary" />
                                         <Rock:RockLiteralField HeaderText="Status" ID="lStepStatus" SortExpression="StepStatusName" OnDataBound="lStepStatus_DataBound" />
@@ -64,8 +66,8 @@
                     <div class="row">
                         <asp:repeater id="rStepTypeCards" runat="server" OnItemDataBound="rStepTypeCards_ItemDataBound">
                             <itemtemplate>
-                                <div class="col-xs-12 col-sm-6 col-md-4 col-lg-3 text-center">
-                                    <div class="step-card">
+                                <div class="text-center <%# Eval( "CardColCssClass" ) %>">
+                                    <div class="step-card <%# Eval( "CardCssClass" ) %>">
                                         <div class="card-info">
                                             <%# Eval( "RenderedLava" ) %>
                                         </div>
@@ -75,7 +77,7 @@
                                                     <span>
                                                     <i class="fa fa-plus-circle fa-2x"></i>
                                                     <br />
-                                                    Add a Step
+                                                    Add a <%# Eval("StepTerm") %>
                                                     </span>
                                                 </asp:LinkButton>
                                                 <div class="step-records-table-container">
@@ -101,7 +103,7 @@
                                                 </div>
                                             </asp:Panel>
                                             <asp:Panel ID="pnlPrereqs" runat="server">
-                                                <p class="prereq-list-info">This step requires the following prerequisite steps:</p>
+                                                <p class="prereq-list-info">This <%# Eval("StepTerm") %> requires the following prerequisites:</p>
                                                 <ul class="list-unstyled">
                                                     <asp:repeater id="rPrereqs" runat="server">
                                                         <itemtemplate>

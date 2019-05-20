@@ -221,6 +221,7 @@ namespace RockWeb.Blocks.Steps
             gStatuses.Actions.ShowAdd = true;
             gStatuses.Actions.AddClick += gStatuses_Add;
             gStatuses.GridRebind += gStatuses_GridRebind;
+            gStatuses.GridReorder += gStatuses_GridReorder;
         }
 
         /// <summary>
@@ -402,6 +403,40 @@ namespace RockWeb.Blocks.Steps
             BindStepStatusesGrid();
         }
 
+        /// <summary>
+        /// Handles the GridReorder event of the gStatuses control.
+        /// </summary>
+        /// <param name="sender">The source of the event.</param>
+        /// <param name="e">The <see cref="GridReorderEventArgs" /> instance containing the event data.</param>
+        void gStatuses_GridReorder( object sender, GridReorderEventArgs e )
+        {
+            var movedItem = StatusesState.Where( ss => ss.Order == e.OldIndex ).FirstOrDefault();
+
+            if ( movedItem != null )
+            {
+                if ( e.NewIndex < e.OldIndex )
+                {
+                    // Moved up
+                    foreach ( var otherItem in StatusesState.Where( ss => ss.Order < e.OldIndex && ss.Order >= e.NewIndex ) )
+                    {
+                        otherItem.Order++;
+                    }
+                }
+                else
+                {
+                    // Moved Down
+                    foreach ( var otherItem in StatusesState.Where( ss => ss.Order > e.OldIndex && ss.Order <= e.NewIndex ) )
+                    {
+                        otherItem.Order--;
+                    }
+                }
+
+                movedItem.Order = e.NewIndex;
+            }
+
+            BindStepStatusesGrid();
+        }
+
         /// <summar>ymod
         /// Handles the Add event of the gStatuses control.
         /// </summary>
@@ -455,9 +490,9 @@ namespace RockWeb.Blocks.Steps
         /// </summary>
         private void BindStepStatusesGrid()
         {
-            SetStepStatusListOrder( StatusesState );
+            SetStepStatusStateOrder();
 
-            gStatuses.DataSource = StatusesState.OrderBy( a => a.Name ).ToList();
+            gStatuses.DataSource = StatusesState;
 
             gStatuses.DataBind();
         }
@@ -466,13 +501,20 @@ namespace RockWeb.Blocks.Steps
         /// Sets the attribute list order.
         /// </summary>
         /// <param name="attributeList">The attribute list.</param>
-        private void SetStepStatusListOrder( List<StepStatus> StepStatusList )
+        private void SetStepStatusStateOrder()
         {
-            if ( StepStatusList != null )
+            if ( StatusesState != null )
             {
-                if ( StepStatusList.Any() )
+                if ( StatusesState.Any() )
                 {
-                    StepStatusList.OrderBy( a => a.Name ).ToList();
+                    StatusesState = StatusesState.OrderBy( ss => ss.Order ).ThenBy( ss => ss.Name ).ToList();
+
+                    for ( var i = 0; i < StatusesState.Count; i++ )
+                    {
+                        StatusesState[i].Order = i;
+                    }
+
+                    SaveViewState();
                 }
             }
         }
@@ -880,7 +922,7 @@ namespace RockWeb.Blocks.Steps
             stepProgram.Description = tbDescription.Text;
             stepProgram.IconCssClass = tbIconCssClass.Text;
 
-            stepProgram.CategoryId = cpCategory.SelectedValueAsInt().GetValueOrDefault( 0 );
+            stepProgram.CategoryId = cpCategory.SelectedValueAsInt();
 
             stepProgram.DefaultListView = rblDefaultListView.SelectedValue.ConvertToEnum<StepProgram.ViewMode>( StepProgram.ViewMode.Cards );
 

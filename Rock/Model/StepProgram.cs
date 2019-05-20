@@ -16,6 +16,12 @@ namespace Rock.Model
     [DataContract]
     public partial class StepProgram : Model<StepProgram>, IOrdered, IHasActiveFlag
     {
+        #region Constants
+
+        private const string _defaultStepTerm = "Step";
+
+        #endregion Constants
+
         #region Entity Properties
 
         /// <summary>
@@ -33,6 +39,18 @@ namespace Rock.Model
         public string Description { get; set; }
 
         /// <summary>
+        /// Gets or sets the term used for steps within this program. This property is required.
+        /// </summary>
+        [MaxLength( 100 )]
+        [DataMember]
+        public string StepTerm
+        {
+            get => _stepTerm.IsNullOrWhiteSpace() ? _defaultStepTerm : _stepTerm;
+            set => _stepTerm = value;            
+        }
+        private string _stepTerm;
+
+        /// <summary>
         /// Gets or sets the icon CSS class.
         /// </summary>
         [MaxLength( 100 )]
@@ -40,11 +58,10 @@ namespace Rock.Model
         public string IconCssClass { get; set; }
 
         /// <summary>
-        /// Gets or sets the Id of the <see cref="Category"/>. This property is required.
+        /// Gets or sets the Id of the <see cref="Category"/>.
         /// </summary>
-        [Required]
-        [DataMember( IsRequired = true )]
-        public int CategoryId { get; set; }
+        /// [DataMember]
+        public int? CategoryId { get; set; }
 
         /// <summary>
         /// Gets or sets the default view mode for the program (<see cref="Rock.Model.DefaultListView"/>). This value is required.
@@ -129,7 +146,7 @@ namespace Rock.Model
             /// </summary>
             public StepProgramConfiguration()
             {
-                HasRequired( sp => sp.Category ).WithMany().HasForeignKey( sp => sp.CategoryId ).WillCascadeOnDelete( false );
+                HasOptional( sp => sp.Category ).WithMany().HasForeignKey( sp => sp.CategoryId ).WillCascadeOnDelete( false );
             }
         }
 

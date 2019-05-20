@@ -33,6 +33,7 @@ namespace RockWeb.Blocks.Steps
     [DisplayName( "Steps" )]
     [Category( "Steps" )]
     [Description( "Displays step records for a person in a step program." )]
+    [ContextAware( typeof( Person ) )]
 
     #region Attributes
 
@@ -44,10 +45,26 @@ namespace RockWeb.Blocks.Steps
         key: AttributeKeys.StepProgram )]
 
     [LinkedPage(
-        name: "Step Page",
+        name: "Step Entry Page",
         description: "The page where step records can be edited or added",
         order: 2,
         key: AttributeKeys.StepPage )]
+
+    [IntegerField(
+        name: "Steps Per Row",
+        description: "The number of step cards that should be shown on a row",
+        order: 3,
+        required: true,
+        key: AttributeKeys.StepsPerRow,
+        defaultValue: 4 )]
+
+    [IntegerField(
+        name: "Steps Per Row Mobile",
+        description: "The number of step cards that should be shown on a row on a mobile screen size",
+        order: 4,
+        required: true,
+        key: AttributeKeys.StepsPerRowMobile,
+        defaultValue: 1 )]
 
     #endregion Attributes
 
@@ -62,6 +79,8 @@ namespace RockWeb.Blocks.Steps
         {
             public const string StepProgram = "StepProgram";
             public const string StepPage = "StepPage";
+            public const string StepsPerRow = "StepsPerRow";
+            public const string StepsPerRowMobile = "StepsPerRowMobile";
         }
 
         /// <summary>
@@ -106,7 +125,6 @@ namespace RockWeb.Blocks.Steps
 
             gfGridFilter.ApplyFilterClick += gfGridFilter_ApplyFilterClick;
             gfGridFilter.ClearFilterClick += gfGridFilter_ClearFilterClick;
-            gfGridFilter.DisplayFilterValue += gfGridFilter_DisplayFilterValue;
 
             gStepList.DataKeyNames = new[] { "id" };
             gStepList.GridRebind += gStepList_GridRebind;
@@ -123,6 +141,8 @@ namespace RockWeb.Blocks.Steps
                 }
             }
 
+            RenderStepsPerRow();
+            DisplayStepTerm();
             RenderViewMode();
         }
 
@@ -252,7 +272,7 @@ namespace RockWeb.Blocks.Steps
         /// Add a step with the given step type
         /// </summary>
         /// <param name="stepTypeId"></param>
-        private void AddStep(int? stepTypeId)
+        private void AddStep( int? stepTypeId )
         {
             if ( stepTypeId.HasValue )
             {
@@ -370,7 +390,7 @@ namespace RockWeb.Blocks.Steps
             var pnlPrereqs = e.Item.FindControl( "pnlPrereqs" ) as Panel;
             var lbCardAddStep = e.Item.FindControl( "lbCardAddStep" ) as LinkButton;
 
-            lbCardAddStep.Visible = CanAddStep( cardData.StepType );
+            lbCardAddStep.Visible = cardData.CanAddStep;
             pnlStepRecords.Visible = hasMetPrerequisites;
             pnlPrereqs.Visible = !hasMetPrerequisites;
 
@@ -403,26 +423,6 @@ namespace RockWeb.Blocks.Steps
         #endregion Events
 
         #region GridFilter Events
-
-        /// <summary>
-        /// Handles the DisplayFilterValue event of the gfGridFilter control.
-        /// </summary>
-        /// <param name="sender">The source of the event.</param>
-        /// <param name="e">The <see cref="Rock.Web.UI.Controls.GridFilter.DisplayFilterValueArgs"/> instance containing the event data.</param>
-        protected void gfGridFilter_DisplayFilterValue( object sender, GridFilter.DisplayFilterValueArgs e )
-        {
-            // TODO - Keep adding filters. Some will need transformed here
-
-            /*
-            switch ( e.Key )
-            {
-                case FilterKeys.StepTypeName:
-                {
-                    
-                }
-            }
-            */
-        }
 
         /// <summary>
         /// Handles the ApplyFilterClick event of the gfGridFilter control.
@@ -495,6 +495,32 @@ namespace RockWeb.Blocks.Steps
         private StepProgram _stepProgram;
 
         /// <summary>
+        /// Get the term for the steps in the program
+        /// </summary>
+        /// <returns></returns>
+        public string GetStepTerm()
+        {
+            if ( _stepTerm == null )
+            {
+                var defaultValue = "Step";
+                var program = GetStepProgram();
+
+                if ( program == null )
+                {
+                    _stepTerm = defaultValue;
+                }
+                else
+                {
+                    var term = program.StepTerm;
+                    _stepTerm = term.IsNullOrWhiteSpace() ? defaultValue : term;
+                }
+            }
+
+            return _stepTerm;
+        }
+        private string _stepTerm;
+
+        /// <summary>
         /// Gets the step types (model) for this program
         /// </summary>
         /// <returns></returns>
@@ -526,23 +552,33 @@ namespace RockWeb.Blocks.Steps
 
         /// <summary>
         /// Gets the person model that should be displayed in the block
+        /// 1.) Context Entity
+        /// 2.) PersonId parameter
+        /// 3.) Current person
         /// </summary>
         /// <returns></returns>
         private Person GetPerson()
         {
             if ( _person == null )
             {
-                _person = ContextEntity() as Person;
-            }
+                // 1.) Context Entity
+                _person = ContextEntity<Person>();
 
-            if ( _person == null )
-            {
-                var personId = PageParameter( "PersonId" ).AsIntegerOrNull();
-
-                if ( personId.HasValue )
+                if ( _person == null )
                 {
-                    var rockContext = GetRockContext();
-                    _person = new PersonService( rockContext ).Get( personId.Value );
+                    // 2.) PersonId parameter
+                    var personId = PageParameter( "PersonId" ).AsIntegerOrNull();
+
+                    if ( personId.HasValue )
+                    {
+                        var rockContext = GetRockContext();
+                        _person = new PersonService( rockContext ).Get( personId.Value );
+                    }
+                    else
+                    {
+                        // 3.) Current person
+                        _person = CurrentPerson;
+                    }
                 }
             }
 
@@ -732,6 +768,34 @@ namespace RockWeb.Blocks.Steps
         #region Control Helpers
 
         /// <summary>
+        /// Render the steps per row css literal control
+        /// </summary>
+        private void RenderStepsPerRow()
+        {
+            var stepsPerRow = GetAttributeValue( AttributeKeys.StepsPerRow ).AsIntegerOrNull() ?? 4;
+            var stepsPerRowMobile = GetAttributeValue( AttributeKeys.StepsPerRowMobile ).AsIntegerOrNull() ?? 1;
+
+            lStepsPerRowCss.Text =
+@"<style>
+    :root {
+        --stepsPerRow: " + stepsPerRow + @";
+        --stepsPerRowMobile: " + stepsPerRowMobile + @";
+        }
+</style>";
+        }
+
+        /// <summary>
+        /// Display the step term in all the appropriate places
+        /// </summary>
+        private void DisplayStepTerm()
+        {
+            var stepTerm = GetStepTerm();
+            tbStepTypeName.Label = string.Format( "{0} Type Name", stepTerm );
+            tbStepStatus.Label = string.Format( "{0} Status", stepTerm );
+            lStepType.HeaderText = string.Format( "{0} Type", stepTerm );
+        }
+
+        /// <summary>
         /// Show an error in the notification box
         /// </summary>
         /// <param name="message"></param>
@@ -780,28 +844,56 @@ namespace RockWeb.Blocks.Steps
             }
 
             var program = GetStepProgram();
+            var stepTerm = GetStepTerm();
             var person = GetPerson();
             var orderedStepTypes = OrderStepTypes( GetStepTypes() );
             var cardsData = new List<CardViewModel>();
 
+            var stepsPerRow = GetAttributeValue( AttributeKeys.StepsPerRow ).AsIntegerOrNull() ?? 4;
+            var stepsPerRowMobile = GetAttributeValue( AttributeKeys.StepsPerRowMobile ).AsIntegerOrNull() ?? 1;
+            var cardColCssClass = string.Format( "col-xs-{0} col-md-{1}", ( 12 / stepsPerRowMobile ), ( 12 / stepsPerRow ) );
+
             foreach ( var stepType in orderedStepTypes )
             {
+                var cardCssClasses = new List<string>();
                 var personStepsOfType = GetPersonStepsOfType( stepType.Id );
+                var isComplete = personStepsOfType.Any( s => s.IsComplete );
+                var canAddStep = CanAddStep( stepType );
 
                 var rendered = stepType.CardLavaTemplate.ResolveMergeFields( new Dictionary<string, object> {
                     { "StepType", stepType },
                     { "Steps", personStepsOfType },
                     { "Person", person },
                     { "Program", program },
-                    { "IsComplete", personStepsOfType.Any( s => s.IsComplete ) },
+                    { "IsComplete", isComplete },
                     { "CompletedDateTime", personStepsOfType.Where( s => s.CompletedDateTime.HasValue ).Max( s => s.CompletedDateTime ) },
-                    { "StepCount", personStepsOfType.Count }
+                    { "StepCount", personStepsOfType.Count },
+                    { "CanAddStep", canAddStep }
                 } );
+
+                if ( isComplete )
+                {
+                    cardCssClasses.Add( "is-complete" );
+                }
+
+                if ( personStepsOfType.Any() )
+                {
+                    cardCssClasses.Add( "has-steps" );
+                }
+
+                if ( canAddStep )
+                {
+                    cardCssClasses.Add( "has-add" );
+                }
 
                 cardsData.Add( new CardViewModel
                 {
                     StepType = stepType,
-                    RenderedLava = rendered
+                    RenderedLava = rendered,
+                    StepTerm = stepTerm,
+                    CardCssClass = cardCssClasses.JoinStrings( " " ),
+                    CanAddStep = canAddStep,
+                    CardColCssClass = cardColCssClass
                 } );
             }
 
@@ -907,6 +999,7 @@ namespace RockWeb.Blocks.Steps
 
             var stepTypes = GetStepTypes();
             var addButtons = new List<AddStepButtonViewModel>();
+            var stepTerm = GetStepTerm();
 
             foreach ( var stepType in stepTypes )
             {
@@ -917,7 +1010,8 @@ namespace RockWeb.Blocks.Steps
                 {
                     StepTypeId = stepType.Id,
                     IsEnabled = CanAddStep( stepType ),
-                    ButtonContents = string.Format( "<i class=\"{0}\"></i> &nbsp; {1}", stepType.IconCssClass, stepType.Name )
+                    ButtonContents = string.Format( "<i class=\"{0}\"></i> &nbsp; {1}", stepType.IconCssClass, stepType.Name ),
+                    StepTerm = stepTerm
                 } );
             }
 
@@ -1006,6 +1100,7 @@ namespace RockWeb.Blocks.Steps
             public int StepTypeId { get; set; }
             public bool IsEnabled { get; set; }
             public string ButtonContents { get; set; }
+            public string StepTerm { get; set; }
         }
 
         /// <summary>
@@ -1015,6 +1110,10 @@ namespace RockWeb.Blocks.Steps
         {
             public StepType StepType { get; set; }
             public string RenderedLava { get; set; }
+            public string StepTerm { get; set; }
+            public string CardCssClass { get; set; }
+            public string CardColCssClass { get; set; }
+            public bool CanAddStep { get; set; }
         }
 
         /// <summary>
