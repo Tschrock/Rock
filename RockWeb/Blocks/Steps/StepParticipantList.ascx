@@ -5,7 +5,7 @@
         $('.js-member-note').tooltip();
 
         // data view sync list popover
-        $('.js-sync-popover').popover()
+        $('.js-sync-popover').popover();
     });
 </script>
 
@@ -17,7 +17,7 @@
             <div id="pnlSteps" runat="server">
 
                 <div class="panel panel-block">
-                
+
                     <div class="panel-heading clearfix">
                         <h1 class="panel-title pull-left">
                             <i class="fa fa-users"></i>
@@ -68,20 +68,20 @@
 
                     // person-link-popover
                     $('.js-person-popover').popover({
-                        placement: 'right', 
+                        placement: 'right',
                         trigger: 'manual',
                         delay: 500,
                         html: true,
                         content: function() {
                             var dataUrl = Rock.settings.get('baseUrl') + 'api/People/PopupHtml/' +  $(this).attr('personid') + '/false';
 
-                            var result = $.ajax({ 
-                                                type: 'GET', 
-                                                url: dataUrl, 
-                                                dataType: 'json', 
+                            var result = $.ajax({
+                                                type: 'GET',
+                                                url: dataUrl,
+                                                dataType: 'json',
                                                 contentType: 'application/json; charset=utf-8',
                                                 async: false }).responseText;
-            
+
                             var resultObject = jQuery.parseJSON(result);
 
                             return resultObject.PickerItemDetailsHtml;

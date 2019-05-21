@@ -18,8 +18,8 @@
                 <div class="panel-labels">
                     <asp:LinkButton ID="lbShowCards" runat="server" class="btn btn-xs btn-square btn-default" OnClick="ShowCards" AutoPostBack="true">
                         <i class="fa fa-th"></i>
-                    </asp:LinkButton><!--
-                    --><asp:LinkButton ID="lbShowGrid" runat="server" class="btn btn-xs btn-square btn-default" OnClick="ShowGrid" AutoPostBack="true">
+                    </asp:LinkButton>
+                    <asp:LinkButton ID="lbShowGrid" runat="server" class="btn btn-xs btn-square btn-default" OnClick="ShowGrid" AutoPostBack="true">
                         <i class="fa fa-list"></i>
                     </asp:LinkButton>
                 </div>
@@ -66,7 +66,7 @@
                     <div class="row">
                         <asp:repeater id="rStepTypeCards" runat="server" OnItemDataBound="rStepTypeCards_ItemDataBound">
                             <itemtemplate>
-                                <div class="text-center <%# Eval( "CardColCssClass" ) %>">
+                                <div class="<%# Eval( "CardColCssClass" ) %>">
                                     <div class="step-card <%# Eval( "CardCssClass" ) %>">
                                         <div class="card-info">
                                             <%# Eval( "RenderedLava" ) %>
@@ -123,6 +123,53 @@
             </div><!-- .panel-body -->
 
         </div><!-- .panel -->
+        <script>
+            Sys.Application.add_load( function () {
 
+$( ".step-card" ).each(function( index ) {
+    if( $(this).hasClass('has-add') ){
+        var cardHeight = $(this).height(),
+        infoHeight = $(this).find(".card-add-step-button span").height(),
+        tableHeight = $(this).find(".step-records-table-container").height(),
+        freeSpace = (cardHeight - tableHeight),
+        pixelOffset = Math.floor((cardHeight/2) - ((freeSpace - infoHeight) / 2));
+
+        if ( (freeSpace - infoHeight) >= 0 ) {
+            $(this).mouseenter(function() {
+                $(this).find('.card-add-step-button span').css('transform', 'translateY(-' + pixelOffset + 'px)');
+            }).mouseleave(function() {
+                $(this).find('.card-add-step-button span').css('transform', '');
+            });
+        } else {
+            scale = (freeSpace / (infoHeight + 8));
+            pixelOffset = Math.floor((cardHeight/2) - ((freeSpace - (infoHeight)) / 2));
+
+            $(this).mouseenter(function() {
+                $(this).find('.card-add-step-button span').css('transform', 'translateY(-' + pixelOffset + 'px) scale('+scale+')');
+            }).mouseleave(function() {
+                $(this).find('.card-add-step-button span').css('transform', '');
+            });
+            $(this).attr('data-scale', (infoHeight * scale));
+        }
+    } else if ( $(this).hasClass('has-steps') ){
+        var cardHeight = $(this).height(),
+        infoHeight = $(this).find(".card-info").height(),
+        tableHeight = $(this).find(".step-records-table-container").height(),
+        freeSpace = (cardHeight - tableHeight),
+        pixelOffset = Math.floor((cardHeight - tableHeight) / 2);
+
+        if ( (freeSpace - infoHeight) >= 0 ) {
+            $(this).mouseenter(function() {
+                $(this).find('.card-info').css('transform', 'translateY(-' + pixelOffset + 'px)');
+            }).mouseleave(function() {
+                $(this).find('.card-info').css('transform', '');
+            });
+        } else {
+            console.log('needs resize');
+        }
+    };
+});
+})
+        </script>
     </ContentTemplate>
 </asp:UpdatePanel>

@@ -851,7 +851,7 @@ namespace RockWeb.Blocks.Steps
 
             var stepsPerRow = GetAttributeValue( AttributeKeys.StepsPerRow ).AsIntegerOrNull() ?? 4;
             var stepsPerRowMobile = GetAttributeValue( AttributeKeys.StepsPerRowMobile ).AsIntegerOrNull() ?? 1;
-            var cardColCssClass = string.Format( "col-xs-{0} col-md-{1}", ( 12 / stepsPerRowMobile ), ( 12 / stepsPerRow ) );
+            var cardColCssClass = string.Format( "col-steps" );
 
             foreach ( var stepType in orderedStepTypes )
             {
@@ -932,7 +932,7 @@ namespace RockWeb.Blocks.Steps
             var stepTypeNameFilter = gfGridFilter.GetUserPreference( FilterKeys.StepTypeName );
             var stepStatusNameFilter = gfGridFilter.GetUserPreference( FilterKeys.StepStatusName );
 
-            // Apply step type filters            
+            // Apply step type filters
             if ( !string.IsNullOrEmpty( stepTypeNameFilter ) )
             {
                 stepTypes = stepTypes.Where( st => st.Name.Contains( stepTypeNameFilter ) ).ToList();
@@ -954,7 +954,7 @@ namespace RockWeb.Blocks.Steps
                     s.PersonAlias.PersonId == person.Id &&
                     stepTypeIds.Contains( s.StepTypeId ) );
 
-            // Apply step filters                
+            // Apply step filters
             if ( !string.IsNullOrEmpty( stepStatusNameFilter ) )
             {
                 stepsQuery = stepsQuery.Where( s => s.StepStatus != null && s.StepStatus.Name.Contains( stepStatusNameFilter ) );
@@ -1117,7 +1117,7 @@ namespace RockWeb.Blocks.Steps
         }
 
         /// <summary>
-        /// View model for a single step shown on the hover state of the card 
+        /// View model for a single step shown on the hover state of the card
         /// </summary>
         public class CardStepViewModel
         {
