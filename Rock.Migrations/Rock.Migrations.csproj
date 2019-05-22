@@ -328,6 +328,10 @@
     <Compile Include="Migrations\201905201339193_StepTerm.Designer.cs">
       <DependentUpon>201905201339193_StepTerm.cs</DependentUpon>
     </Compile>
+    <Compile Include="Migrations\201905222143025_StepPagesAndBlocks.cs" />
+    <Compile Include="Migrations\201905222143025_StepPagesAndBlocks.Designer.cs">
+      <DependentUpon>201905222143025_StepPagesAndBlocks.cs</DependentUpon>
+    </Compile>
     <Compile Include="Migrations\CreateDatabase\201311251734059_CreateDatabase.cs" />
     <Compile Include="Migrations\CreateDatabase\201311251734059_CreateDatabase.Designer.cs">
       <DependentUpon>201311251734059_CreateDatabase.cs</DependentUpon>
@@ -814,6 +818,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Migrations\201905201339193_StepTerm.resx">
       <DependentUpon>201905201339193_StepTerm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201905222143025_StepPagesAndBlocks.resx">
+      <DependentUpon>201905222143025_StepPagesAndBlocks.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Migrations\CreateDatabase\201311251734059_CreateDatabase.resx">
       <DependentUpon>201311251734059_CreateDatabase.cs</DependentUpon>
