@@ -64,7 +64,7 @@ namespace RockWeb.Blocks.Steps
         order: 4,
         required: true,
         key: AttributeKeys.StepsPerRowMobile,
-        defaultValue: 3 )]
+        defaultValue: 2 )]
 
     #endregion Attributes
 

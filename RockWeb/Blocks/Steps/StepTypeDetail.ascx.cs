@@ -55,9 +55,9 @@ namespace RockWeb.Blocks.Steps
          DefaultValue = Rock.SystemGuid.DefinedValue.CHART_STYLE_ROCK,
          Order = 1 )]
     [SlidingDateRangeField
-        ( "Chart Date Range",
+        ( "Default Chart Date Range",
           Key = AttributeKey.SlidingDateRange,
-          DefaultValue = "-1||||",
+          DefaultValue = "Current||Year||",
           EnabledSlidingDateRangeTypes = "Last,Previous,Current,DateRange",
           Order = 2 )]
     [CategoryField(
@@ -68,7 +68,7 @@ namespace RockWeb.Blocks.Steps
         EntityTypeName = "Rock.Model.DataView",
         EntityTypeQualifierColumn = "",
         EntityTypeQualifierValue = "",
-        IsRequired =false,
+        IsRequired = false,
         DefaultValue = "",
         Category = "",
         Order = 7
