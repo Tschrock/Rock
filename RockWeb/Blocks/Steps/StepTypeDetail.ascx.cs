@@ -71,8 +71,7 @@ namespace RockWeb.Blocks.Steps
         IsRequired = false,
         DefaultValue = "",
         Category = "",
-        Order = 7
-        )]
+        Order = 7 )]
 
     #endregion Block Attributes
 
