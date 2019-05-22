@@ -97,7 +97,7 @@
 
                     <div class="row">
                         <div class="col-md-6">
-                            <Rock:DataTextBox ID="tbIconCssClass" runat="server" SourceTypeName="Rock.Model.StepProgram, Rock" PropertyName="IconCssClass" ValidateRequestMode="Disabled" />
+                            <Rock:DataTextBox ID="tbIconCssClass" runat="server" SourceTypeName="Rock.Model.StepProgram, Rock" Label="Icon CSS Class" PropertyName="IconCssClass" ValidateRequestMode="Disabled" />
                             <Rock:CategoryPicker ID="cpCategory" runat="server" EntityTypeName="Rock.Model.StepProgram" Label="Category" />
                         </div>
                         <div class="col-md-6">

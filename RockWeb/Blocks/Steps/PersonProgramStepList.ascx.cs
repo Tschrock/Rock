@@ -56,7 +56,7 @@ namespace RockWeb.Blocks.Steps
         order: 3,
         required: true,
         key: AttributeKeys.StepsPerRow,
-        defaultValue: 4 )]
+        defaultValue: 6 )]
 
     [IntegerField(
         name: "Steps Per Row Mobile",
@@ -64,7 +64,7 @@ namespace RockWeb.Blocks.Steps
         order: 4,
         required: true,
         key: AttributeKeys.StepsPerRowMobile,
-        defaultValue: 1 )]
+        defaultValue: 3 )]
 
     #endregion Attributes
 
@@ -875,10 +875,14 @@ namespace RockWeb.Blocks.Steps
                 {
                     cardCssClasses.Add( "is-complete" );
                 }
-
+                
                 if ( personStepsOfType.Any() )
                 {
                     cardCssClasses.Add( "has-steps" );
+                }
+                else
+                {
+                    cardCssClasses.Add( "no-steps" );
                 }
 
                 if ( canAddStep )

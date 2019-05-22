@@ -107,7 +107,7 @@
                                 runat="server"
                                 SourceTypeName="Rock.Model.StepType, Rock"
                                 PropertyName="IconCssClass"
-                                Label="Icon Css Class"
+                                Label="Icon CSS Class"
                                 Help="The Font Awesome icon class to use when displaying steps of this type."
                                 ValidateRequestMode="Disabled" />
                             <Rock:RockCheckBox ID="cbAllowMultiple"
