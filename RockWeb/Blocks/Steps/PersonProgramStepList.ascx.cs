@@ -238,7 +238,7 @@ namespace RockWeb.Blocks.Steps
 
             if ( !stepGridRow.StepStatusColor.IsNullOrWhiteSpace() )
             {
-                classAttribute = string.Format( @" class=""label label-{0}""", stepGridRow.StepStatusColor );
+                classAttribute = string.Format( @" class=""label"" style=""background-color: {0};"" ", stepGridRow.StepStatusColor );
             }
 
             lStepStatus.Text = string.Format( "<span{0}>{1}</span>",
@@ -623,7 +623,7 @@ namespace RockWeb.Blocks.Steps
                         st => st.Id,
                         st => st.Steps
                             .Where( s => s.PersonAlias.PersonId == person.Id )
-                            .OrderBy( s => s.CompletedDateTime ?? s.EndDateTime ?? s.StartDateTime ?? DateTime.MinValue )
+                            .OrderBy( s => s.CompletedDateTime ?? s.EndDateTime ?? s.StartDateTime ?? s.CreatedDateTime ?? DateTime.MinValue )
                             .ToList() );
                 }
             }
@@ -793,6 +793,7 @@ namespace RockWeb.Blocks.Steps
             tbStepTypeName.Label = string.Format( "{0} Type Name", stepTerm );
             tbStepStatus.Label = string.Format( "{0} Status", stepTerm );
             lStepType.HeaderText = string.Format( "{0} Type", stepTerm );
+            lAddStepButtonsLabel.Text = string.Format( "Add {0}:", stepTerm );
         }
 
         /// <summary>
@@ -849,14 +850,13 @@ namespace RockWeb.Blocks.Steps
             var orderedStepTypes = OrderStepTypes( GetStepTypes() );
             var cardsData = new List<CardViewModel>();
 
-            var stepsPerRow = GetAttributeValue( AttributeKeys.StepsPerRow ).AsIntegerOrNull() ?? 4;
-            var stepsPerRowMobile = GetAttributeValue( AttributeKeys.StepsPerRowMobile ).AsIntegerOrNull() ?? 1;
-            var cardColCssClass = string.Format( "col-steps" );
-
             foreach ( var stepType in orderedStepTypes )
             {
                 var cardCssClasses = new List<string>();
                 var personStepsOfType = GetPersonStepsOfType( stepType.Id );
+
+                var latestStep = personStepsOfType.LastOrDefault();
+                var latestStepStatus = latestStep == null ? null : latestStep.StepStatus;
                 var isComplete = personStepsOfType.Any( s => s.IsComplete );
                 var canAddStep = CanAddStep( stepType );
 
@@ -868,7 +868,9 @@ namespace RockWeb.Blocks.Steps
                     { "IsComplete", isComplete },
                     { "CompletedDateTime", personStepsOfType.Where( s => s.CompletedDateTime.HasValue ).Max( s => s.CompletedDateTime ) },
                     { "StepCount", personStepsOfType.Count },
-                    { "CanAddStep", canAddStep }
+                    { "CanAddStep", canAddStep },
+                    { "LatestStep", latestStep },
+                    { "LatestStepStatus", latestStepStatus },
                 } );
 
                 if ( isComplete )
@@ -896,8 +898,7 @@ namespace RockWeb.Blocks.Steps
                     RenderedLava = rendered,
                     StepTerm = stepTerm,
                     CardCssClass = cardCssClasses.JoinStrings( " " ),
-                    CanAddStep = canAddStep,
-                    CardColCssClass = cardColCssClass
+                    CanAddStep = canAddStep
                 } );
             }
 
@@ -1116,7 +1117,6 @@ namespace RockWeb.Blocks.Steps
             public string RenderedLava { get; set; }
             public string StepTerm { get; set; }
             public string CardCssClass { get; set; }
-            public string CardColCssClass { get; set; }
             public bool CanAddStep { get; set; }
         }
 

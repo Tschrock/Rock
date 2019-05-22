@@ -18,20 +18,20 @@ namespace Rock.Model
     {
         #region Constants
 
-        private const string _defaultCardLavaTemplate = @"
-<h3 class=""step-name"">{{ StepType.Name }}</h3>
+        private const string _defaultCardLavaTemplate =
+@"<h3 class=""step-name"">{{ StepType.Name }}</h3>
 {% if StepType.HighlightColor == '' or IsComplete == false %}
     <i class=""{{ StepType.IconCssClass }} fa-4x""></i>
 {% else %}
     <i class=""{{ StepType.IconCssClass }} fa-4x"" style=""color: {{ StepType.HighlightColor }};""></i>
 {% endif %}
 <p class=""step-status"">
-    {% if IsComplete %}
-        Completed
-        {% if CompletedDateTime != '' %}
-            <br />
-            <small>{{ CompletedDateTime | Date:'M/d/yyyy' }}</small>
-        {% endif %}
+    {% if LatestStepStatus %}
+        <span class=""label"" style=""background-color: {{ LatestStepStatus.StatusColor }};"">{{ LatestStepStatus.Name }}</span>
+    {% endif %}
+    {% if LatestStep and LatestStep.CompletedDateTime != '' %}
+        <br />
+        <small>{{ LatestStep.CompletedDateTime | Date:'M/d/yyyy' }}</small>
     {% endif %}
 </p>
 {% if StepCount > 1 %}

@@ -56,6 +56,10 @@ DECLARE @leaderStepTypeGuid AS UNIQUEIDENTIFIER = '95DF3AC6-AFBF-4BEA-AF86-80533
 DECLARE @alphaStatusStartedGuid AS UNIQUEIDENTIFIER = 'F29CF8A1-76A9-4436-9726-810DF0BC95C7';
 DECLARE @alphaStatusCompletedGuid AS UNIQUEIDENTIFIER = '7BA5F14D-BB38-4AAB-AB69-3A7F49494A55';
 
+DECLARE @colorGreen NVARCHAR(10) = '#0f0';
+DECLARE @colorRed NVARCHAR(10) = '#f00';
+DECLARE @colorBlue NVARCHAR(10) = '#00f';
+
 if ( @deleteExistingPrograms = 1 )
 begin
 	print N'Removing existing programs...';
@@ -191,7 +195,7 @@ BEGIN
 		( SELECT Id FROM StepProgram WHERE Guid = @sacramentsProgramGuid ),
 		'Completed',
 		1,
-		'success',
+		@colorGreen,
 		1,
 		1,
 		@sacramentsStatusSuccessGuid
@@ -212,7 +216,7 @@ BEGIN
 		( SELECT Id FROM StepProgram WHERE Guid = @sacramentsProgramGuid ),
 		'Pending',
 		0,
-		'danger',
+		@colorRed,
 		1,
 		2,
 		@sacramentsStatusDangerGuid
@@ -233,7 +237,7 @@ BEGIN
 		( SELECT Id FROM StepProgram WHERE Guid = @alphaProgramGuid ),
 		'Started',
 		0,
-		'success',
+		@colorGreen,
 		1,
 		1,
 		@alphaStatusStartedGuid
@@ -253,7 +257,7 @@ BEGIN
 		( SELECT Id FROM StepProgram WHERE Guid = @alphaProgramGuid ),
 		'Completed',
 		1,
-		'success',
+		@colorGreen,
 		1,
 		1,
 		@alphaStatusCompletedGuid

@@ -32,6 +32,7 @@
                 <asp:Panel runat="server" id="pnlGridView">
                     <div class="row add-step-buttons">
                         <div class="col-xs-12">
+                            <asp:Literal runat="server" ID="lAddStepButtonsLabel" />
                             <asp:repeater id="rAddStepButtons" runat="server" OnItemDataBound="rAddStepButtons_ItemDataBound">
                                 <itemtemplate>
                                     <button runat="server" id="bAddStep" class="btn btn-sm btn-default" OnCommand="AddStep" CommandArgument='<%# Eval("StepTypeId") %>' onserverclick="bAddStep_ServerClick">
@@ -66,7 +67,7 @@
                     <div class="row">
                         <asp:repeater id="rStepTypeCards" runat="server" OnItemDataBound="rStepTypeCards_ItemDataBound">
                             <itemtemplate>
-                                <div class="<%# Eval( "CardColCssClass" ) %>">
+                                <div class="col-steps">
                                     <div class="step-card <%# Eval( "CardCssClass" ) %>">
                                         <div class="card-info">
                                             <%# Eval( "RenderedLava" ) %>
