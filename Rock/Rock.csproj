@@ -426,6 +426,8 @@
     <Compile Include="Model\CodeGenerated\SmsActionService.cs" />
     <Compile Include="Model\CodeGenerated\NoteAttachmentService.cs" />
     <Compile Include="Model\CodeGenerated\PersonScheduleExclusionService.cs" />
+    <Compile Include="Model\CodeGenerated\StepWorkflowService.cs" />
+    <Compile Include="Model\CodeGenerated\StepWorkflowTriggerService.cs" />
     <Compile Include="Model\GroupLocationScheduleConfig.cs" />
     <Compile Include="Model\GroupMemberAssignment.cs" />
     <Compile Include="Model\GroupMemberAssignmentService.Partial.cs" />
