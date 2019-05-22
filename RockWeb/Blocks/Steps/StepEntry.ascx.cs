@@ -116,7 +116,22 @@ namespace RockWeb.Blocks.Steps
             var step = GetStep();
             var stepType = GetStepType();
             var person = GetPerson();
+            var isPersonSelectable = IsPersonSelectable();
 
+            // If the person is allowed to be selected and the person is missing, query for it
+            if ( isPersonSelectable && ppPerson.PersonId.HasValue && person == null )
+            {
+                var personService = new PersonService( rockContext );
+                person = personService.Get( ppPerson.PersonId.Value );
+            }
+
+            // Person is the only required field for the step
+            if ( person == null )
+            {
+                ShowError( "The person is required to save a step record." );
+            }
+
+            // If the step is null, then the aim is to create a new step
             if ( step == null )
             {
                 step = new Step
@@ -127,12 +142,15 @@ namespace RockWeb.Blocks.Steps
                 service.Add( step );
             }
 
+            // Update the step properties. Person cannot be changed (only set when the step is added)
             step.StartDateTime = rdpStartDate.SelectedDate;
             step.EndDateTime = stepType.HasEndDate ? rdpEndDate.SelectedDate : null;
             step.StepStatusId = rsspStatus.SelectedValueAsId();
 
+            // Save the step record
             rockContext.SaveChanges();
 
+            // Save the step attributes from the attribute controls
             step.LoadAttributes( rockContext );
             avcAttributes.GetEditValues( step );
             step.SaveAttributeValues( rockContext );
@@ -167,15 +185,7 @@ namespace RockWeb.Blocks.Steps
                 return true;
             }
 
-            // Add requires step type and person
-            var person = GetPerson();
-
-            if ( person == null || !person.PrimaryAliasId.HasValue )
-            {
-                ShowError( "A person with a PrimaryAliasId is required to add a step" );
-                return false;
-            }
-
+            // Add requires step type            
             var stepType = GetStepType();
 
             if ( stepType == null )
@@ -229,6 +239,7 @@ namespace RockWeb.Blocks.Steps
             }
 
             BuildDynamicControls();
+            InitializePersonPicker();
         }
 
         /// <summary>
@@ -405,5 +416,30 @@ namespace RockWeb.Blocks.Steps
         private RockContext _rockContext = null;
 
         #endregion Model Getters
+
+        #region Control Helpers
+
+        /// <summary>
+        /// Initialize the person picker. Show or hide it based on if the person is selectable
+        /// </summary>
+        private void InitializePersonPicker()
+        {
+            var isSelectable = IsPersonSelectable();
+            ppPerson.Visible = isSelectable;
+            ppPerson.Required = isSelectable;
+        }
+
+        /// <summary>
+        /// Returns true if this block is adding a new step and the Person is not set by context or page parameter
+        /// </summary>
+        /// <returns></returns>
+        private bool IsPersonSelectable()
+        {
+            var person = GetPerson();
+            var step = GetStep();
+            return step == null && person == null;
+        }
+
+        #endregion Control Helpers
     }
 }

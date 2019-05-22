@@ -465,6 +465,9 @@ namespace RockWeb.Blocks.Steps
 
         /// <summary>
         /// Gets the step program (model) that should be displayed in the block
+        /// 1.) Use the block setting
+        /// 2.) Use the page parameter
+        /// 3.) Use the first active program
         /// </summary>
         /// <returns></returns>
         private StepProgram GetStepProgram()
@@ -473,20 +476,29 @@ namespace RockWeb.Blocks.Steps
             {
                 var programGuid = GetAttributeValue( AttributeKeys.StepProgram ).AsGuidOrNull();
                 var programId = PageParameter( PageParameters.StepProgramId ).AsIntegerOrNull();
+                var rockContext = GetRockContext();
+                var service = new StepProgramService( rockContext );
 
                 if ( programGuid.HasValue )
                 {
-                    var rockContext = GetRockContext();
-                    _stepProgram = new StepProgramService( rockContext ).Queryable()
+                    // 1.) Use the block setting
+                    _stepProgram = service.Queryable()
                         .AsNoTracking()
                         .FirstOrDefault( sp => sp.Guid == programGuid.Value && sp.IsActive );
                 }
                 else if ( programId.HasValue )
                 {
-                    var rockContext = GetRockContext();
-                    _stepProgram = new StepProgramService( rockContext ).Queryable()
+                    // 2.) Use the page parameter
+                    _stepProgram = service.Queryable()
                         .AsNoTracking()
                         .FirstOrDefault( sp => sp.Id == programId.Value && sp.IsActive );
+                }
+                else
+                {
+                    // 3.) Just use the first active program
+                    _stepProgram = service.Queryable()
+                        .AsNoTracking()
+                        .FirstOrDefault( sp => sp.IsActive );
                 }
             }
 

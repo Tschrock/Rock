@@ -394,7 +394,7 @@ namespace RockWeb.Blocks.Steps
         /// <param name="e">The <see cref="EventArgs" /> instance containing the event data.</param>
         protected void gSteps_AddClick( object sender, EventArgs e )
         {
-            NavigateToLinkedPage( "DetailPage", "StepId", 0, "GroupId", _stepType.Id );
+            NavigateToLinkedPage( "DetailPage", "StepId", 0, "StepTypeId", _stepType.Id );
         }
 
         /// <summary>
@@ -640,7 +640,6 @@ namespace RockWeb.Blocks.Steps
                 return;
             }
 
-            int groupId = _stepType.Id;
             pnlSteps.Visible = true;
             rFilter.Visible = true;
             gSteps.Visible = true;
