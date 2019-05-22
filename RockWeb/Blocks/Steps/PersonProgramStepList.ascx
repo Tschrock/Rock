@@ -32,7 +32,7 @@
                 <asp:Panel runat="server" id="pnlGridView">
                     <div class="row add-step-buttons">
                         <div class="col-xs-12">
-                            <asp:Literal runat="server" ID="lAddStepButtonsLabel" />
+                            <p class="add-step-label"><asp:Literal runat="server" ID="lAddStepButtonsLabel" /></p>
                             <asp:repeater id="rAddStepButtons" runat="server" OnItemDataBound="rAddStepButtons_ItemDataBound">
                                 <itemtemplate>
                                     <button runat="server" id="bAddStep" class="btn btn-sm btn-default" OnCommand="AddStep" CommandArgument='<%# Eval("StepTypeId") %>' onserverclick="bAddStep_ServerClick">
@@ -160,11 +160,11 @@ $( ".step-card" ).each(function( index ) {
         pixelOffset = Math.floor((cardHeight - tableHeight) / 2);
 
         if ( (freeSpace - infoHeight) >= 0 ) {
-            $(this).mouseenter(function() {
-                $(this).find('.card-info').css('transform', 'translateY(-' + pixelOffset + 'px)');
-            }).mouseleave(function() {
-                $(this).find('.card-info').css('transform', '');
-            });
+            // $(this).mouseenter(function() {
+            //     $(this).find('.card-info').css('transform', 'translateY(-' + pixelOffset + 'px)');
+            // }).mouseleave(function() {
+            //     $(this).find('.card-info').css('transform', '');
+            // });
         } else {
             console.log('needs resize');
         }

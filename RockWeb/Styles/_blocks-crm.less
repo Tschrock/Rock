@@ -1431,12 +1431,19 @@ tr.inactive {
 
 .add-step-buttons {
   margin: -16px -16px 0 -16px;
-  padding: 16px 0;
+  padding: 8px 0;
   background: #f7f7f7;
   border-bottom: 1px solid @panel-border;
 
   + .row {
     margin-top: 16px;
+  }
+
+  .add-step-label {
+    font-size: @font-size-small;
+    padding: (@padding-small-vertical + 1) 0;
+    margin: 0 6px 0 0;
+    float: left;
   }
 }
 
@@ -1468,8 +1475,7 @@ tr.inactive {
 
   .card-info {
     position: relative;
-    top: 50%;
-    transform: perspective(1px) translateY(-50%);
+    margin-top: 36px;
     transition-duration: 0.25s;
     will-change: transform;
 
