@@ -402,6 +402,7 @@
     <Compile Include="Field\Types\AssetFieldType.cs" />
     <Compile Include="Field\Types\AssetStorageProviderFieldType.cs" />
     <Compile Include="Jobs\SendGroupScheduleNotifications.cs" />
+    <Compile Include="Model\BadgeType.cs" />
     <Compile Include="Model\CodeGenerated\GroupMemberAssignmentService.cs" />
     <Compile Include="Model\CodeGenerated\GroupMemberScheduleTemplateService.cs" />
     <Compile Include="Field\EntitySingleSelectionListFieldTypeBase.cs" />
@@ -553,6 +554,7 @@
     <Compile Include="Utility\Scripturize.cs" />
     <Compile Include="Utility\StringRockExtensions.cs" />
     <Compile Include="Utility\WebRequestHelper.cs" />
+    <Compile Include="Web\Cache\Entities\BadgeTypeCache.cs" />
     <Compile Include="Web\Cache\Entities\BlockCache.cs" />
     <Compile Include="Web\Cache\Entities\CampusCache.cs" />
     <Compile Include="Web\Cache\Entities\ContentChannelCache.cs" />
@@ -1806,6 +1808,7 @@
     <Compile Include="Web\UI\ICustomGridOptions.cs" />
     <Compile Include="Web\UI\IPickerBlock.cs" />
     <Compile Include="Web\UI\IIdleRedirectBlock.cs" />
+    <Compile Include="Web\UI\ContextEntityBlock.cs" />
     <Compile Include="Web\UI\RockHiddenFieldPageStatePersister.cs" />
     <Compile Include="Web\UI\Controls\Grid\LavaBoundField.cs" />
     <Compile Include="Web\UI\Controls\Pickers\DefinedValuesPickerEnhanced.cs" />

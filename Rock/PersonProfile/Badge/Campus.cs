@@ -41,10 +41,10 @@ namespace Rock.PersonProfile.Badge
         /// <returns></returns>
         public override HighlightLabel GetLabel(Person person)
         {
-            if (ParentPersonBlock != null)
+            if (ParentContextEntityBlock != null)
             {
                 // Campus is associated with the family group(s) person belongs to.
-                var families = ParentPersonBlock.PersonGroups(Rock.SystemGuid.GroupType.GROUPTYPE_FAMILY);
+                var families = ParentContextEntityBlock.PersonGroups(Rock.SystemGuid.GroupType.GROUPTYPE_FAMILY);
                 if (families != null)
                 {
                     var label = new HighlightLabel();

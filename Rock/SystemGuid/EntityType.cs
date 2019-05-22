@@ -37,6 +37,11 @@ namespace Rock.SystemGuid
         public const string BENEVOLENCE_REQUEST = "CF0CE5C1-9286-4310-9B50-10D040F8EBD2";
 
         /// <summary>
+        /// The guid for the Rock.Model.BadgeType entity.
+        /// </summary>
+        public const string BADGE_TYPE = "5768FD60-CC96-4B17-995B-678F7C947AB0";
+
+        /// <summary>
         /// The Block entity type
         /// </summary>
         public const string BLOCK = "D89555CA-9AE4-4D62-8AF1-E5E463C1EF65";

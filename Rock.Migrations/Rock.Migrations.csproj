@@ -328,6 +328,10 @@
     <Compile Include="Migrations\201905201339193_StepTerm.Designer.cs">
       <DependentUpon>201905201339193_StepTerm.cs</DependentUpon>
     </Compile>
+    <Compile Include="Migrations\201905221436330_BadgeTypes.cs" />
+    <Compile Include="Migrations\201905221436330_BadgeTypes.Designer.cs">
+      <DependentUpon>201905221436330_BadgeTypes.cs</DependentUpon>
+    </Compile>
     <Compile Include="Migrations\CreateDatabase\201311251734059_CreateDatabase.cs" />
     <Compile Include="Migrations\CreateDatabase\201311251734059_CreateDatabase.Designer.cs">
       <DependentUpon>201311251734059_CreateDatabase.cs</DependentUpon>
@@ -814,6 +818,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Migrations\201905201339193_StepTerm.resx">
       <DependentUpon>201905201339193_StepTerm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\201905221436330_BadgeTypes.resx">
+      <DependentUpon>201905221436330_BadgeTypes.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Migrations\CreateDatabase\201311251734059_CreateDatabase.resx">
       <DependentUpon>201311251734059_CreateDatabase.cs</DependentUpon>

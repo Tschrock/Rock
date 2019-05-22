@@ -17,7 +17,7 @@
 using System;
 using System.Collections.Generic;
 using System.Web.UI;
-
+using Rock.Data;
 using Rock.Extension;
 using Rock.Model;
 using Rock.Web.Cache;
@@ -79,28 +79,57 @@ namespace Rock.PersonProfile
         /// <summary>
         /// Gets or sets the parent person block.
         /// </summary>
-        /// <value>
-        /// The parent person block.
-        /// </value>
-        public PersonBlock ParentPersonBlock
+        public ContextEntityBlock ParentContextEntityBlock
         {
-            get { return _parentPersonBlock; }
-            set { _parentPersonBlock = value; }
+            get
+            {
+                return _parentContextEntityBlock;
+            }
+            set
+            {
+                _parentContextEntityBlock = value;
+
+                if ( _parentContextEntityBlock != null )
+                {
+                    Entity = _parentContextEntityBlock.Entity;
+                }
+            }
         }
-        private PersonBlock _parentPersonBlock;
+        private ContextEntityBlock _parentContextEntityBlock = null;
 
         /// <summary>
-        /// Gets or sets the person.
+        /// The current entity being viewed
         /// </summary>
-        /// <value>
-        /// The person.
-        /// </value>
-        public virtual Person Person
+        public IEntity Entity
         {
-            get { return _person; }
-            set { _person = value; }
+            get
+            {
+                return _entity;
+            }
+            set
+            {
+                _entity = value;
+                _person = value as Person;
+            }
         }
-        private Person _person;
+        private IEntity _entity = null;
+
+        /// <summary>
+        /// The current person being viewed
+        /// </summary>
+        public Person Person
+        {
+            get
+            {
+                return _person;
+            }
+            set
+            {
+                _entity = value;
+                _person = value;
+            }
+        }
+        private Person _person = null;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="BadgeComponent" /> class.

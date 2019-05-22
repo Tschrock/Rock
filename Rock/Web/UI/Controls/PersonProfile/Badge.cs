@@ -70,26 +70,30 @@ namespace Rock.Web.UI.Controls
         /// <value>
         /// The parent person block.
         /// </value>
-        public PersonBlock ParentPersonBlock
+        public ContextEntityBlock ContextEntityBlock
         {
             get
             {
-                var parentControl = this.Parent;
-
-                while ( parentControl != null )
+                if ( _contextEntityBlock == null )
                 {
-                    if ( parentControl is PersonBlock )
-                    {
-                        return parentControl as PersonBlock;
-                    }
+                    var parentControl = Parent;
 
-                    parentControl = parentControl.Parent;
+                    while ( parentControl != null )
+                    {
+                        if ( parentControl is ContextEntityBlock )
+                        {
+                            _contextEntityBlock = parentControl as ContextEntityBlock;
+                            break;
+                        }
+
+                        parentControl = parentControl.Parent;
+                    }
                 }
 
-                return null;
+                return _contextEntityBlock;
             }
-
         }
+        private ContextEntityBlock _contextEntityBlock = null;
 
         /// <summary>
         /// Raises the <see cref="E:System.Web.UI.Control.Init" /> event.
@@ -109,11 +113,10 @@ namespace Rock.Web.UI.Controls
             var badgeComponent = PersonBadge?.BadgeComponent;
             if ( badgeComponent != null )
             {
-                var personBlock = ParentPersonBlock;
-                if ( personBlock != null )
+                if ( ContextEntityBlock != null )
                 {
-                    badgeComponent.ParentPersonBlock = personBlock;
-                    badgeComponent.Person = personBlock.Person;
+                    badgeComponent.ParentContextEntityBlock = ContextEntityBlock;
+                    badgeComponent.Entity = ContextEntityBlock.Entity;
                     badgeComponent.Render( PersonBadge, writer );
                 }
             }
