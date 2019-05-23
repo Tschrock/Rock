@@ -12,6 +12,8 @@
 <asp:UpdatePanel ID="upMain" runat="server">
     <ContentTemplate>
 
+        <Rock:NotificationBox ID="nbBlockStatus" runat="server" NotificationBoxType="Info" />
+
         <asp:Panel ID="pnlContent" runat="server">
 
             <div id="pnlSteps" runat="server">

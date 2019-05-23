@@ -91,6 +91,7 @@ namespace RockWeb.Blocks.Steps
         protected static class PageParameterKey
         {
             public const string StepProgramId = "ProgramId";
+            public const string StepTypeId = "StepTypeId";
         }
 
         #endregion Page Parameter Keys
@@ -111,10 +112,10 @@ namespace RockWeb.Blocks.Steps
 
         #region Private Variables
 
-        private StepProgram _Program = null;
-        private RockContext _DataContext = null;
-
-        private readonly string _EntityKeyName = "StepTypeId";
+        private StepProgram _program = null;
+        private RockContext _dataContext = null;
+        private bool _blockContextIsValid = false;
+        private RockBlockNotificationManager _notificationManager;
 
         #endregion
 
@@ -128,13 +129,20 @@ namespace RockWeb.Blocks.Steps
         {
             base.OnInit( e );
 
-            this.InitializeBlockContext();
+            this.InitializeSettingsNotification( upMain );
+
+            _notificationManager = new RockBlockNotificationManager( this, nbBlockStatus, pnlList );
+
+            _blockContextIsValid = this.InitializeBlockContext();
+
+            if ( !_blockContextIsValid )
+            {
+                return;
+            }
 
             this.InitializeFilter();
 
             this.InitializeGrid();
-
-            this.InitializeSettingsNotification( upMain );
         }
 
         /// <summary>
@@ -143,6 +151,11 @@ namespace RockWeb.Blocks.Steps
         /// <param name="e">The <see cref="T:System.EventArgs" /> object that contains the event data.</param>
         protected override void OnLoad( EventArgs e )
         {
+            if ( !_blockContextIsValid )
+            {
+                return;
+            }
+
             this.ShowBlockDetail();
 
             base.OnLoad( e );
@@ -159,7 +172,12 @@ namespace RockWeb.Blocks.Steps
         /// <param name="e">The <see cref="EventArgs"/> instance containing the event data.</param>
         protected void Block_BlockUpdated( object sender, EventArgs e )
         {
-            this.InitializeBlockContext();
+            _blockContextIsValid = this.InitializeBlockContext();
+
+            if ( !_blockContextIsValid )
+            {
+                return;
+            }
 
             this.ConfigureGridFromBlockSettings();
 
@@ -213,7 +231,7 @@ namespace RockWeb.Blocks.Steps
         /// <param name="e">The <see cref="EventArgs" /> instance containing the event data.</param>
         protected void gStepType_Add( object sender, EventArgs e )
         {
-            NavigateToLinkedPage( AttributeKey.DetailPage, _EntityKeyName, 0 );
+            NavigateToLinkedPage( AttributeKey.DetailPage, PageParameterKey.StepTypeId, 0, PageParameterKey.StepProgramId, _program.Id );
         }
 
         /// <summary>
@@ -223,7 +241,7 @@ namespace RockWeb.Blocks.Steps
         /// <param name="e">The <see cref="RowEventArgs" /> instance containing the event data.</param>
         protected void gStepType_Edit( object sender, RowEventArgs e )
         {
-            NavigateToLinkedPage( AttributeKey.DetailPage, _EntityKeyName, e.RowKeyId );
+            NavigateToLinkedPage( AttributeKey.DetailPage, PageParameterKey.StepTypeId, e.RowKeyId );
         }
 
         /// <summary>
@@ -233,7 +251,7 @@ namespace RockWeb.Blocks.Steps
         /// <param name="e">The <see cref="RowEventArgs" /> instance containing the event data.</param>
         protected void gStepType_BulkEntry( object sender, RowEventArgs e )
         {
-            NavigateToLinkedPage( AttributeKey.BulkEntryPage, _EntityKeyName, e.RowKeyId );
+            NavigateToLinkedPage( AttributeKey.BulkEntryPage, PageParameterKey.StepTypeId, e.RowKeyId );
         }
 
         /// <summary>
@@ -276,12 +294,12 @@ namespace RockWeb.Blocks.Steps
         /// <returns></returns>
         private RockContext GetDataContext()
         {
-            if ( _DataContext == null )
+            if ( _dataContext == null )
             {
-                _DataContext = new RockContext();
+                _dataContext = new RockContext();
             }
 
-            return _DataContext;
+            return _dataContext;
         }
 
         /// <summary>
@@ -297,35 +315,15 @@ namespace RockWeb.Blocks.Steps
         }
 
         /// <summary>
-        /// Set a configuration status message for the block.
-        /// If a message is visible, the item list is hidden.
-        /// </summary>
-        /// <param name="message"></param>
-        private void SetConfigurationStatusMessage( string message )
-        {
-            if ( string.IsNullOrWhiteSpace( message ) )
-            {
-                nbStepProgramWarning.Visible = false;
-                pnlList.Visible = true;
-            }
-            else
-            {
-                nbStepProgramWarning.Text = message;
-                nbStepProgramWarning.Visible = true;
-                pnlList.Visible = false;
-            }
-        }
-
-        /// <summary>
         /// Initialize the list filter.
         /// </summary>
         private void InitializeFilter()
         {
             if ( !Page.IsPostBack )
             {
-                if ( _Program != null )
+                if ( _program != null )
                 {
-                    rFilter.UserPreferenceKeyPrefix = string.Format( "{0}-", _Program.Id );
+                    rFilter.UserPreferenceKeyPrefix = string.Format( "{0}-", _program.Id );
                 }
 
                 this.BindFilter();
@@ -337,7 +335,7 @@ namespace RockWeb.Blocks.Steps
 
         private void InitializeGrid()
         {
-            if ( _Program == null )
+            if ( _program == null )
             {
                 return;
             }
@@ -348,10 +346,10 @@ namespace RockWeb.Blocks.Steps
             gStepType.GridRebind += gStepType_GridRebind;
             gStepType.RowItemText = "Step Type";
             gStepType.ExportSource = ExcelExportSource.DataSource;
-            gStepType.ExportFilename = _Program.Name;
+            gStepType.ExportFilename = _program.Name;
 
             // Verify authorization to edit either the block or the parent step program.
-            bool canAddEditDelete = IsUserAuthorized( Authorization.EDIT ) || _Program.IsAuthorized( Authorization.EDIT, this.CurrentPerson );
+            bool canAddEditDelete = IsUserAuthorized( Authorization.EDIT ) || _program.IsAuthorized( Authorization.EDIT, this.CurrentPerson );
             bool canAdministrate = IsUserAuthorized( Authorization.ADMINISTRATE );
 
             gStepType.Actions.ShowAdd = canAddEditDelete;
@@ -389,9 +387,12 @@ namespace RockWeb.Blocks.Steps
         /// <summary>
         /// Initialize the essential context in which this block is operating.
         /// </summary>
-        private void InitializeBlockContext()
+        /// <returns>True, if the block context is valid.</returns>
+        private bool InitializeBlockContext()
         {
-            _Program = null;
+            _program = null;
+
+            _notificationManager.Clear();
 
             // Try to load the Step Program from the cache.
             var programGuid = GetAttributeValue( AttributeKey.StepProgram ).AsGuid();
@@ -413,11 +414,11 @@ namespace RockWeb.Blocks.Steps
 
             if ( !string.IsNullOrEmpty( sharedItemKey ) )
             {
-                _Program = RockPage.GetSharedItem( sharedItemKey ) as StepProgram;
+                _program = RockPage.GetSharedItem( sharedItemKey ) as StepProgram;
             }
 
             // Retrieve the program from the data store and cache for subsequent use.
-            if ( _Program == null )
+            if ( _program == null )
             {
                 var dataContext = this.GetDataContext();
 
@@ -425,46 +426,38 @@ namespace RockWeb.Blocks.Steps
 
                 if ( programGuid != Guid.Empty )
                 {
-                    _Program = stepProgramService.Queryable().Where( g => g.Guid == programGuid ).FirstOrDefault();
+                    _program = stepProgramService.Queryable().Where( g => g.Guid == programGuid ).FirstOrDefault();
                 }
                 else if ( programId != 0 )
                 {
-                    _Program = stepProgramService.Queryable().Where( g => g.Id == programId ).FirstOrDefault();
+                    _program = stepProgramService.Queryable().Where( g => g.Id == programId ).FirstOrDefault();
                 }
 
-                if ( _Program != null )
+                if ( _program != null )
                 {
-                    RockPage.SaveSharedItem( sharedItemKey, _Program );
+                    RockPage.SaveSharedItem( sharedItemKey, _program );
                 }
             }
 
-        }
-
-        /// <summary>
-        /// Sets the availability of the block for viewing and editing based on the state of the underlying data.
-        /// </summary>
-        private void RefreshBlockAvailabilityState()
-        {
             // Verify the Step Program is valid.
-            if ( _Program == null )
+            if ( _program == null )
             {
-                this.SetConfigurationStatusMessage( "There is no Step Program available in this context." );
-                return;
+                _notificationManager.ShowMessageNoContent();
+                return false;
             }
 
             // Check for View permissions.
-            if ( !_Program.IsAuthorized( Authorization.VIEW, CurrentPerson ) )
+            if ( !_program.IsAuthorized( Authorization.VIEW, CurrentPerson ) )
             {
-                this.SetConfigurationStatusMessage( "Sorry, you are not authorized to view this content." );
-                return;
+                _notificationManager.ShowMessageUnauthorized();
+                return false;
             }
 
-            // Reset the configuration status message.
-            SetConfigurationStatusMessage( null );
+            return true;
         }
 
         /// <summary>
-        /// Initialize Shows the 
+        /// Show the block content.
         /// </summary>
         private void ShowBlockDetail()
         {
@@ -473,7 +466,7 @@ namespace RockWeb.Blocks.Steps
                 return;
             }
 
-            this.RefreshBlockAvailabilityState();
+            //this.RefreshBlockAvailabilityState();
 
             this.BindGrid();
         }
@@ -485,7 +478,7 @@ namespace RockWeb.Blocks.Steps
         /// <param name="newIndex"></param>
         private void ReorderStepType( int oldIndex, int newIndex )
         {
-            if ( _Program == null )
+            if ( _program == null )
             {
                 return;
             }
@@ -495,7 +488,7 @@ namespace RockWeb.Blocks.Steps
             var service = new StepTypeService( rockContext );
 
             var stepTypes = service.Queryable()
-                .Where( x => x.StepProgramId == _Program.Id )
+                .Where( x => x.StepProgramId == _program.Id )
                 .OrderBy( b => b.Order )
                 .ToList();
 
@@ -595,7 +588,12 @@ namespace RockWeb.Blocks.Steps
         /// </summary>
         private void BindGrid()
         {
-            if ( _Program == null )
+            if ( !_blockContextIsValid )
+            {
+                return;
+            }
+
+            if ( _program == null )
             {
                 return;
             }
@@ -606,7 +604,7 @@ namespace RockWeb.Blocks.Steps
                 .Queryable();
 
             // Filter by: Step Programs
-            stepTypesQry = stepTypesQry.Where( x => x.StepProgramId == _Program.Id );
+            stepTypesQry = stepTypesQry.Where( x => x.StepProgramId == _program.Id );
 
             // Filter by: Name
             var name = rFilter.GetUserPreference( FilterSettingName.Name ).ToStringSafe();

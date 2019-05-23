@@ -286,7 +286,7 @@ namespace RockWeb.Blocks.Steps
             step.LoadAttributes();
 
             var mergefields = e.MergeValues;
-            
+
             e.MergeValues.Add( "StepStatus", step.StepStatus.Name );
             e.MergeValues.Add( "StepName", step.StepType.Name );
 
@@ -514,7 +514,6 @@ namespace RockWeb.Blocks.Steps
             gSteps.Actions.AddClick += gSteps_AddClick;
             gSteps.GridRebind += gSteps_GridRebind;
             gSteps.RowItemText = "Step Participant";
-            gSteps.ExportFilename = _stepType.Name;
             gSteps.ExportSource = ExcelExportSource.DataSource;
             gSteps.ShowConfirmDeleteDialog = true;
 
@@ -523,6 +522,11 @@ namespace RockWeb.Blocks.Steps
 
             gSteps.Actions.ShowAdd = canEditBlock;
             gSteps.IsDeleteEnabled = canEditBlock;
+
+            if ( _stepType != null )
+            {
+                gSteps.ExportFilename = _stepType.Name;
+            }
         }
 
         /// <summary>
@@ -849,7 +853,7 @@ namespace RockWeb.Blocks.Steps
 
             public Person Person { get; set; }
         }
-        
+
         #endregion
     }
 }

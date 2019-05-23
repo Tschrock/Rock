@@ -14,6 +14,8 @@
             <asp:LinkButton ID="btnDeleteCancel" runat="server" Text="Cancel" CssClass="btn btn-primary" OnClick="btnDeleteCancel_Click" />
         </asp:Panel>
 
+        <Rock:NotificationBox ID="nbBlockStatus" runat="server" NotificationBoxType="Info" />
+
         <asp:Panel ID="pnlDetails" CssClass="panel panel-block" runat="server" Visible="false">
             <asp:HiddenField ID="hfStepTypeId" runat="server" />
 

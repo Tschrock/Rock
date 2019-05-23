@@ -12,7 +12,7 @@
                     <h1 class="panel-title"><i class="fa fa-map-marker"></i> Step Types</h1>
                 </div>
                 <div class="panel-body">
-                    <Rock:NotificationBox ID="nbStepProgramWarning" runat="server" NotificationBoxType="Warning" Text="There is no Step Program available in this context." Visible="false" />
+                    <Rock:NotificationBox ID="nbBlockStatus" runat="server" NotificationBoxType="Info" />
                     <asp:Panel ID="pnlList" runat="server">
                         <div class="grid grid-panel">
                             <Rock:GridFilter ID="rFilter" runat="server" OnClearFilterClick="rFilter_ClearFilterClick">
