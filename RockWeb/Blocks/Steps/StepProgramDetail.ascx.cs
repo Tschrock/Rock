@@ -96,7 +96,13 @@ namespace RockWeb.Blocks.Steps
         private List<StepStatus> StatusesState { get; set; }
         private List<StepWorkflowTrigger> WorkflowsState { get; set; }
 
-        #endregion
+        #endregion Properties
+
+        #region Private Variables
+
+        private RockBlockNotificationManager _notificationManager;
+
+        #endregion Private Variables
 
         #region Control Methods
 
@@ -156,11 +162,14 @@ namespace RockWeb.Blocks.Steps
         {
             base.OnInit( e );
 
+            InitializeSettingsNotification( upStepProgram );
+
+            _notificationManager = new RockBlockNotificationManager( this, nbBlockStatus, pnlContent );
+
             InitializeStatusesGrid();
             InitializeWorkflowsGrid();
             InitializeActionButtons();
             InitializeChartFilter();
-            InitializeSettingsNotification( upStepProgram );
         }
 
         /// <summary>
@@ -754,42 +763,6 @@ namespace RockWeb.Blocks.Steps
 
         #endregion
 
-        #region Block Notification Messages
-
-        /// <summary>
-        /// Show a notification message for the block.
-        /// </summary>
-        /// <param name="notificationControl"></param>
-        /// <param name="message"></param>
-        /// <param name="notificationType"></param>
-        private void ShowBlockNotification( NotificationBox notificationControl, string message, NotificationBoxType notificationType = NotificationBoxType.Info )
-        {
-            notificationControl.Text = message;
-            notificationControl.NotificationBoxType = notificationType;
-        }
-
-        private void ShowBlockError( NotificationBox notificationControl, string message )
-        {
-            this.ShowBlockNotification( notificationControl, message, NotificationBoxType.Danger );
-        }
-
-        private void ShowBlockException( NotificationBox notificationControl, Exception ex, bool writeToLog = true )
-        {
-            this.ShowBlockNotification( notificationControl, ex.Message, NotificationBoxType.Danger );
-
-            if ( writeToLog )
-            {
-                this.LogException( ex );
-            }
-        }
-
-        private void ShowBlockSuccess( NotificationBox notificationControl, string message )
-        {
-            this.ShowBlockNotification( notificationControl, message, NotificationBoxType.Success );
-        }
-
-        #endregion
-
         #region Internal Methods
 
         /// <summary>
@@ -1001,7 +974,7 @@ namespace RockWeb.Blocks.Steps
             }
             catch ( Exception ex )
             {
-                this.ShowBlockException( nbEditModeMessage, ex );
+                _notificationManager.ShowException( ex );
                 return;
             }
 
@@ -1045,11 +1018,11 @@ namespace RockWeb.Blocks.Steps
                 lIcon.Text = string.Format( "<i class='{0}'></i>", stepProgram.IconCssClass );
                 bool readOnly = false;
 
-                nbEditModeMessage.Text = string.Empty;
                 if ( !adminAllowed )
                 {
                     readOnly = true;
-                    nbEditModeMessage.Text = EditModeMessage.ReadOnlyEditActionNotAllowed( StepProgram.FriendlyTypeName );
+
+                    _notificationManager.ShowMessageEditModeDisallowed( StepProgram.FriendlyTypeName );
                 }
 
                 rblDefaultListView.Items.Clear();
