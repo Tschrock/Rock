@@ -46,7 +46,7 @@ namespace Rock.Web.UI.Controls
             set
             {
                 EnsureChildControls();
-                string[] values = value.Split( ',' );
+                string[] values = ( value ?? string.Empty ).Split( ',' );
                 if ( values.Length != 3 )
                 {
                     // Need three numbers and only three numbers.
