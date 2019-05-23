@@ -781,7 +781,7 @@ namespace RockWeb.Blocks.Steps
                 LastName = x.PersonAlias.Person.LastName,
                 NickName = x.PersonAlias.Person.NickName,
                 StartedDateTime = x.StartDateTime ?? DateTime.MinValue,
-                CompletedDateTime = hasDuration ? x.CompletedDateTime : x.StartDateTime,
+                CompletedDateTime = x.CompletedDateTime,
                 StepStatusName = ( x.StepStatus == null ? "" : x.StepStatus.Name ),
                 IsCompleted = ( x.StepStatus == null ? false : x.StepStatus.IsCompleteStatus ),
                 Note = x.Note,

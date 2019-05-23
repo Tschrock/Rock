@@ -147,6 +147,26 @@ namespace RockWeb.Blocks.Steps
             step.EndDateTime = stepType.HasEndDate ? rdpEndDate.SelectedDate : null;
             step.StepStatusId = rsspStatus.SelectedValueAsId();
 
+            // Update the completed date time, which is based on the start, end, and status
+            if ( !step.StepStatusId.HasValue )
+            {
+                step.CompletedDateTime = null;
+            }
+            else
+            {
+                var stepStatusService = new StepStatusService( rockContext );
+                var stepStatus = stepStatusService.Get( step.StepStatusId.Value );
+
+                if ( stepStatus == null || !stepStatus.IsCompleteStatus )
+                {
+                    step.CompletedDateTime = null;
+                }
+                else
+                {
+                    step.CompletedDateTime = step.EndDateTime ?? step.StartDateTime;
+                }
+            }
+
             // Save the step record
             rockContext.SaveChanges();
 
