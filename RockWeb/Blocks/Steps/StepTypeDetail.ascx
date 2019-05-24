@@ -131,7 +131,7 @@
                                 SourceTypeName="Rock.Model.StepType, Rock"
                                 PropertyName="ShowCountOnBadge"
                                 Label="Show Count on Badge"
-                                Help="Show the number of achievements for this step type be shown on the step badge?"
+                                Help="Should the number of achievements for this step type be shown on the step badge?"
                                 Checked="false"
                                 Text="Yes" />
                         </div>

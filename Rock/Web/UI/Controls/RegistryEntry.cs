@@ -37,9 +37,9 @@ namespace Rock.Web.UI.Controls
             get
             {
                 EnsureChildControls();
-                string volume = tbVolume.Text.IsNullOrWhiteSpace() ? "0" : tbVolume.Text;
-                string page = tbPage.Text.IsNullOrWhiteSpace() ? "0" : tbPage.Text;
-                string line = tbLine.Text.IsNullOrWhiteSpace() ? "0" : tbLine.Text;
+                string volume = tbVolume.Text.IsNullOrWhiteSpace() ? string.Empty : tbVolume.Text;
+                string page = tbPage.Text.IsNullOrWhiteSpace() ? string.Empty : tbPage.Text;
+                string line = tbLine.Text.IsNullOrWhiteSpace() ? string.Empty : tbLine.Text;
 
                 return $"{volume},{page},{line}";
             }

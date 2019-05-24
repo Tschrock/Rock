@@ -422,6 +422,7 @@ namespace RockWeb.Blocks.Steps
             stepType.HighlightColor = cpHighlight.Value;
             stepType.ShowCountOnBadge = cbShowBadgeCount.Checked;
             stepType.HasEndDate = cbHasDuration.Checked;
+            stepType.AllowMultiple = cbAllowMultiple.Checked;
 
             // Update Pre-requisites
             var uiPrerequisiteStepTypeIds = cblPrerequsities.SelectedValuesAsInt;
