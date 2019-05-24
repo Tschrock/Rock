@@ -622,7 +622,12 @@ namespace RockWeb.Blocks.Steps
                 wpWorkflowType.SetValue( workflowTrigger.WorkflowTypeId );
                 ddlTriggerType.SelectedValue = workflowTrigger.TriggerType.ToString();
             }
-
+            else
+            {
+                // Set default values
+                wpWorkflowType.SetValue( null );
+                ddlTriggerType.SelectedValue = StepWorkflowTrigger.WorkflowTriggerCondition.IsComplete.ToString();
+            }
 
             hfAddStepWorkflowGuid.Value = stepWorkflowGuid.ToString();
             ShowDialog( "StepWorkflows", true );
@@ -664,37 +669,36 @@ namespace RockWeb.Blocks.Steps
 
                 int stepProgramId = int.Parse( hfStepProgramId.Value );
 
-                switch ( sStepWorkflowTriggerType )
+                if ( sStepWorkflowTriggerType == StepWorkflowTrigger.WorkflowTriggerCondition.StatusChanged )
                 {
-                    case StepWorkflowTrigger.WorkflowTriggerCondition.Manual:
-                        {
-                            ddlPrimaryQualifier.Visible = false;
-                            ddlPrimaryQualifier.Items.Clear();
-                            ddlSecondaryQualifier.Visible = false;
-                            ddlSecondaryQualifier.Items.Clear();
-                            break;
-                        }
-                    case StepWorkflowTrigger.WorkflowTriggerCondition.StatusChanged:
-                        {
-                            var statusList = new StepStatusService( rockContext ).Queryable().Where( s => s.StepProgramId == stepProgramId ).ToList();
-                            ddlPrimaryQualifier.Label = "From";
-                            ddlPrimaryQualifier.Visible = true;
-                            ddlPrimaryQualifier.Items.Clear();
-                            ddlPrimaryQualifier.Items.Add( new ListItem( string.Empty, string.Empty ) );
-                            foreach ( var status in statusList )
-                            {
-                                ddlPrimaryQualifier.Items.Add( new ListItem( status.Name, status.Id.ToString().ToUpper() ) );
-                            }
-                            ddlSecondaryQualifier.Label = "To";
-                            ddlSecondaryQualifier.Visible = true;
-                            ddlSecondaryQualifier.Items.Clear();
-                            ddlSecondaryQualifier.Items.Add( new ListItem( string.Empty, string.Empty ) );
-                            foreach ( var status in statusList )
-                            {
-                                ddlSecondaryQualifier.Items.Add( new ListItem( status.Name, status.Id.ToString().ToUpper() ) );
-                            }
-                            break;
-                        }
+                    var statusList = new StepStatusService( rockContext ).Queryable().Where( s => s.StepProgramId == stepProgramId ).ToList();
+
+                    ddlPrimaryQualifier.Label = "From";
+                    ddlPrimaryQualifier.Visible = true;
+                    ddlPrimaryQualifier.Items.Clear();
+                    ddlPrimaryQualifier.Items.Add( new ListItem( string.Empty, string.Empty ) );
+
+                    foreach ( var status in statusList )
+                    {
+                        ddlPrimaryQualifier.Items.Add( new ListItem( status.Name, status.Id.ToString().ToUpper() ) );
+                    }
+
+                    ddlSecondaryQualifier.Label = "To";
+                    ddlSecondaryQualifier.Visible = true;
+                    ddlSecondaryQualifier.Items.Clear();
+                    ddlSecondaryQualifier.Items.Add( new ListItem( string.Empty, string.Empty ) );
+
+                    foreach ( var status in statusList )
+                    {
+                        ddlSecondaryQualifier.Items.Add( new ListItem( status.Name, status.Id.ToString().ToUpper() ) );
+                    }
+                }
+                else
+                {
+                    ddlPrimaryQualifier.Visible = false;
+                    ddlPrimaryQualifier.Items.Clear();
+                    ddlSecondaryQualifier.Visible = false;
+                    ddlSecondaryQualifier.Items.Clear();
                 }
 
                 if ( workflowTrigger != null )
