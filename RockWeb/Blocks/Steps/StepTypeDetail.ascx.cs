@@ -264,9 +264,7 @@ namespace RockWeb.Blocks.Steps
         /// <param name="e">The <see cref="EventArgs" /> instance containing the event data.</param>
         protected void btnEdit_Click( object sender, EventArgs e )
         {
-            var rockContext = this.GetDataContext();
-
-            var stepType = this.GetStepType( null, rockContext );
+            var stepType = this.GetStepType();
 
             ShowEditDetails( stepType );
         }
@@ -283,7 +281,7 @@ namespace RockWeb.Blocks.Steps
             var stepTypeService = new StepTypeService( rockContext );
             var authService = new AuthService( rockContext );
 
-            var stepType = this.GetStepType( null, rockContext );
+            var stepType = this.GetStepType();
 
             if ( stepType != null )
             {
@@ -694,12 +692,10 @@ namespace RockWeb.Blocks.Steps
 
             var sStepWorkflowTriggerType = ddlTriggerType.SelectedValueAsEnum<StepWorkflowTrigger.WorkflowTriggerCondition>();
 
-            int stepTypeId = int.Parse( hfStepTypeId.Value );
-
             if ( sStepWorkflowTriggerType == StepWorkflowTrigger.WorkflowTriggerCondition.StatusChanged )
             {
                 // Populate the selection lists for "To Status" and "From Status".
-                var stepType = this.GetStepType( stepTypeId, rockContext );
+                var stepType = this.GetStepType();
 
                 var statusList = new StepStatusService( rockContext ).Queryable().Where( s => s.StepProgramId == stepType.StepProgramId ).ToList();
 
@@ -825,22 +821,22 @@ namespace RockWeb.Blocks.Steps
         private bool InitializeBlockContext()
         {
             _stepProgramId = PageParameter( PageParameterKey.StepProgramId ).AsInteger();
+            _stepTypeId = PageParameter( PageParameterKey.StepTypeId ).AsInteger();
 
-            if ( _stepProgramId == 0 )
+            if ( _stepProgramId == 0
+                 && _stepTypeId == 0 )
             {
-                _stepTypeId = PageParameter( PageParameterKey.StepTypeId ).AsInteger();
+                _notificationManager.ShowFatal( "A new Step can't be added because there is no Step Program available in this context." );
 
-                if ( _stepTypeId == 0 )
-                {
-                    _notificationManager.ShowFatal( "A new Step can't be added because there is no Step Program available in this context." );
-
-                    return false;
-                }
+                return false;
             }
 
             return true;
         }
 
+        /// <summary>
+        /// Populate the selection list for Workflow Trigger Types.
+        /// </summary>
         private void LoadWorkflowTriggerTypesSelectionList()
         {
             ddlTriggerType.Items.Add( new ListItem( "Step Completed", StepWorkflowTrigger.WorkflowTriggerCondition.IsComplete.ToString() ) );
@@ -848,27 +844,42 @@ namespace RockWeb.Blocks.Steps
             ddlTriggerType.Items.Add( new ListItem( "Manual", StepWorkflowTrigger.WorkflowTriggerCondition.Manual.ToString() ) );
         }
 
+        /// <summary>
+        /// Populate the selection list for Prerequisite Steps.
+        /// </summary>
         private void LoadPrerequisiteStepsList()
         {
             var dataContext = this.GetDataContext();
 
-            // Load Prerequisite Steps.
-            var stepType = this.GetStepType( null, dataContext );
+            // Load available Prerequisite Steps, being any other Step Types in this Step Program that are active.
+            var stepType = this.GetStepType();
+
+            int programId = 0;
 
             if ( stepType != null )
             {
-                var stepsService = new StepTypeService( dataContext );
-
-                var prerequisiteStepTypes = stepsService.Queryable().Include( x => x.StepProgram ).Where( x => x.StepProgramId == stepType.StepProgramId && x.Id != stepType.Id && x.IsActive ).ToList();
-
-                cblPrerequsities.DataSource = prerequisiteStepTypes;
-
-                cblPrerequsities.DataBind();
+                programId = stepType.StepProgramId;
             }
+
+            if ( programId == 0 )
+            {
+                programId = _stepProgramId;
+            }
+
+            var stepsService = new StepTypeService( dataContext );
+
+            var prerequisiteStepTypes = stepsService.Queryable()
+                .Include( x => x.StepProgram )
+                .Where( x => x.StepProgramId == programId && x.Id != _stepTypeId && x.IsActive )
+                .ToList();
+
+            cblPrerequsities.DataSource = prerequisiteStepTypes;
+
+            cblPrerequsities.DataBind();
         }
 
         /// <summary>
-        /// Shows the edit.
+        /// Shows the detail panel containing the main content of the block.
         /// </summary>
         /// <param name="stepTypeId">The Connection Type Type identifier.</param>
         public void ShowDetail( int stepTypeId )
@@ -878,7 +889,7 @@ namespace RockWeb.Blocks.Steps
             var rockContext = this.GetDataContext();
 
             // Get the Step Type data model
-            var stepType = this.GetStepType( stepTypeId, rockContext );
+            var stepType = this.GetStepType( stepTypeId );
 
             if ( stepType.Id != 0 )
             {
@@ -890,7 +901,7 @@ namespace RockWeb.Blocks.Steps
                 pdAuditDetails.Visible = false;
             }
 
-            // Admin rights are needed to edit a connection type ( Edit rights only allow adding/removing items )
+            // Admin rights are required to edit a Step Type. Edit rights only allow adding/removing items.
             bool adminAllowed = UserCanAdministrate || stepType.IsAuthorized( Authorization.ADMINISTRATE, CurrentPerson );
             pnlDetails.Visible = true;
             hfStepTypeId.Value = stepType.Id.ToString();
@@ -1030,9 +1041,8 @@ namespace RockWeb.Blocks.Steps
         /// Gets the specified Step Type data model, or the current model if none is specified.
         /// </summary>
         /// <param name="stepTypeId">The connection type identifier.</param>
-        /// <param name="rockContext">The rock context.</param>
         /// <returns></returns>
-        private StepType GetStepType( int? stepTypeId = null, RockContext rockContext = null )
+        private StepType GetStepType( int? stepTypeId = null )
         {
             if ( stepTypeId == null )
             {
@@ -1045,7 +1055,7 @@ namespace RockWeb.Blocks.Steps
 
             if ( stepType == null )
             {
-                rockContext = rockContext ?? this.GetDataContext();
+                var rockContext = this.GetDataContext();
 
                 stepType = new StepTypeService( rockContext ).Queryable()
                     .Where( c => c.Id == stepTypeId )
@@ -1207,16 +1217,12 @@ namespace RockWeb.Blocks.Steps
 
             var stepService = new StepService( dataContext );
 
-            var stepTypeId = GetActiveStepTypeId();
-
-            var stepType = this.GetStepType( stepTypeId, dataContext );
-
             // Get the Steps associated with the current Step Type.
             var stepsStartedQuery = stepService.Queryable()
-                .Where( x => x.StepTypeId == stepTypeId && x.StepType.IsActive && x.StartDateTime != null && x.CompletedDateTime == null );
+                .Where( x => x.StepTypeId == _stepTypeId && x.StepType.IsActive && x.StartDateTime != null && x.CompletedDateTime == null );
 
             var stepsCompletedQuery = stepService.Queryable()
-                .Where( x => x.StepTypeId == stepTypeId && x.StepType.IsActive && x.CompletedDateTime != null );
+                .Where( x => x.StepTypeId == _stepTypeId && x.StepType.IsActive && x.CompletedDateTime != null );
 
             if ( startDate != null )
             {
@@ -1304,6 +1310,5 @@ namespace RockWeb.Blocks.Steps
         }
 
         #endregion
-
     }
 }
