@@ -3,8 +3,10 @@ using System.Collections.ObjectModel;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Data.Entity.ModelConfiguration;
+using System.Linq;
 using System.Runtime.Serialization;
 using Rock.Data;
+using Rock.Utility;
 
 namespace Rock.Model
 {
@@ -170,6 +172,42 @@ namespace Rock.Model
             /// The <see cref="StepWorkflowTrigger"/> is triggered when the step is completed.
             /// </summary>
             IsComplete = 2
+        }
+
+        #endregion
+
+        #region Support Classes
+
+        /// <summary>
+        /// Represents the parameters for the Step Workflow Status Change Trigger.
+        /// </summary>
+        public class StatusChangeTriggerSettings : SettingsStringBase
+        {
+            public int? FromStatusId { get; set; }
+            public int? ToStatusId { get; set; }
+
+            public StatusChangeTriggerSettings()
+            {
+                //
+            }
+
+            public StatusChangeTriggerSettings( string settingsString )
+            {
+                FromSelectionString( settingsString );
+            }
+
+            protected override IEnumerable<string> OnGetParameters()
+            {
+                var parameters = new List<string> { FromStatusId.ToStringSafe(), ToStatusId.ToStringSafe() };
+
+                return parameters;
+            }
+
+            protected override void OnSetParameters( int version, IReadOnlyList<string> parameters )
+            {
+                FromStatusId = parameters[0].AsIntegerOrNull();
+                ToStatusId = parameters[1].AsIntegerOrNull();
+            }
         }
 
         #endregion
