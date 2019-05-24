@@ -155,8 +155,8 @@
                         <div class="grid">
                             <Rock:Grid ID="gWorkflows" runat="server" AllowPaging="false" DisplayType="Light" RowItemText="Workflow" ShowConfirmDeleteDialog="false">
                                 <Columns>
-                                    <Rock:RockBoundField DataField="WorkflowType" HeaderText="Workflow Type" />
-                                    <Rock:RockBoundField DataField="Trigger" HeaderText="Trigger" />
+                                    <Rock:RockBoundField DataField="WorkflowTypeName" HeaderText="Workflow Type" />
+                                    <Rock:RockBoundField DataField="TriggerDescription" HeaderText="Trigger" />
                                     <Rock:EditField OnClick="gWorkflows_Edit" />
                                     <Rock:DeleteField OnClick="gWorkflows_Delete" />
                                 </Columns>

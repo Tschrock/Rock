@@ -106,13 +106,14 @@ namespace RockWeb.Blocks.Steps
 
         #region Properties
 
-        private List<StepWorkflowTrigger> WorkflowsState { get; set; }
+        private List<StepWorkflowTriggerViewModel> WorkflowsState { get; set; }
 
         #endregion
 
         #region Private Variables
 
         private int _stepProgramId = 0;
+        private int _stepTypeId = 0;
         private RockContext _dataContext = null;
         private bool _blockContextIsValid = false;
         private RockBlockNotificationManager _notificationManager;
@@ -120,21 +121,6 @@ namespace RockWeb.Blocks.Steps
         #endregion Private Variables
 
         #region Control Methods
-
-        /// <summary>
-        /// Restores the view-state information from a previous user control request that was saved by the <see cref="M:System.Web.UI.UserControl.SaveViewState" /> method.
-        /// </summary>
-        /// <param name="savedState">An <see cref="T:System.Object" /> that represents the user control state to be restored.</param>
-        protected override void LoadViewState( object savedState )
-        {
-            base.LoadViewState( savedState );
-
-            var json = ViewState["WorkflowsState"] as string ?? string.Empty;
-
-            this.WorkflowsState = JsonConvert.DeserializeObject<List<StepWorkflowTrigger>>( json );
-
-            this.WorkflowsState = this.WorkflowsState ?? new List<StepWorkflowTrigger>();
-        }
 
         /// <summary>
         /// Raises the <see cref="E:System.Web.UI.Control.Init" /> event.
@@ -187,10 +173,23 @@ namespace RockWeb.Blocks.Steps
 
             if ( !Page.IsPostBack )
             {
-                int stepTypeId = PageParameter( PageParameterKey.StepTypeId ).AsInteger();
-
-                this.ShowDetail( stepTypeId );
+                this.ShowDetail( _stepTypeId );
             }
+        }
+
+        /// <summary>
+        /// Restores the view-state information from a previous user control request that was saved by the <see cref="M:System.Web.UI.UserControl.SaveViewState" /> method.
+        /// </summary>
+        /// <param name="savedState">An <see cref="T:System.Object" /> that represents the user control state to be restored.</param>
+        protected override void LoadViewState( object savedState )
+        {
+            base.LoadViewState( savedState );
+
+            var json = ViewState["WorkflowsState"] as string ?? string.Empty;
+
+            this.WorkflowsState = JsonConvert.DeserializeObject<List<StepWorkflowTriggerViewModel>>( json );
+
+            this.WorkflowsState = this.WorkflowsState ?? new List<StepWorkflowTriggerViewModel>();
         }
 
         /// <summary>
@@ -201,18 +200,15 @@ namespace RockWeb.Blocks.Steps
         /// </returns>
         protected override object SaveViewState()
         {
-            // Create a custom contract resolver to specifically ignore some complex properties that add significant amounts of unnecessary ViewState data.
-            var resolver = new Rock.Utility.DynamicPropertyMapContractResolver();
-
-            resolver.IgnoreProperty( typeof( StepStatus ), "StepProgram", "Steps", "UrlEncodedKey" );
-
             var jsonSetting = new JsonSerializerSettings
             {
                 ReferenceLoopHandling = ReferenceLoopHandling.Ignore,
-                ContractResolver = resolver,
+                NullValueHandling = NullValueHandling.Ignore
             };
 
-            ViewState["WorkflowsState"] = JsonConvert.SerializeObject( WorkflowsState, Formatting.None, jsonSetting );
+            var json = JsonConvert.SerializeObject( WorkflowsState, Formatting.None, jsonSetting );
+
+            ViewState["WorkflowsState"] = json;
 
             return base.SaveViewState();
         }
@@ -375,6 +371,8 @@ namespace RockWeb.Blocks.Steps
             var stepStatusService = new StepStatusService( rockContext );
             var attributeService = new AttributeService( rockContext );
             var qualifierService = new AttributeQualifierService( rockContext );
+            var stepWorkflowService = new StepWorkflowService( rockContext );
+            var stepWorkflowTriggerService = new StepWorkflowTriggerService( rockContext );
 
             int stepTypeId = int.Parse( hfStepTypeId.Value );
 
@@ -394,7 +392,28 @@ namespace RockWeb.Blocks.Steps
                                           .FirstOrDefault();
             }
 
-            // Update Workflow Triggers
+            // Workflow Triggers: Remove deleted triggers.
+            var uiWorkflows = WorkflowsState.Select( l => l.Guid );
+
+            var deletedTriggers = stepType.StepWorkflowTriggers.Where( l => !uiWorkflows.Contains( l.Guid ) ).ToList();
+
+            foreach ( var trigger in deletedTriggers )
+            {
+                // Remove the Step workflows associated with this trigger.
+                var stepWorkflows = stepWorkflowService.Queryable().Where( w => w.StepWorkflowTriggerId == trigger.Id );
+
+                foreach ( var requestWorkflow in stepWorkflows )
+                {
+                    stepWorkflowService.Delete( requestWorkflow );
+                }
+
+                // Remove the trigger.
+                stepType.StepWorkflowTriggers.Remove( trigger );
+
+                stepWorkflowTriggerService.Delete( trigger );
+            }
+
+            // Workflow Triggers: Update modified triggers.
             foreach ( var stateTrigger in WorkflowsState )
             {
                 var workflowTrigger = stepType.StepWorkflowTriggers.Where( a => a.Guid == stateTrigger.Guid ).FirstOrDefault();
@@ -403,15 +422,18 @@ namespace RockWeb.Blocks.Steps
                 {
                     workflowTrigger = new StepWorkflowTrigger();
 
+                    workflowTrigger.StepProgramId = stepType.StepProgramId;
+
                     stepType.StepWorkflowTriggers.Add( workflowTrigger );
                 }
 
+                workflowTrigger.Guid = stateTrigger.Guid;
+                workflowTrigger.WorkflowTypeId = stateTrigger.WorkflowTypeId;
                 workflowTrigger.TriggerType = stateTrigger.TriggerType;
                 workflowTrigger.TypeQualifier = stateTrigger.TypeQualifier;
                 workflowTrigger.WorkflowTypeId = stateTrigger.WorkflowTypeId;
-                workflowTrigger.WorkflowName = stateTrigger.WorkflowName;
+                workflowTrigger.WorkflowName = stateTrigger.WorkflowTypeName;
             }
-
 
             // Update Basic properties
             stepType.Name = tbName.Text;
@@ -534,7 +556,8 @@ namespace RockWeb.Blocks.Steps
         /// <param name="e">The <see cref="EventArgs"/> instance containing the event data.</param>
         protected void dlgStepWorkflow_SaveClick( object sender, EventArgs e )
         {
-            StepWorkflowTrigger workflowTrigger = null;
+            StepWorkflowTriggerViewModel workflowTrigger = null;
+
             var guid = hfAddStepWorkflowGuid.Value.AsGuid();
             if ( !guid.IsEmpty() )
             {
@@ -543,30 +566,36 @@ namespace RockWeb.Blocks.Steps
 
             if ( workflowTrigger == null )
             {
-                workflowTrigger = new StepWorkflowTrigger();
+                workflowTrigger = new StepWorkflowTriggerViewModel();
+
+                workflowTrigger.Guid = Guid.NewGuid();
             }
-            try
-            {
-                workflowTrigger.WorkflowType = new WorkflowTypeService( this.GetDataContext() ).Get( wpWorkflowType.SelectedValueAsId().Value );
-            }
-            catch { }
 
             workflowTrigger.WorkflowTypeId = wpWorkflowType.SelectedValueAsId().Value;
             workflowTrigger.TriggerType = ddlTriggerType.SelectedValueAsEnum<StepWorkflowTrigger.WorkflowTriggerCondition>();
-            workflowTrigger.TypeQualifier = String.Format( "|{0}|{1}|", ddlPrimaryQualifier.SelectedValue, ddlSecondaryQualifier.SelectedValue );
-            workflowTrigger.StepProgramId = 0;
 
-            if ( !workflowTrigger.IsValid )
+            var qualifierSettings = new StepWorkflowTrigger.StatusChangeTriggerSettings
             {
-                return;
-            }
-            if ( WorkflowsState.Any( a => a.Guid.Equals( workflowTrigger.Guid ) ) )
-            {
-                WorkflowsState.RemoveEntity( workflowTrigger.Guid );
-            }
+                FromStatusId = ddlPrimaryQualifier.SelectedValue.AsIntegerOrNull(),
+                ToStatusId = ddlSecondaryQualifier.SelectedValue.AsIntegerOrNull()
+            };
+
+            workflowTrigger.TypeQualifier = qualifierSettings.ToSelectionString();
+
+            var dataContext = this.GetDataContext();
+
+            var workflowTypeService = new WorkflowTypeService( dataContext );
+
+            var workflowTypeId = wpWorkflowType.SelectedValueAsId().GetValueOrDefault( 0 );
+
+            var workflowType = workflowTypeService.Queryable().AsNoTracking().FirstOrDefault( x => x.Id == workflowTypeId );
+
+            workflowTrigger.WorkflowTypeName = ( workflowType == null ) ? "(Unknown)" : workflowType.Name;
 
             WorkflowsState.Add( workflowTrigger );
+
             BindStepWorkflowsGrid();
+
             HideDialog();
         }
 
@@ -578,7 +607,12 @@ namespace RockWeb.Blocks.Steps
         protected void gWorkflows_Delete( object sender, RowEventArgs e )
         {
             Guid rowGuid = ( Guid ) e.RowKeyValue;
-            WorkflowsState.RemoveEntity( rowGuid );
+
+            var workflowTypeStateObj = WorkflowsState.Where( g => g.Guid.Equals( rowGuid ) ).FirstOrDefault();
+            if ( workflowTypeStateObj != null )
+            {
+                WorkflowsState.Remove( workflowTypeStateObj );
+            }
 
             BindStepWorkflowsGrid();
         }
@@ -617,7 +651,12 @@ namespace RockWeb.Blocks.Steps
                 wpWorkflowType.SetValue( workflowTrigger.WorkflowTypeId );
                 ddlTriggerType.SelectedValue = workflowTrigger.TriggerType.ToString();
             }
-
+            else
+            {
+                // Set default values
+                wpWorkflowType.SetValue( null );
+                ddlTriggerType.SelectedValue = StepWorkflowTrigger.WorkflowTriggerCondition.IsComplete.ToString();
+            }
 
             hfAddStepWorkflowGuid.Value = stepWorkflowGuid.ToString();
             ShowDialog( "StepWorkflows", true );
@@ -651,61 +690,56 @@ namespace RockWeb.Blocks.Steps
         {
             var rockContext = this.GetDataContext();
 
-            var qualifierValues = new String[2];
-
             var workflowTrigger = WorkflowsState.FirstOrDefault( l => l.Guid.Equals( hfAddStepWorkflowGuid.Value.AsGuid() ) );
 
             var sStepWorkflowTriggerType = ddlTriggerType.SelectedValueAsEnum<StepWorkflowTrigger.WorkflowTriggerCondition>();
 
             int stepTypeId = int.Parse( hfStepTypeId.Value );
 
-            switch ( sStepWorkflowTriggerType )
+            if ( sStepWorkflowTriggerType == StepWorkflowTrigger.WorkflowTriggerCondition.StatusChanged )
             {
-                case StepWorkflowTrigger.WorkflowTriggerCondition.Manual:
-                    {
-                        ddlPrimaryQualifier.Visible = false;
-                        ddlPrimaryQualifier.Items.Clear();
-                        ddlSecondaryQualifier.Visible = false;
-                        ddlSecondaryQualifier.Items.Clear();
-                        break;
-                    }
-                case StepWorkflowTrigger.WorkflowTriggerCondition.StatusChanged:
-                    {
-                        var statusList = new StepStatusService( rockContext ).Queryable().Where( s => s.StepProgramId == stepTypeId ).ToList();
-                        ddlPrimaryQualifier.Label = "From";
-                        ddlPrimaryQualifier.Visible = true;
-                        ddlPrimaryQualifier.Items.Clear();
-                        ddlPrimaryQualifier.Items.Add( new ListItem( string.Empty, string.Empty ) );
-                        foreach ( var status in statusList )
-                        {
-                            ddlPrimaryQualifier.Items.Add( new ListItem( status.Name, status.Id.ToString().ToUpper() ) );
-                        }
-                        ddlSecondaryQualifier.Label = "To";
-                        ddlSecondaryQualifier.Visible = true;
-                        ddlSecondaryQualifier.Items.Clear();
-                        ddlSecondaryQualifier.Items.Add( new ListItem( string.Empty, string.Empty ) );
-                        foreach ( var status in statusList )
-                        {
-                            ddlSecondaryQualifier.Items.Add( new ListItem( status.Name, status.Id.ToString().ToUpper() ) );
-                        }
-                        break;
-                    }
+                // Populate the selection lists for "To Status" and "From Status".
+                var stepType = this.GetStepType( stepTypeId, rockContext );
+
+                var statusList = new StepStatusService( rockContext ).Queryable().Where( s => s.StepProgramId == stepType.StepProgramId ).ToList();
+
+                ddlPrimaryQualifier.Label = "From";
+                ddlPrimaryQualifier.Visible = true;
+                ddlPrimaryQualifier.Items.Clear();
+                ddlPrimaryQualifier.Items.Add( new ListItem( string.Empty, string.Empty ) );
+
+                foreach ( var status in statusList )
+                {
+                    ddlPrimaryQualifier.Items.Add( new ListItem( status.Name, status.Id.ToString().ToUpper() ) );
+                }
+
+                ddlSecondaryQualifier.Label = "To";
+                ddlSecondaryQualifier.Visible = true;
+                ddlSecondaryQualifier.Items.Clear();
+                ddlSecondaryQualifier.Items.Add( new ListItem( string.Empty, string.Empty ) );
+
+                foreach ( var status in statusList )
+                {
+                    ddlSecondaryQualifier.Items.Add( new ListItem( status.Name, status.Id.ToString().ToUpper() ) );
+                }
+            }
+            else
+            {
+                ddlPrimaryQualifier.Visible = false;
+                ddlPrimaryQualifier.Items.Clear();
+                ddlSecondaryQualifier.Visible = false;
+                ddlSecondaryQualifier.Items.Clear();
             }
 
+            // Set the qualifier values.
             if ( workflowTrigger != null )
             {
                 if ( workflowTrigger.TriggerType == sStepWorkflowTriggerType )
                 {
-                    qualifierValues = workflowTrigger.TypeQualifier.SplitDelimitedValues();
-                    if ( ddlPrimaryQualifier.Visible && qualifierValues.Length > 0 )
-                    {
-                        ddlPrimaryQualifier.SelectedValue = qualifierValues[0];
-                    }
+                    var qualifierSettings = new StepWorkflowTrigger.StatusChangeTriggerSettings( workflowTrigger.TypeQualifier );
 
-                    if ( ddlSecondaryQualifier.Visible && qualifierValues.Length > 1 )
-                    {
-                        ddlSecondaryQualifier.SelectedValue = qualifierValues[1];
-                    }
+                    ddlPrimaryQualifier.SelectedValue = qualifierSettings.FromStatusId.ToStringSafe();
+                    ddlSecondaryQualifier.SelectedValue = qualifierSettings.ToStatusId.ToStringSafe();
                 }
             }
 
@@ -719,14 +753,20 @@ namespace RockWeb.Blocks.Steps
             if ( WorkflowsState != null )
             {
                 SetStepWorkflowListOrder( WorkflowsState );
-                gWorkflows.DataSource = WorkflowsState.Select( c => new
+
+                // Set the description for the trigger.
+                var stepService = new StepWorkflowTriggerService( new RockContext() );
+
+                foreach ( var workflowTrigger in WorkflowsState )
                 {
-                    c.Id,
-                    c.Guid,
-                    WorkflowType = c.WorkflowType.Name,
-                    Trigger = c.TriggerType.ConvertToString()
-                } ).ToList();
+                    var qualifierSettings = new StepWorkflowTrigger.StatusChangeTriggerSettings( workflowTrigger.TypeQualifier );
+
+                    workflowTrigger.TriggerDescription = stepService.GetTriggerSettingsDescription( workflowTrigger.TriggerType, qualifierSettings );
+                }
+
+                gWorkflows.DataSource = WorkflowsState;
             }
+
 
             gWorkflows.DataBind();
         }
@@ -735,13 +775,13 @@ namespace RockWeb.Blocks.Steps
         /// Sets the connection workflow list order.
         /// </summary>
         /// <param name="stepWorkflowList">The connection workflow list.</param>
-        private void SetStepWorkflowListOrder( List<StepWorkflowTrigger> stepWorkflowList )
+        private void SetStepWorkflowListOrder( List<StepWorkflowTriggerViewModel> stepWorkflowList )
         {
             if ( stepWorkflowList != null )
             {
                 if ( stepWorkflowList.Any() )
                 {
-                    stepWorkflowList.OrderBy( c => c.WorkflowType.Name ).ThenBy( c => c.TriggerType.ConvertToString() ).ToList();
+                    stepWorkflowList.OrderBy( c => c.WorkflowTypeName ).ThenBy( c => c.TriggerType.ConvertToString() ).ToList();
                 }
             }
         }
@@ -788,9 +828,9 @@ namespace RockWeb.Blocks.Steps
 
             if ( _stepProgramId == 0 )
             {
-                var stepTypeId = PageParameter( PageParameterKey.StepTypeId ).AsInteger();
+                _stepTypeId = PageParameter( PageParameterKey.StepTypeId ).AsInteger();
 
-                if ( stepTypeId == 0 )
+                if ( _stepTypeId == 0 )
                 {
                     _notificationManager.ShowFatal( "A new Step can't be added because there is no Step Program available in this context." );
 
@@ -801,12 +841,15 @@ namespace RockWeb.Blocks.Steps
             return true;
         }
 
-        private void LoadDropDownLists()
+        private void LoadWorkflowTriggerTypesSelectionList()
         {
             ddlTriggerType.Items.Add( new ListItem( "Step Completed", StepWorkflowTrigger.WorkflowTriggerCondition.IsComplete.ToString() ) );
             ddlTriggerType.Items.Add( new ListItem( "Status Changed", StepWorkflowTrigger.WorkflowTriggerCondition.StatusChanged.ToString() ) );
             ddlTriggerType.Items.Add( new ListItem( "Manual", StepWorkflowTrigger.WorkflowTriggerCondition.Manual.ToString() ) );
+        }
 
+        private void LoadPrerequisiteStepsList()
+        {
             var dataContext = this.GetDataContext();
 
             // Load Prerequisite Steps.
@@ -911,7 +954,8 @@ namespace RockWeb.Blocks.Steps
 
             SetEditMode( true );
 
-            this.LoadDropDownLists();
+            this.LoadPrerequisiteStepsList();
+            this.LoadWorkflowTriggerTypesSelectionList();
 
             // General properties
             tbName.Text = stepType.Name;
@@ -942,7 +986,15 @@ namespace RockWeb.Blocks.Steps
 
             ceCardTemplate.Text = stepType.CardLavaTemplate;
 
-            WorkflowsState = stepType.StepWorkflowTriggers.ToList();
+            // Workflow Triggers
+            WorkflowsState = new List<StepWorkflowTriggerViewModel>();
+
+            foreach ( var trigger in stepType.StepWorkflowTriggers )
+            {
+                var newItem = new StepWorkflowTriggerViewModel( trigger );
+
+                WorkflowsState.Add( newItem );
+            }
 
             BindStepWorkflowsGrid();
         }
@@ -1212,5 +1264,46 @@ namespace RockWeb.Blocks.Steps
         }
 
         #endregion
+
+        #region Support Classes
+
+        [Serializable]
+        private class StepWorkflowTriggerViewModel
+        {
+            public int Id { get; set; }
+            public Guid Guid { get; set; }
+            public string WorkflowTypeName { get; set; }
+
+            public int? StepTypeId { get; set; }
+            public int WorkflowTypeId { get; set; }
+
+            public StepWorkflowTrigger.WorkflowTriggerCondition TriggerType { get; set; }
+            public string TypeQualifier { get; set; }
+
+            public string TriggerDescription { get; set; }
+
+            public StepWorkflowTriggerViewModel()
+            {
+                //
+            }
+
+            public StepWorkflowTriggerViewModel( StepWorkflowTrigger trigger )
+            {
+                Id = trigger.Id;
+                Guid = trigger.Guid;
+                StepTypeId = trigger.StepTypeId;
+                TriggerType = trigger.TriggerType;
+                TypeQualifier = trigger.TypeQualifier;
+
+                if ( trigger.WorkflowType != null )
+                {
+                    WorkflowTypeId = trigger.WorkflowType.Id;
+                    WorkflowTypeName = trigger.WorkflowType.Name;
+                }
+            }
+        }
+
+        #endregion
+
     }
 }
