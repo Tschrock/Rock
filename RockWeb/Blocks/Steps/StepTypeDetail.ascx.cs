@@ -187,9 +187,7 @@ namespace RockWeb.Blocks.Steps
 
             var json = ViewState["WorkflowsState"] as string ?? string.Empty;
 
-            this.WorkflowsState = JsonConvert.DeserializeObject<List<StepWorkflowTriggerViewModel>>( json );
-
-            this.WorkflowsState = this.WorkflowsState ?? new List<StepWorkflowTriggerViewModel>();
+            this.WorkflowsState = JsonConvert.DeserializeObject<List<StepWorkflowTriggerViewModel>>( json ) ?? new List<StepWorkflowTriggerViewModel>();
         }
 
         /// <summary>

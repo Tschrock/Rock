@@ -81,7 +81,7 @@ namespace RockWeb.Blocks.Steps
             public const string LinkedPages = "Linked Pages";
         }
 
-        #endregion Attribute Keys
+        #endregion Attribute Categories
 
         #region Page Parameter Keys
 
@@ -99,7 +99,7 @@ namespace RockWeb.Blocks.Steps
         #region User Preference Keys
 
         /// <summary>
-        /// Keys to use for Page Parameters
+        /// Keys to use for Filter Settings
         /// </summary>
         protected static class FilterSettingName
         {
@@ -333,6 +333,9 @@ namespace RockWeb.Blocks.Steps
             rFilter.DisplayFilterValue += rFilter_DisplayFilterValue;
         }
 
+        /// <summary>
+        /// Set the properties of the main grid.
+        /// </summary>
         private void InitializeGrid()
         {
             if ( _program == null )
@@ -466,8 +469,6 @@ namespace RockWeb.Blocks.Steps
                 return;
             }
 
-            //this.RefreshBlockAvailabilityState();
-
             this.BindGrid();
         }
 
@@ -506,6 +507,9 @@ namespace RockWeb.Blocks.Steps
             this.BindGrid();
         }
 
+        /// <summary>
+        /// Clear the filter fields for the grid.
+        /// </summary>
         private void ClearGridFilter()
         {
             rFilter.DeleteUserPreferences();
@@ -513,6 +517,10 @@ namespace RockWeb.Blocks.Steps
             BindFilter();
         }
 
+        /// <summary>
+        /// Delete the specified Step Type.
+        /// </summary>
+        /// <param name="stepTypeId"></param>
         private void DeleteStepType( int stepTypeId )
         {
             var rockContext = this.GetDataContext();
