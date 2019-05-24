@@ -3,7 +3,10 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+//using System.Data.Entity;
 using System.Data.Entity.ModelConfiguration;
+using System.Data.Entity.Infrastructure;
+
 using System.Runtime.Serialization;
 using Rock.Data;
 
@@ -156,14 +159,29 @@ namespace Rock.Model
             }
         }
 
+        /// <summary>
+        /// Perform tasks prior to saving changes to this entity.
+        /// </summary>
+        /// <param name="dbContext">The database context.</param>
+        /// <param name="entry">The entry.</param>
+        public override void PreSaveChanges( DbContext dbContext, DbEntityEntry entry )
+        {
+            // Add a transaction to process workflows associated with changes to this Step.
+            var transaction = new Rock.Transactions.StepChangeTransaction( entry );
+
+            Rock.Transactions.RockQueue.TransactionQueue.Enqueue( transaction );
+
+            base.PreSaveChanges( dbContext, entry );
+        }
+
         #endregion Overrides
 
-        #region Entity Configuration
+    #region Entity Configuration
 
-        /// <summary>
-        /// Step Configuration class.
-        /// </summary>
-        public partial class StepConfiguration : EntityTypeConfiguration<Step>
+    /// <summary>
+    /// Step Configuration class.
+    /// </summary>
+    public partial class StepConfiguration : EntityTypeConfiguration<Step>
         {
             /// <summary>
             /// Initializes a new instance of the <see cref="StepConfiguration"/> class.
