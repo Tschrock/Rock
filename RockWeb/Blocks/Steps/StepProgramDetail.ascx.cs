@@ -96,13 +96,7 @@ namespace RockWeb.Blocks.Steps
         private List<StepStatus> StatusesState { get; set; }
         private List<StepWorkflowTrigger> WorkflowsState { get; set; }
 
-        #endregion Properties
-
-        #region Private Variables
-
-        private RockBlockNotificationManager _notificationManager;
-
-        #endregion Private Variables
+        #endregion
 
         #region Control Methods
 
@@ -162,14 +156,11 @@ namespace RockWeb.Blocks.Steps
         {
             base.OnInit( e );
 
-            InitializeSettingsNotification( upStepProgram );
-
-            _notificationManager = new RockBlockNotificationManager( this, nbBlockStatus, pnlContent );
-
             InitializeStatusesGrid();
             InitializeWorkflowsGrid();
             InitializeActionButtons();
             InitializeChartFilter();
+            InitializeSettingsNotification( upStepProgram );
         }
 
         /// <summary>
@@ -622,12 +613,7 @@ namespace RockWeb.Blocks.Steps
                 wpWorkflowType.SetValue( workflowTrigger.WorkflowTypeId );
                 ddlTriggerType.SelectedValue = workflowTrigger.TriggerType.ToString();
             }
-            else
-            {
-                // Set default values
-                wpWorkflowType.SetValue( null );
-                ddlTriggerType.SelectedValue = StepWorkflowTrigger.WorkflowTriggerCondition.IsComplete.ToString();
-            }
+
 
             hfAddStepWorkflowGuid.Value = stepWorkflowGuid.ToString();
             ShowDialog( "StepWorkflows", true );
@@ -669,36 +655,37 @@ namespace RockWeb.Blocks.Steps
 
                 int stepProgramId = int.Parse( hfStepProgramId.Value );
 
-                if ( sStepWorkflowTriggerType == StepWorkflowTrigger.WorkflowTriggerCondition.StatusChanged )
+                switch ( sStepWorkflowTriggerType )
                 {
-                    var statusList = new StepStatusService( rockContext ).Queryable().Where( s => s.StepProgramId == stepProgramId ).ToList();
-
-                    ddlPrimaryQualifier.Label = "From";
-                    ddlPrimaryQualifier.Visible = true;
-                    ddlPrimaryQualifier.Items.Clear();
-                    ddlPrimaryQualifier.Items.Add( new ListItem( string.Empty, string.Empty ) );
-
-                    foreach ( var status in statusList )
-                    {
-                        ddlPrimaryQualifier.Items.Add( new ListItem( status.Name, status.Id.ToString().ToUpper() ) );
-                    }
-
-                    ddlSecondaryQualifier.Label = "To";
-                    ddlSecondaryQualifier.Visible = true;
-                    ddlSecondaryQualifier.Items.Clear();
-                    ddlSecondaryQualifier.Items.Add( new ListItem( string.Empty, string.Empty ) );
-
-                    foreach ( var status in statusList )
-                    {
-                        ddlSecondaryQualifier.Items.Add( new ListItem( status.Name, status.Id.ToString().ToUpper() ) );
-                    }
-                }
-                else
-                {
-                    ddlPrimaryQualifier.Visible = false;
-                    ddlPrimaryQualifier.Items.Clear();
-                    ddlSecondaryQualifier.Visible = false;
-                    ddlSecondaryQualifier.Items.Clear();
+                    case StepWorkflowTrigger.WorkflowTriggerCondition.Manual:
+                        {
+                            ddlPrimaryQualifier.Visible = false;
+                            ddlPrimaryQualifier.Items.Clear();
+                            ddlSecondaryQualifier.Visible = false;
+                            ddlSecondaryQualifier.Items.Clear();
+                            break;
+                        }
+                    case StepWorkflowTrigger.WorkflowTriggerCondition.StatusChanged:
+                        {
+                            var statusList = new StepStatusService( rockContext ).Queryable().Where( s => s.StepProgramId == stepProgramId ).ToList();
+                            ddlPrimaryQualifier.Label = "From";
+                            ddlPrimaryQualifier.Visible = true;
+                            ddlPrimaryQualifier.Items.Clear();
+                            ddlPrimaryQualifier.Items.Add( new ListItem( string.Empty, string.Empty ) );
+                            foreach ( var status in statusList )
+                            {
+                                ddlPrimaryQualifier.Items.Add( new ListItem( status.Name, status.Id.ToString().ToUpper() ) );
+                            }
+                            ddlSecondaryQualifier.Label = "To";
+                            ddlSecondaryQualifier.Visible = true;
+                            ddlSecondaryQualifier.Items.Clear();
+                            ddlSecondaryQualifier.Items.Add( new ListItem( string.Empty, string.Empty ) );
+                            foreach ( var status in statusList )
+                            {
+                                ddlSecondaryQualifier.Items.Add( new ListItem( status.Name, status.Id.ToString().ToUpper() ) );
+                            }
+                            break;
+                        }
                 }
 
                 if ( workflowTrigger != null )
@@ -764,6 +751,42 @@ namespace RockWeb.Blocks.Steps
         }
 
         #endregion
+
+        #endregion
+
+        #region Block Notification Messages
+
+        /// <summary>
+        /// Show a notification message for the block.
+        /// </summary>
+        /// <param name="notificationControl"></param>
+        /// <param name="message"></param>
+        /// <param name="notificationType"></param>
+        private void ShowBlockNotification( NotificationBox notificationControl, string message, NotificationBoxType notificationType = NotificationBoxType.Info )
+        {
+            notificationControl.Text = message;
+            notificationControl.NotificationBoxType = notificationType;
+        }
+
+        private void ShowBlockError( NotificationBox notificationControl, string message )
+        {
+            this.ShowBlockNotification( notificationControl, message, NotificationBoxType.Danger );
+        }
+
+        private void ShowBlockException( NotificationBox notificationControl, Exception ex, bool writeToLog = true )
+        {
+            this.ShowBlockNotification( notificationControl, ex.Message, NotificationBoxType.Danger );
+
+            if ( writeToLog )
+            {
+                this.LogException( ex );
+            }
+        }
+
+        private void ShowBlockSuccess( NotificationBox notificationControl, string message )
+        {
+            this.ShowBlockNotification( notificationControl, message, NotificationBoxType.Success );
+        }
 
         #endregion
 
@@ -978,7 +1001,7 @@ namespace RockWeb.Blocks.Steps
             }
             catch ( Exception ex )
             {
-                _notificationManager.ShowException( ex );
+                this.ShowBlockException( nbEditModeMessage, ex );
                 return;
             }
 
@@ -1022,11 +1045,11 @@ namespace RockWeb.Blocks.Steps
                 lIcon.Text = string.Format( "<i class='{0}'></i>", stepProgram.IconCssClass );
                 bool readOnly = false;
 
+                nbEditModeMessage.Text = string.Empty;
                 if ( !adminAllowed )
                 {
                     readOnly = true;
-
-                    _notificationManager.ShowMessageEditModeDisallowed( StepProgram.FriendlyTypeName );
+                    nbEditModeMessage.Text = EditModeMessage.ReadOnlyEditActionNotAllowed( StepProgram.FriendlyTypeName );
                 }
 
                 rblDefaultListView.Items.Clear();

@@ -24,119 +24,117 @@
             </div>
             <Rock:PanelDrawer ID="pdAuditDetails" runat="server"></Rock:PanelDrawer>
             <div class="panel-body">
-                <Rock:NotificationBox ID="nbBlockStatus" runat="server" NotificationBoxType="Info" />
+                <Rock:NotificationBox ID="nbEditModeMessage" runat="server" NotificationBoxType="Info" />
                 <asp:ValidationSummary ID="valStepProgramDetail" runat="server" HeaderText="Please correct the following:" CssClass="alert alert-validation" />
 
-                <div id="pnlContent" runat="server">
-                    <div id="pnlViewDetails" runat="server">
-                        <div class="row">
-                            <div class="col-md-12">
-                                <asp:Literal ID="lStepProgramDescription" runat="server"></asp:Literal>
-                            </div>
+                <div id="pnlViewDetails" runat="server">
+                    <div class="row">
+                        <div class="col-md-12">
+                            <asp:Literal ID="lStepProgramDescription" runat="server"></asp:Literal>
                         </div>
+                    </div>
 
-                        <div class="row">
-                            <div class="col-sm-6">
-                                <h3>Steps Activity Summary</h3>
-                                <p class="small">Shows steps completed within the activity period.</p>
-                            </div>
-                            <div class="col-sm-6">
-                                <div class="panel panel-body">
-                                    <div class="row">
-                                        <div class="col-sm-8">
-                                            <Rock:SlidingDateRangePicker ID="drpSlidingDateRange"
-                                                runat="server"
-                                                EnabledSlidingDateRangeTypes="Previous, Last, Current, DateRange"
-                                                EnabledSlidingDateRangeUnits="Week, Month, Year"
-                                                SlidingDateRangeMode="Current"
-                                                TimeUnit="Year"
-                                                CssClass="pull-right" />
-                                        </div>
-                                        <div class="col-sm-4">
-                                            <span class="pull-right">
-                                                <asp:LinkButton ID="btnRefreshChart" runat="server" CssClass="btn btn-primary" Style="vertical-align: bottom" ToolTip="Refresh Chart" OnClick="btnRefreshChart_Click"><i class="fa fa-refresh"></i> Update</asp:LinkButton>
-                                            </span>
-                                        </div>
+                    <div class="row">
+                        <div class="col-sm-6">
+                            <h3>Steps Activity Summary</h3>
+                            <p class="small">Shows steps completed within the activity period.</p>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="panel panel-body">
+                                <div class="row">
+                                    <div class="col-sm-8">
+                                        <Rock:SlidingDateRangePicker ID="drpSlidingDateRange"
+                                            runat="server"
+                                            EnabledSlidingDateRangeTypes="Previous, Last, Current, DateRange"
+                                            EnabledSlidingDateRangeUnits="Week, Month, Year"
+                                            SlidingDateRangeMode="Current"
+                                            TimeUnit="Year"
+                                            CssClass="pull-right" />
+                                    </div>
+                                    <div class="col-sm-4">
+                                        <span class="pull-right">
+                                            <asp:LinkButton ID="btnRefreshChart" runat="server" CssClass="btn btn-primary" Style="vertical-align: bottom" ToolTip="Refresh Chart" OnClick="btnRefreshChart_Click"><i class="fa fa-refresh"></i> Update</asp:LinkButton>
+                                        </span>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                        <div class="row">
-                            <div class="col-md-12">
-                                <Rock:LineChart ID="lcSteps" runat="server" ChartHeight="280px" />
-                            </div>
-                        </div>
-
-
-                        <div class="row">
-                            <div class="col-md-6">
-                                <asp:Literal ID="lblMainDetails" runat="server" />
-                            </div>
-                        </div>
-
-                        <div class="actions">
-                            <asp:LinkButton ID="btnEdit" runat="server" AccessKey="e" ToolTip="Alt+e" Text="Edit" CssClass="btn btn-primary" OnClick="btnEdit_Click" CausesValidation="false" />
-                            <Rock:ModalAlert ID="mdDeleteWarning" runat="server" />
-                            <asp:LinkButton ID="btnDelete" runat="server" Text="Delete" CssClass="btn btn-link" CausesValidation="false" />
-                            <span class="pull-right">
-                                <Rock:SecurityButton ID="btnSecurity" runat="server" class="btn btn-sm btn-security" />
-                            </span>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <Rock:LineChart ID="lcSteps" runat="server" ChartHeight="280px" />
                         </div>
                     </div>
 
-                    <div id="pnlEditDetails" runat="server">
-	                    <div class="row">
-	                        <div class="col-md-6">
-	                            <Rock:DataTextBox ID="tbName" runat="server" SourceTypeName="Rock.Model.StepProgram, Rock" PropertyName="Name" />
-	                        </div>
-	                        <div class="col-md-6">
-	                            <Rock:RockCheckBox ID="cbActive" runat="server" SourceTypeName="Rock.Model.StepProgram, Rock" PropertyName="IsActive" Label="Active" Checked="true" Text="Yes" />
-	                        </div>
-	                    </div>
 
-	                    <Rock:DataTextBox ID="tbDescription" runat="server" SourceTypeName="Rock.Model.StepProgram, Rock" PropertyName="Description" TextMode="MultiLine" Rows="4" />
-
-	                    <div class="row">
-	                        <div class="col-md-6">
-                                <Rock:DataTextBox ID="tbIconCssClass" runat="server" SourceTypeName="Rock.Model.StepProgram, Rock" Label="Icon CSS Class" PropertyName="IconCssClass" ValidateRequestMode="Disabled" />
-                                <Rock:CategoryPicker ID="cpCategory" runat="server" EntityTypeName="Rock.Model.StepProgram" Label="Category" />
-                            </div>
-                            <div class="col-md-6">
-                                <Rock:RockRadioButtonList ID="rblDefaultListView" runat="server" Label="Default List View" RepeatDirection="Horizontal" />
-                            </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <asp:Literal ID="lblMainDetails" runat="server" />
                         </div>
+                    </div>
 
-                        <Rock:PanelWidget ID="wpStatuses" runat="server" Title="Statuses">
-                            <div class="grid">
-                                <Rock:Grid ID="gStatuses" runat="server" AllowPaging="false" DisplayType="Light" RowItemText="Status" ShowConfirmDeleteDialog="false">
-                                    <Columns>
-                                    	<Rock:ReorderField />
-                                        <Rock:RockBoundField DataField="Name" HeaderText="Name" />
-                                        <Rock:BoolField DataField="IsCompleteStatus" HeaderText="Completion?" HeaderStyle-HorizontalAlign="Center" ItemStyle-HorizontalAlign="Center" />
-                                        <Rock:EditField OnClick="gStatuses_Edit" />
-                                        <Rock:DeleteField OnClick="gStatuses_Delete" />
-                                    </Columns>
-                                </Rock:Grid>
-                            </div>
-                        </Rock:PanelWidget>
+                    <div class="actions">
+                        <asp:LinkButton ID="btnEdit" runat="server" AccessKey="e" ToolTip="Alt+e" Text="Edit" CssClass="btn btn-primary" OnClick="btnEdit_Click" CausesValidation="false" />
+                        <Rock:ModalAlert ID="mdDeleteWarning" runat="server" />
+                        <asp:LinkButton ID="btnDelete" runat="server" Text="Delete" CssClass="btn btn-link" CausesValidation="false" />
+                        <span class="pull-right">
+                            <Rock:SecurityButton ID="btnSecurity" runat="server" class="btn btn-sm btn-security" />
+                        </span>
+                    </div>
+                </div>
 
-                        <Rock:PanelWidget ID="wpWorkflow" runat="server" Title="Workflows">
-                            <div class="grid">
-                                <Rock:Grid ID="gWorkflows" runat="server" AllowPaging="false" DisplayType="Light" RowItemText="Workflow" ShowConfirmDeleteDialog="false">
-                                    <Columns>
-                                        <Rock:RockBoundField DataField="WorkflowType" HeaderText="Workflow Type" />
-                                        <Rock:RockBoundField DataField="Trigger" HeaderText="Trigger" />
-                                        <Rock:EditField OnClick="gWorkflows_Edit" />
-                                        <Rock:DeleteField OnClick="gWorkflows_Delete" />
-                                    </Columns>
-                                </Rock:Grid>
-                            </div>
-                        </Rock:PanelWidget>
-
-                        <div class="actions">
-                            <asp:LinkButton ID="btnSave" runat="server" AccessKey="s" ToolTip="Alt+s" Text="Save" CssClass="btn btn-primary" OnClick="btnSave_Click" />
-                            <asp:LinkButton ID="btnCancel" runat="server" AccessKey="c" ToolTip="Alt+c" Text="Cancel" CssClass="btn btn-link" CausesValidation="false" OnClick="btnCancel_Click" />
+                <div id="pnlEditDetails" runat="server">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <Rock:DataTextBox ID="tbName" runat="server" SourceTypeName="Rock.Model.StepProgram, Rock" PropertyName="Name" />
                         </div>
+                        <div class="col-md-6">
+                            <Rock:RockCheckBox ID="cbActive" runat="server" SourceTypeName="Rock.Model.StepProgram, Rock" PropertyName="IsActive" Label="Active" Checked="true" Text="Yes" />
+                        </div>
+                    </div>
+
+                    <Rock:DataTextBox ID="tbDescription" runat="server" SourceTypeName="Rock.Model.StepProgram, Rock" PropertyName="Description" TextMode="MultiLine" Rows="4" />
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <Rock:DataTextBox ID="tbIconCssClass" runat="server" SourceTypeName="Rock.Model.StepProgram, Rock" Label="Icon CSS Class" PropertyName="IconCssClass" ValidateRequestMode="Disabled" />
+                            <Rock:CategoryPicker ID="cpCategory" runat="server" EntityTypeName="Rock.Model.StepProgram" Label="Category" />
+                        </div>
+                        <div class="col-md-6">
+                            <Rock:RockRadioButtonList ID="rblDefaultListView" runat="server" Label="Default List View" RepeatDirection="Horizontal" />
+                        </div>
+                    </div>
+
+                    <Rock:PanelWidget ID="wpStatuses" runat="server" Title="Statuses">
+                        <div class="grid">
+                            <Rock:Grid ID="gStatuses" runat="server" AllowPaging="false" DisplayType="Light" RowItemText="Status" ShowConfirmDeleteDialog="false">
+                                <Columns>
+                                    <Rock:ReorderField />
+                                    <Rock:RockBoundField DataField="Name" HeaderText="Name" />
+                                    <Rock:BoolField DataField="IsCompleteStatus" HeaderText="Completion?" HeaderStyle-HorizontalAlign="Center" ItemStyle-HorizontalAlign="Center" />
+                                    <Rock:EditField OnClick="gStatuses_Edit" />
+                                    <Rock:DeleteField OnClick="gStatuses_Delete" />
+                                </Columns>
+                            </Rock:Grid>
+                        </div>
+                    </Rock:PanelWidget>
+
+                    <Rock:PanelWidget ID="wpWorkflow" runat="server" Title="Workflows">
+                        <div class="grid">
+                            <Rock:Grid ID="gWorkflows" runat="server" AllowPaging="false" DisplayType="Light" RowItemText="Workflow" ShowConfirmDeleteDialog="false">
+                                <Columns>
+                                    <Rock:RockBoundField DataField="WorkflowType" HeaderText="Workflow Type" />
+                                    <Rock:RockBoundField DataField="Trigger" HeaderText="Trigger" />
+                                    <Rock:EditField OnClick="gWorkflows_Edit" />
+                                    <Rock:DeleteField OnClick="gWorkflows_Delete" />
+                                </Columns>
+                            </Rock:Grid>
+                        </div>
+                    </Rock:PanelWidget>
+
+                    <div class="actions">
+                        <asp:LinkButton ID="btnSave" runat="server" AccessKey="s" ToolTip="Alt+s" Text="Save" CssClass="btn btn-primary" OnClick="btnSave_Click" />
+                        <asp:LinkButton ID="btnCancel" runat="server" AccessKey="c" ToolTip="Alt+c" Text="Cancel" CssClass="btn btn-link" CausesValidation="false" OnClick="btnCancel_Click" />
                     </div>
                 </div>
             </div>
