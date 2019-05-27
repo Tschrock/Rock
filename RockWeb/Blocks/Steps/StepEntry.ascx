@@ -3,6 +3,8 @@
 <asp:UpdatePanel ID="pnlGatewayListUpdatePanel" runat="server">
     <ContentTemplate>
 
+        <asp:HiddenField ID="hfStepId" runat="server" />
+
         <asp:Panel ID="pnlDetails" CssClass="panel panel-block" runat="server">
 
             <div class="panel-heading">
@@ -30,13 +32,31 @@
                             <Rock:DatePicker ID="rdpEndDate" runat="server" PropertyName="EndDate" />
                         </div>
                         <div class="col-sm-12 col-md-6">
-                            <Rock:StepStatusPicker ID="rsspStatus" runat="server" Label="Status" />                            
+                            <Rock:StepStatusPicker ID="rsspStatus" runat="server" Label="Status" />
                         </div>
                     </div>
 
                     <div class="row">
                         <div class="col-sm-12">
                             <Rock:AttributeValuesContainer ID="avcAttributes" runat="server" NumberOfColumns="2" />
+                        </div>
+                    </div>
+
+                    <%-- Manual Workflow Triggers --%>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <Rock:ModalAlert ID="mdWorkflowResult" runat="server" />
+                            <asp:Label ID="lblWorkflows" Text="Available Workflows" Font-Bold="true" runat="server" />
+                            <div class="margin-b-md">
+                                <asp:Repeater ID="rptWorkflows" runat="server">
+                                    <ItemTemplate>
+                                        <asp:LinkButton runat="server" CssClass="btn btn-default btn-xs" CommandArgument='<%# Eval("Id") %>' CommandName="LaunchWorkflow">
+                                        <%# Eval("WorkflowType.Name") %>
+                                        </asp:LinkButton>
+                                    </ItemTemplate>
+
+                                </asp:Repeater>
+                            </div>
                         </div>
                     </div>
 

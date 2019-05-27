@@ -22,13 +22,12 @@ using System.Linq;
 using System.Web.UI.WebControls;
 using Rock;
 using Rock.Attribute;
-using Rock.Constants;
 using Rock.Data;
 using Rock.Model;
 using Rock.Security;
-using Rock.Web;
 using Rock.Web.Cache;
 using Rock.Web.UI;
+using Rock.Web.UI.Controls;
 
 namespace RockWeb.Blocks.Steps
 {
@@ -52,6 +51,13 @@ namespace RockWeb.Blocks.Steps
         order: 2,
         key: AttributeKeys.SuccessPage )]
 
+    [LinkedPage(
+        name: "Workflow Entry Page",
+        description: "Page used to launch a new workflow of the selected type.",
+        required: false,
+        order: 3,
+        key: AttributeKeys.WorkflowEntryPage )]
+
     #endregion Block Attributes
 
     public partial class StepEntry : RockBlock
@@ -65,6 +71,7 @@ namespace RockWeb.Blocks.Steps
         {
             public const string StepType = "StepType";
             public const string SuccessPage = "SuccessPage";
+            public const string WorkflowEntryPage = "WorkflowEntryPage";
         }
 
         /// <summary>
@@ -80,6 +87,13 @@ namespace RockWeb.Blocks.Steps
         #endregion Keys
 
         #region Control Methods
+
+        protected override void OnInit( EventArgs e )
+        {
+            base.OnInit( e );
+
+            this.InitializeWorkflowControls();
+        }
 
         /// <summary>
         /// Raises the <see cref="E:System.Web.UI.Control.Load" /> event.
@@ -98,6 +112,187 @@ namespace RockWeb.Blocks.Steps
             {
                 ShowEditDetails();
             }
+            else
+            {
+                BindWorkflows();
+            }
+        }
+
+        #endregion
+
+        #region Workflows
+
+        /// <summary>
+        /// Initialize the workflows control.
+        /// </summary>
+        private void InitializeWorkflowControls()
+        {
+            rptWorkflows.ItemCommand += rptWorkflows_ItemCommand;
+        }
+
+        /// <summary>
+        /// Bind the set of available workflows to the repeater control.
+        /// </summary>
+        private void BindWorkflows()
+        {
+            var stepType = GetStepType();
+
+            if ( stepType == null )
+            {
+                return;
+            }
+
+            var workflows = stepType.StepWorkflowTriggers
+                .Union( stepType.StepProgram.StepWorkflowTriggers )
+                .Where( x => x.TriggerType == StepWorkflowTrigger.WorkflowTriggerCondition.Manual
+                        && x.WorkflowType != null
+                        && ( x.WorkflowType.IsActive ?? false ) )
+                .OrderBy( w => w.WorkflowType.Name )
+                .ToList();
+
+            var authorizedWorkflows = workflows.Where( x => x.WorkflowType.IsAuthorized( Authorization.VIEW, CurrentPerson ) );
+
+            bool hasWorkflows = authorizedWorkflows.Any();
+
+            lblWorkflows.Visible = hasWorkflows;
+            rptWorkflows.Visible = hasWorkflows;
+
+            if ( hasWorkflows )
+            {
+                rptWorkflows.DataSource = authorizedWorkflows.ToList();
+                rptWorkflows.DataBind();
+            }
+        }
+
+        /// <summary>
+        /// Handles the ItemCommand event of the rptRequestWorkflows control.
+        /// </summary>
+        /// <param name="source">The source of the event.</param>
+        /// <param name="e">The <see cref="RepeaterCommandEventArgs"/> instance containing the event data.</param>
+        protected void rptWorkflows_ItemCommand( object source, RepeaterCommandEventArgs e )
+        {
+            if ( e.CommandName == "LaunchWorkflow" )
+            {
+                var triggerId = e.CommandArgument.ToString().AsInteger();
+                var targetId = hfStepId.ValueAsInt();
+
+                this.LaunchWorkflow( triggerId, targetId );
+            }
+        }
+
+        /// <summary>
+        /// Launch a specific workflow.
+        /// </summary>
+        /// <param name="rockContext">The rock context.</param>
+        /// <param name="triggerId">The connection workflow.</param>
+        /// <param name="targetId">The name.</param>
+        private void LaunchWorkflow( int triggerId, int targetId )
+        {
+            var rockContext = this.GetRockContext();
+
+            var target = new StepService( rockContext ).Get( targetId );
+
+            var workflowTrigger = new StepWorkflowTriggerService( rockContext ).Get( triggerId );
+
+            bool success = this.LaunchWorkflow( rockContext, target, workflowTrigger );
+
+            if ( success )
+            {
+                ShowEditDetails();
+            }
+        }
+
+        /// <summary>
+        /// Launch a specific workflow.
+        /// </summary>
+        /// <param name="rockContext">The rock context.</param>
+        /// <param name="workflowTrigger">The connection workflow.</param>
+        /// <param name="target">The name.</param>
+        private bool LaunchWorkflow( RockContext rockContext, Step target, StepWorkflowTrigger workflowTrigger )
+        {
+            if ( target == null
+                 || workflowTrigger == null )
+            {
+                mdWorkflowResult.Show( "Workflow Processing Failed:<ul><li>The workflow parameters are invalid.</li></ul>", ModalAlertType.Information );
+                return false;
+            }
+
+            var workflowType = workflowTrigger.WorkflowType;
+
+            if ( workflowType == null || !( workflowType.IsActive ?? true ) )
+            {
+                mdWorkflowResult.Show( "Workflow Processing Failed:<ul><li>This workflow is unavailable.</li></ul>", ModalAlertType.Information );
+                return false;
+            }
+
+            if ( !workflowType.IsAuthorized( Authorization.VIEW, CurrentPerson ) )
+            {
+                mdWorkflowResult.Show( "Workflow Processing Failed:<ul><li>You are not authorized to access this workflow.</li></ul>", ModalAlertType.Information );
+                return false;
+            }
+
+            var workflowTypeCache = WorkflowTypeCache.Get( workflowType );
+
+            var workflow = Rock.Model.Workflow.Activate( workflowTypeCache, workflowTrigger.WorkflowType.WorkTerm, rockContext );
+
+            if ( workflow == null )
+            {
+                mdWorkflowResult.Show( "Workflow Processing Failed:<ul><li>The workflow could not be activated.</li></ul>", ModalAlertType.Information );
+                return false;
+            }
+
+            var workflowService = new Rock.Model.WorkflowService( rockContext );
+
+            List<string> workflowErrors;
+
+            var processed = workflowService.Process( workflow, target, out workflowErrors );
+
+            if ( processed )
+            {                
+                if ( workflow.HasActiveEntryForm( CurrentPerson ) )
+                {
+                    // If the workflow has a user entry form that can be displayed for the current user, show it now.
+                    // Note that for a non-persisted workflow, a new instance of the workflow will be created after the user form is saved.
+                    var qryParam = new Dictionary<string, string>();
+
+                    qryParam.Add( "WorkflowTypeId", workflowType.Id.ToString() );
+                    
+                    if ( workflow.Id != 0 )
+                    {
+                        qryParam.Add( "WorkflowId", workflow.Id.ToString() );
+                    }
+
+                    var entryPage = this.GetAttributeValue( AttributeKeys.WorkflowEntryPage );
+
+                    if ( string.IsNullOrWhiteSpace( entryPage ) )
+                    {
+                        mdWorkflowResult.Show( "A Workflow Entry Page has not been configured for this block.", ModalAlertType.Alert );
+                        return false;
+                    }
+
+                    NavigateToLinkedPage( AttributeKeys.WorkflowEntryPage, qryParam );
+                    return false;
+                }
+                else if ( workflow.Id != 0 )
+                {
+                    // The workflow has been started and persisted, but it has no requirement for user interaction.
+                    mdWorkflowResult.Show( string.Format( "A '{0}' workflow has been started.", workflowType.Name ), ModalAlertType.Information );
+                    return true;
+                }
+                else
+                {
+                    // The workflow has run to completion, and it has no requirement for user interaction.
+                    mdWorkflowResult.Show( string.Format( "A '{0}' workflow was processed.", workflowType.Name ), ModalAlertType.Information );
+
+                    return true;
+                }
+            }
+            else
+            {
+                mdWorkflowResult.Show( "Workflow Processing Failed:<ul><li>" + workflowErrors.AsDelimited( "</li><li>" ) + "</li></ul>", ModalAlertType.Information );
+            }
+
+            return false;
         }
 
         #endregion
@@ -260,6 +455,10 @@ namespace RockWeb.Blocks.Steps
 
             BuildDynamicControls();
             InitializePersonPicker();
+
+            InitializeWorkflowControls();
+
+            BindWorkflows();
         }
 
         /// <summary>
@@ -343,6 +542,11 @@ namespace RockWeb.Blocks.Steps
                     var rockContext = GetRockContext();
                     var service = new StepService( rockContext );
                     _step = service.Get( stepId.Value );
+                }
+
+                if ( _step != null )
+                {
+                    hfStepId.Value = _step.Id.ToString();
                 }
             }
 
@@ -463,3 +667,4 @@ namespace RockWeb.Blocks.Steps
         #endregion Control Helpers
     }
 }
+
