@@ -440,6 +440,8 @@
     <Compile Include="Model\CodeGenerated\StepTypeService.cs" />
     <Compile Include="Model\CommunicationResponse.cs" />
     <Compile Include="Model\CommunicationResponseService.partial.cs" />
+    <Compile Include="Model\Sequence.cs" />
+    <Compile Include="Model\SequenceOccurrenceExclusion.cs" />
     <Compile Include="Model\SmsAction.cs" />
     <Compile Include="Model\SmsActionService.Partial.cs" />
     <Compile Include="Model\GroupLocationHistoricalService.Partial.cs" />
@@ -474,6 +476,7 @@
     <Compile Include="Lava\Shortcodes\Scripturize.cs" />
     <Compile Include="Lava\Shortcodes\LavaShortcodeMetaDataAttribute.cs" />
     <Compile Include="Model\Step.cs" />
+    <Compile Include="Model\SequenceEnrollment.cs" />
     <Compile Include="Model\StepWorkflow.cs" />
     <Compile Include="Model\StepWorkflowTrigger.cs" />
     <Compile Include="Model\StepTypePrerequisite.cs" />
