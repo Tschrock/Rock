@@ -8,12 +8,6 @@
 
 <asp:UpdatePanel ID="upStepType" runat="server">
     <ContentTemplate>
-        <asp:Panel ID="pnlDeleteConfirm" runat="server" CssClass="panel panel-body" Visible="false">
-            <Rock:NotificationBox ID="nbDeleteConfirm" runat="server" NotificationBoxType="Warning" Text="Deleting this Step Type will also delete the associated Step Participants. Are you sure you want to continue?" />
-            <asp:LinkButton ID="btnDeleteConfirm" runat="server" Text="Confirm Delete" CssClass="btn btn-danger" OnClick="btnDeleteConfirm_Click" />
-            <asp:LinkButton ID="btnDeleteCancel" runat="server" Text="Cancel" CssClass="btn btn-primary" OnClick="btnDeleteCancel_Click" />
-        </asp:Panel>
-
         <Rock:NotificationBox ID="nbBlockStatus" runat="server" NotificationBoxType="Info" />
 
         <asp:Panel ID="pnlDetails" CssClass="panel panel-block" runat="server" Visible="false">

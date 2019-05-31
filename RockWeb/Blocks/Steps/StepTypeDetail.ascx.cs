@@ -152,8 +152,8 @@ namespace RockWeb.Blocks.Steps
             gWorkflows.Actions.AddClick += gWorkflows_Add;
             gWorkflows.GridRebind += gWorkflows_GridRebind;
 
-            btnDelete.Attributes["onclick"] = string.Format( "javascript: return Rock.dialogs.confirmDelete(event, '{0}', 'This will also delete the associated connection steps! Are you sure you want to continue?');", StepProgram.FriendlyTypeName );
-            btnSecurity.EntityTypeId = EntityTypeCache.Get( typeof( Rock.Model.StepProgram ) ).Id;
+            btnDelete.Attributes["onclick"] = string.Format( "javascript: return Rock.dialogs.confirmDelete(event, '{0}', 'This will also delete the associated step participants.');", StepType.FriendlyTypeName );
+            btnSecurity.EntityTypeId = EntityTypeCache.Get( typeof( Rock.Model.StepType ) ).Id;
 
             this.InitializeChart();
         }
@@ -271,65 +271,10 @@ namespace RockWeb.Blocks.Steps
         /// Handles the Click event of the btnDelete control.
         /// </summary>
         /// <param name="sender">The source of the event.</param>
-        /// <param name="e">The <see cref="EventArgs" /> instance containing the event data.</param>
-        protected void btnDeleteConfirm_Click( object sender, EventArgs e )
-        {
-            var rockContext = this.GetDataContext();
-
-            var stepTypeService = new StepTypeService( rockContext );
-            var authService = new AuthService( rockContext );
-
-            var stepType = this.GetStepType();
-
-            if ( stepType != null )
-            {
-                if ( !stepType.IsAuthorized( Authorization.ADMINISTRATE, this.CurrentPerson ) )
-                {
-                    mdDeleteWarning.Show( "You are not authorized to delete this item.", ModalAlertType.Information );
-                    return;
-                }
-
-                stepTypeService.Delete( stepType );
-
-                rockContext.SaveChanges();
-
-                string errorMessage;
-
-                if ( !stepTypeService.CanDelete( stepType, out errorMessage ) )
-                {
-                    mdDeleteWarning.Show( errorMessage, ModalAlertType.Information );
-                    return;
-                }
-
-                stepTypeService.Delete( stepType );
-                rockContext.SaveChanges();
-            }
-
-            NavigateToParentPage();
-        }
-
-        /// <summary>
-        /// Handles the Click event of the btnDeleteCancel control.
-        /// </summary>
-        /// <param name="sender">The source of the event.</param>
-        /// <param name="e">The <see cref="EventArgs"/> instance containing the event data.</param>
-        protected void btnDeleteCancel_Click( object sender, EventArgs e )
-        {
-            btnDelete.Visible = true;
-            btnEdit.Visible = true;
-            pnlDeleteConfirm.Visible = false;
-        }
-
-        /// <summary>
-        /// Handles the Click event of the btnDelete control.
-        /// </summary>
-        /// <param name="sender">The source of the event.</param>
         /// <param name="e">The <see cref="EventArgs"/> instance containing the event data.</param>
         protected void btnDelete_Click( object sender, EventArgs e )
         {
-            btnDelete.Visible = false;
-            btnEdit.Visible = false;
-            pnlDeleteConfirm.Visible = true;
+            this.DeleteRecord();
         }
 
         /// <summary>
@@ -1036,11 +981,45 @@ namespace RockWeb.Blocks.Steps
         }
 
         /// <summary>
+        /// Delete the current record.
+        /// </summary>
+        private void DeleteRecord()
+        {
+            var rockContext = this.GetDataContext();
+
+            var stepTypeService = new StepTypeService( rockContext );
+
+            var stepType = this.GetStepType( forceLoadFromContext: true );
+
+            if ( stepType != null )
+            {
+                if ( !stepType.IsAuthorized( Authorization.ADMINISTRATE, this.CurrentPerson ) )
+                {
+                    mdDeleteWarning.Show( "You are not authorized to delete this item.", ModalAlertType.Information );
+                    return;
+                }
+
+                string errorMessage;
+
+                if ( !stepTypeService.CanDelete( stepType, out errorMessage ) )
+                {
+                    mdDeleteWarning.Show( errorMessage, ModalAlertType.Information );
+                    return;
+                }
+
+                stepTypeService.Delete( stepType );
+                rockContext.SaveChanges();
+            }
+
+            NavigateToParentPage();
+        }
+
+        /// <summary>
         /// Gets the specified Step Type data model, or the current model if none is specified.
         /// </summary>
         /// <param name="stepTypeId">The connection type identifier.</param>
         /// <returns></returns>
-        private StepType GetStepType( int? stepTypeId = null )
+        private StepType GetStepType( int? stepTypeId = null, bool forceLoadFromContext = false )
         {
             if ( stepTypeId == null )
             {
@@ -1049,7 +1028,12 @@ namespace RockWeb.Blocks.Steps
 
             string key = string.Format( "StepType:{0}", stepTypeId );
 
-            var stepType = RockPage.GetSharedItem( key ) as StepType;
+            StepType stepType = null;
+
+            if ( !forceLoadFromContext )
+            {
+                stepType = RockPage.GetSharedItem( key ) as StepType;
+            }
 
             if ( stepType == null )
             {
