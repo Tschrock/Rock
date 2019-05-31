@@ -244,6 +244,14 @@ namespace RockWeb.Blocks.Steps
             return breadCrumbs;
         }
 
+        /// <summary>
+        /// Navigate to the step program page
+        /// </summary>
+        private void GoToStepProgramPage()
+        {
+            NavigateToParentPage( new Dictionary<string, string> { { PageParameterKey.StepProgramId, _stepProgramId.ToString() } } );
+        }
+
         #endregion
 
         #region Events
@@ -451,7 +459,7 @@ namespace RockWeb.Blocks.Steps
         {
             if ( hfStepTypeId.Value.Equals( "0" ) )
             {
-                NavigateToParentPage();
+                GoToStepProgramPage();
             }
             else
             {
@@ -992,7 +1000,7 @@ namespace RockWeb.Blocks.Steps
             var stepType = this.GetStepType( forceLoadFromContext: true );
 
             if ( stepType != null )
-            {
+            {                
                 if ( !stepType.IsAuthorized( Authorization.ADMINISTRATE, this.CurrentPerson ) )
                 {
                     mdDeleteWarning.Show( "You are not authorized to delete this item.", ModalAlertType.Information );
@@ -1011,7 +1019,7 @@ namespace RockWeb.Blocks.Steps
                 rockContext.SaveChanges();
             }
 
-            NavigateToParentPage();
+            GoToStepProgramPage();
         }
 
         /// <summary>
@@ -1049,6 +1057,11 @@ namespace RockWeb.Blocks.Steps
                 }
 
                 RockPage.SaveSharedItem( key, stepType );
+            }
+
+            if ( _stepProgramId == default( int ) )
+            {
+                _stepProgramId = stepType.StepProgramId;
             }
 
             return stepType;
