@@ -244,7 +244,14 @@ namespace Rock.Web.UI
         {
             var entityIdParameterName = OnGetUrlQueryParameterNameEntityId();
 
-            NavigateToLinkedPage( AttributeKey.DetailPage, entityIdParameterName, itemId );
+            if ( itemId == 0 )
+            {
+                NavigateToLinkedPage( AttributeKey.DetailPage );
+            }
+            else
+            {
+                NavigateToLinkedPage( AttributeKey.DetailPage, entityIdParameterName, itemId );
+            }
 
             return true;
         }
@@ -307,11 +314,6 @@ namespace Rock.Web.UI
             if ( !this.IsPostBack )
             {
                 this.ShowBlockDetail();
-            }
-
-            if ( this.IsPostBack )
-            {
-                this.HandleGridItemDeleteEvent();
             }
         }
 
@@ -379,48 +381,6 @@ namespace Rock.Web.UI
         #endregion
 
         #region Grid Events
-
-        /// <summary>
-        /// Handles postback for Grid delete events.
-        /// This is required to work around an issue where the Grid component does not correctly forward the Click event for the row Delete button if the event handler is assigned programatically.
-        /// </summary>
-        private void HandleGridItemDeleteEvent()
-        {
-            string eventTarget = Page.Request.Params["__EVENTTARGET"];
-
-            // If this event is not sourced from the List Grid, exit.
-            if ( !eventTarget.StartsWith( this.ListGridControl.UniqueID ) )
-            {
-                return;
-            }
-
-            // If the target is a top-level grid control rather than a list item action, the event will be handled elsewhere.
-            var eventArgs = this.Request.Params["__EVENTARGUMENT"];
-
-            List<string> subTargetList = eventTarget.Replace( this.ListGridControl.UniqueID, string.Empty ).Split( new char[] { '$' }, StringSplitOptions.RemoveEmptyEntries ).ToList();
-
-            if ( subTargetList.Count == 0 )
-            {
-                return;
-            }
-
-            if ( subTargetList.Contains( "actionFooterRow", StringComparer.OrdinalIgnoreCase )
-                 || subTargetList.Contains( "pagerRow", StringComparer.OrdinalIgnoreCase ) )
-            {
-                return;
-            }
-
-            this.EnsureChildControls();
-
-            // Row index is determined by the numeric suffix of the control id after the Grid.
-            // Subtract one row for the header, and another to convert from 0 to 1-based index.
-            int rowIndex = subTargetList.First().AsNumeric().AsInteger() - 2;
-
-            var rowEventArgs = new RowEventArgs( this.ListGridControl.Rows[rowIndex] );
-
-            // Call the event handler that should be wired up for the Click event.
-            gList_Delete( this, rowEventArgs );
-        }
 
         /// <summary>
         /// Handles the Add event of the gList control.
