@@ -320,7 +320,7 @@ namespace Rock.Model
         /// <param name="scheduleId">The schedule identifier.</param>
         /// <param name="groupLocationIds">The group location ids.</param>
         /// <returns></returns>
-        public IQueryable<AttendanceOccurrenceGroupLocationScheduleConfigJoinResult> AttendanceOccurrenceGroupLocationScheduleConfigJoinQuery( DateTime occurrenceDate, int scheduleId, List<int> groupLocationIds )
+        public IQueryable<AttendanceOccurrenceGroupLocationScheduleConfigJoinResult> AttendanceOccurrenceGroupLocationScheduleConfigJoinQuery( List<DateTime> occurrenceDateList, int scheduleId, List<int> groupLocationIds )
         {
             var groupLocationQuery = new GroupLocationService( this.Context as RockContext ).GetByIds( groupLocationIds );
 
@@ -329,7 +329,7 @@ namespace Rock.Model
                         && a.LocationId.HasValue
                         && groupLocationQuery.Any( gl => gl.GroupId == a.GroupId && gl.LocationId == a.LocationId )
                         && a.ScheduleId == scheduleId
-                        && a.OccurrenceDate == occurrenceDate );
+                        && occurrenceDateList.Contains( a.OccurrenceDate ) );
 
             // join with the GroupLocation 
             var joinQuery = from ao in attendanceOccurrencesQuery

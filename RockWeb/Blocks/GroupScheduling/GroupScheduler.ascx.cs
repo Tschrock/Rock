@@ -586,28 +586,34 @@ btnCopyToClipboard.ClientID );
                 return;
             }
 
-            var scheduleOccurrenceDateTime = occurrenceSchedule.GetNextStartDateTime( occurrenceSundayWeekStartDate );
+            var scheduleOccurrenceDateTimeList = occurrenceSchedule.GetScheduledStartTimes(occurrenceSundayWeekStartDate, occurrenceSundayDate.AddDays(1) );
 
-            if ( scheduleOccurrenceDateTime == null )
+            if ( !scheduleOccurrenceDateTimeList.Any()  )
             {
                 btnAutoSchedule.Visible = false;
                 return;
             }
 
-            var occurrenceDate = scheduleOccurrenceDateTime.Value.Date;
+            var occurrenceDateList = scheduleOccurrenceDateTimeList.Select( a => a.Date ).ToList();
             btnAutoSchedule.Visible = true;
 
             var attendanceOccurrenceService = new AttendanceOccurrenceService( rockContext );
             var selectedGroupLocationIds = cblGroupLocations.SelectedValuesAsInt;
 
-            var missingAttendanceOccurrences = attendanceOccurrenceService.CreateMissingAttendanceOccurrences( occurrenceDate, scheduleId.Value, selectedGroupLocationIds );
-            if ( missingAttendanceOccurrences.Any() )
+            List<AttendanceOccurrence> missingAttendanceOccurrenceList = new List<AttendanceOccurrence>();
+
+            foreach ( var occurrenceDate in occurrenceDateList )
             {
-                attendanceOccurrenceService.AddRange( missingAttendanceOccurrences );
+                List<AttendanceOccurrence> missingAttendanceOccurrencesForDate = attendanceOccurrenceService.CreateMissingAttendanceOccurrences( occurrenceDate, scheduleId.Value, selectedGroupLocationIds );
+                missingAttendanceOccurrenceList.AddRange( missingAttendanceOccurrencesForDate );
+            };
+            if ( missingAttendanceOccurrenceList.Any() )
+            {
+                attendanceOccurrenceService.AddRange( missingAttendanceOccurrenceList );
                 rockContext.SaveChanges();
             }
 
-            var attendanceOccurrenceGroupLocationScheduleConfigQuery = attendanceOccurrenceService.AttendanceOccurrenceGroupLocationScheduleConfigJoinQuery( occurrenceDate, scheduleId.Value, selectedGroupLocationIds );
+            var attendanceOccurrenceGroupLocationScheduleConfigQuery = attendanceOccurrenceService.AttendanceOccurrenceGroupLocationScheduleConfigJoinQuery( occurrenceDateList, scheduleId.Value, selectedGroupLocationIds );
 
             var attendanceOccurrencesOrderedList = attendanceOccurrenceGroupLocationScheduleConfigQuery.AsNoTracking()
                 .OrderBy( a => a.GroupLocation.Order ).ThenBy( a => a.GroupLocation.Location.Name )
@@ -627,7 +633,7 @@ btnCopyToClipboard.ClientID );
             var groupId = hfGroupId.Value.AsInteger();
 
             var unassignedLocationOccurrence = attendanceOccurrenceService.Queryable()
-                .Where( a => a.OccurrenceDate == occurrenceDate && a.ScheduleId == scheduleId.Value && a.GroupId == groupId && a.LocationId.HasValue == false )
+                .Where( a => occurrenceDateList.Contains( a.OccurrenceDate ) && a.ScheduleId == scheduleId.Value && a.GroupId == groupId && a.LocationId.HasValue == false )
                 .Where( a => a.Attendees.Any( x => x.RequestedToAttend == true || x.ScheduledToAttend == true ) )
                 .FirstOrDefault();
 
