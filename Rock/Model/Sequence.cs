@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Data.Entity;
+using System.Linq;
 using System.Runtime.Serialization;
 using Rock.Data;
 using Rock.Web.Cache;
@@ -15,7 +17,7 @@ namespace Rock.Model
     [RockDomain( "Sequences" )]
     [Table( "Sequence" )]
     [DataContract]
-    public partial class Sequence : Model<Sequence>, IHasActiveFlag
+    public partial class Sequence : Model<Sequence>, IHasActiveFlag, ICacheable
     {
         #region Entity Properties
 
@@ -99,6 +101,38 @@ namespace Rock.Model
 
         #endregion
 
+        #region ICacheable
+
+        /// <summary>
+        /// Gets the cache object associated with this Entity
+        /// </summary>
+        /// <returns></returns>
+        public IEntityCache GetCacheObject()
+        {
+            return DefinedTypeCache.Get( Id );
+        }
+
+        /// <summary>
+        /// Updates any Cache Objects that are associated with this entity
+        /// </summary>
+        /// <param name="entityState">State of the entity.</param>
+        /// <param name="dbContext">The database context.</param>
+        public void UpdateCache( EntityState entityState, Rock.Data.DbContext dbContext )
+        {
+            var cachedDefinedValues = DefinedTypeCache.Get( Id, ( RockContext ) dbContext )?.DefinedValues;
+            if ( cachedDefinedValues?.Any() == true )
+            {
+                foreach ( var cachedDefinedValue in cachedDefinedValues )
+                {
+                    DefinedValueCache.UpdateCachedEntity( cachedDefinedValue.Id, EntityState.Detached );
+                }
+            }
+
+            DefinedTypeCache.UpdateCachedEntity( Id, entityState );
+        }
+
+        #endregion ICacheable
+
         #region Virtual Properties
 
         /// <summary>
@@ -145,9 +179,14 @@ namespace Rock.Model
         GroupType = 2,
 
         /// <summary>
+        /// The <see cref="Sequence"/> is associated with attendance to groups within grouptypes of a common purpose (defined type).
+        /// </summary>
+        GroupTypePurpose = 3,
+
+        /// <summary>
         /// The <see cref="Sequence"/> is associated with attendance specified by a check-in configuration.
         /// </summary>
-        CheckInConfig = 3
+        CheckInConfig = 4
     }
 
     /// <summary>

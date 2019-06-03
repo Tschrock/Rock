@@ -1,4 +1,4 @@
-// <copyright>
+﻿// <copyright>
 // Copyright by the Spark Development Network
 //
 // Licensed under the Rock Community License (the "License");
@@ -97,7 +97,7 @@ namespace Rock.Migrations
                         PersonAliasId = c.Int(nullable: false),
                         EnrollmentDate = c.DateTime(nullable: false, storeType: "date"),
                         LocationId = c.Int(),
-                        OccurenceMap = c.Binary(),
+                        AttendanceMap = c.Binary(),
                         CreatedDateTime = c.DateTime(),
                         ModifiedDateTime = c.DateTime(),
                         CreatedByPersonAliasId = c.Int(),

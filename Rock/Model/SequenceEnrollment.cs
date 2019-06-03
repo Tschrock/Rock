@@ -22,6 +22,7 @@ namespace Rock.Model
         /// </summary>
         [Required]
         [DataMember( IsRequired = true )]
+        [Index( "IX_SequenceId_PersonAliasId", 0, IsUnique = true )]
         public int SequenceId { get; set; }
 
         /// <summary>
@@ -29,6 +30,7 @@ namespace Rock.Model
         /// </summary>
         [Required]
         [DataMember( IsRequired = true )]
+        [Index( "IX_SequenceId_PersonAliasId", 1, IsUnique = true )]
         public int PersonAliasId { get; set; }
 
         /// <summary>
@@ -56,7 +58,7 @@ namespace Rock.Model
         /// bits represent StartDate + (index * Days per OccurenceFrequency).
         /// </summary>
         [DataMember]
-        public byte[] OccurenceMap { get; set; }
+        public byte[] AttendanceMap { get; set; }
 
         #endregion Entity Properties
 

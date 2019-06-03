@@ -92,7 +92,7 @@ namespace Rock.Model
             target.ForeignGuid = source.ForeignGuid;
             target.ForeignKey = source.ForeignKey;
             target.LocationId = source.LocationId;
-            target.OccurenceMap = source.OccurenceMap;
+            target.AttendanceMap = source.AttendanceMap;
             target.PersonAliasId = source.PersonAliasId;
             target.SequenceId = source.SequenceId;
             target.CreatedDateTime = source.CreatedDateTime;
