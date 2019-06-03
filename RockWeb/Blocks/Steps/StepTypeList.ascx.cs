@@ -382,9 +382,11 @@ namespace RockWeb.Blocks.Steps
             // Set availability of Bulk Entry button.
             bool allowBulkEntry = canAddEditDelete && GetAttributeValue( AttributeKey.BulkEntryPage ).IsNotNullOrWhiteSpace();
 
-            var bulkEntryColumn = gStepType.ColumnsOfType<LinkButtonField>().FirstOrDefault();
-
-            bulkEntryColumn.Visible = allowBulkEntry;
+            var bulkEntryColumn = gStepType.ColumnsOfType<LinkButtonField>().FirstOrDefault( a => a.ID == "lbBulkEntry" );
+            if ( bulkEntryColumn != null )
+            {
+                bulkEntryColumn.Visible = allowBulkEntry;
+            }
         }
 
         /// <summary>
