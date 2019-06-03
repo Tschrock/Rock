@@ -92,7 +92,7 @@ namespace RockWeb.Blocks.Steps
         #region Filter Keys
 
         /// <summary>
-        /// Keys to use for Page Parameters
+        /// Keys to use for Filters
         /// </summary>
         protected static class FilterKey
         {
@@ -202,7 +202,6 @@ namespace RockWeb.Blocks.Steps
             {
                 lFullName.Text = stepPerson.FullNameReversed;
             }
-
 
             var lStepStatusHtml = e.Row.FindControl( _stepStatusField.ID ) as Literal;
 
@@ -506,6 +505,9 @@ namespace RockWeb.Blocks.Steps
             rFilter.DisplayFilterValue += rFilter_DisplayFilterValue;
         }
 
+        /// <summary>
+        /// Initializes the grid.
+        /// </summary>
         private void InitializeGrid()
         {
             gSteps.DataKeyNames = new string[] { "Id" };
@@ -571,12 +573,18 @@ namespace RockWeb.Blocks.Steps
             drpDateCompleted.DelimitedValues = rFilter.GetUserPreference( FilterKey.DateCompleted );
         }
 
+        /// <summary>
+        /// Initialize the row buttons.
+        /// </summary>
         private void IntializeRowButtons()
         {
             RemoveRowButtons();
             AddRowButtons();
         }
 
+        /// <summary>
+        /// Removes the "delete" row button columns and any HyperLinkField/LinkButtonField columns.
+        /// </summary>
         private void RemoveRowButtons()
         {
             // Remove added button columns
@@ -599,6 +607,9 @@ namespace RockWeb.Blocks.Steps
             }
         }
 
+        /// <summary>
+        /// Adds the PersonProfilePage button link and the "delete" row button column.
+        /// </summary>
         private void AddRowButtons()
         {
             // Add Link to Profile Page Column
@@ -815,6 +826,9 @@ namespace RockWeb.Blocks.Steps
             return resolvedValues.AsDelimited( ", " );
         }
 
+        /// <summary>
+        /// Initializes any scripts to the page.
+        /// </summary>
         private void InitializeScripts()
         {
             /// add lazyload js so that person-link-popover javascript works (see StepList.ascx)
@@ -838,7 +852,11 @@ namespace RockWeb.Blocks.Steps
 
         #region Helper Classes
 
-        public class StepParticipantListViewModel
+        /// <summary>
+        /// A view-model that represents a single row on the Steps Participant grid.
+        /// </summary>
+        /// <seealso cref="DotLiquid.Drop" />
+        public class StepParticipantListViewModel : DotLiquid.Drop
         {
             public int Id { get; set; }
             public int PersonId { get; set; }
