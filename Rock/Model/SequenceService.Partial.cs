@@ -139,7 +139,10 @@ namespace Rock.Model
 
             // Calculate the group locations depending on the structure type
             var groupLocationsQuery = GetGroupLocationsQuery( sequence.StructureType.Value, sequence.StructureEntityId.Value );
-            return groupLocationsQuery.Select( gl => gl.Location ).Distinct();
+            return groupLocationsQuery.Select( gl => gl.Location )
+                .DistinctBy( l => l.Id )
+                .AsQueryable();
+            ;
         }
 
         /// <summary>
@@ -180,7 +183,8 @@ namespace Rock.Model
             return groupLocationsQuery.Where( gl => gl.LocationId == locationId )
                 .SelectMany( gl => gl.Schedules )
                 .Where( s => s.IsActive )
-                .Distinct();
+                .DistinctBy( s => s.Id )
+                .AsQueryable();
         }
 
         /// <summary>
