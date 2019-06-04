@@ -115,7 +115,6 @@ namespace RockWeb.Blocks.Steps
         private StepProgram _program = null;
         private RockContext _dataContext = null;
         private bool _blockContextIsValid = false;
-        private RockBlockNotificationManager _notificationManager;
 
         #endregion
 
@@ -129,9 +128,8 @@ namespace RockWeb.Blocks.Steps
         {
             base.OnInit( e );
 
+            this.InitializeBlockNotification( nbBlockStatus, pnlList );
             this.InitializeSettingsNotification( upMain );
-
-            _notificationManager = new RockBlockNotificationManager( this, nbBlockStatus, pnlList );
 
             _blockContextIsValid = this.InitializeBlockContext();
 
@@ -397,8 +395,6 @@ namespace RockWeb.Blocks.Steps
         {
             _program = null;
 
-            _notificationManager.Clear();
-
             // Try to load the Step Program from the cache.
             var programGuid = GetAttributeValue( AttributeKey.StepProgram ).AsGuid();
 
@@ -447,14 +443,14 @@ namespace RockWeb.Blocks.Steps
             // Verify the Step Program is valid.
             if ( _program == null )
             {
-                _notificationManager.ShowMessageNoContent();
+                this.ShowNotification( "There are no Step Types available in this context.", NotificationBoxType.Info, true );
                 return false;
             }
 
             // Check for View permissions.
             if ( !_program.IsAuthorized( Authorization.VIEW, CurrentPerson ) )
             {
-                _notificationManager.ShowMessageUnauthorized();
+                this.ShowNotification( "Sorry, you are not authorized to view this content.", NotificationBoxType.Danger, true );
                 return false;
             }
 
@@ -502,6 +498,9 @@ namespace RockWeb.Blocks.Steps
             this.BindGrid();
         }
 
+        /// <summary>
+        /// Store the current filter field values and reload the grid using the stored filter.
+        /// </summary>
         private void ApplyGridFilter()
         {
             this.SaveFilterSettings();
@@ -668,6 +667,49 @@ namespace RockWeb.Blocks.Steps
         }
 
         #endregion Internal Methods
+
+        #region Block Notifications
+
+        private NotificationBox _notificationControl;
+        private Control _detailContainerControl;
+
+        /// <summary>
+        /// Initialize block-level notification message handlers for block configuration changes.
+        /// </summary>
+        /// <param name="triggerPanel"></param>
+        private void InitializeBlockNotification( NotificationBox notificationControl, Control detailContainerControl )
+        {
+            _notificationControl = notificationControl;
+            _detailContainerControl = detailContainerControl;
+
+            this.ClearBlockNotification();
+        }
+
+        /// <summary>
+        /// Reset the notification message for the block.
+        /// </summary>
+        public void ClearBlockNotification()
+        {
+            _notificationControl.Visible = false;
+            _detailContainerControl.Visible = true;
+        }
+
+        /// <summary>
+        /// Show a notification message for the block.
+        /// </summary>
+        /// <param name="notificationControl"></param>
+        /// <param name="message"></param>
+        /// <param name="notificationType"></param>
+        public void ShowNotification( string message, NotificationBoxType notificationType = NotificationBoxType.Info, bool hideBlockContent = false )
+        {
+            _notificationControl.Text = message;
+            _notificationControl.NotificationBoxType = notificationType;
+
+            _notificationControl.Visible = true;
+            _detailContainerControl.Visible = !hideBlockContent;
+        }
+
+        #endregion
 
         #region Helper Classes
 
