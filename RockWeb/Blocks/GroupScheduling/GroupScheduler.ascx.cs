@@ -575,6 +575,12 @@ btnCopyToClipboard.ClientID );
             var occurrenceSundayDate = hfOccurrenceSundayDate.Value.AsDateTime().Value.Date;
             var occurrenceSundayWeekStartDate = occurrenceSundayDate.AddDays( -6 );
 
+            // make sure we don't let them schedule dates in the past
+            if ( occurrenceSundayWeekStartDate <= RockDateTime.Today )
+            {
+                occurrenceSundayWeekStartDate = RockDateTime.Today;
+            }
+
             var scheduleId = rblSchedule.SelectedValueAsId();
 
             var rockContext = new RockContext();
@@ -586,9 +592,10 @@ btnCopyToClipboard.ClientID );
                 return;
             }
 
-            var scheduleOccurrenceDateTimeList = occurrenceSchedule.GetScheduledStartTimes(occurrenceSundayWeekStartDate, occurrenceSundayDate.AddDays(1) );
+            // get all the occurrences for the selected week for this scheduled (It could be more than once a week if it is a daily scheduled, or it might not be in the selected week if it is every 2 weeks, etc)
+            var scheduleOccurrenceDateTimeList = occurrenceSchedule.GetScheduledStartTimes( occurrenceSundayWeekStartDate, occurrenceSundayDate.AddDays( 1 ) );
 
-            if ( !scheduleOccurrenceDateTimeList.Any()  )
+            if ( !scheduleOccurrenceDateTimeList.Any() )
             {
                 btnAutoSchedule.Visible = false;
                 return;
@@ -600,27 +607,24 @@ btnCopyToClipboard.ClientID );
             var attendanceOccurrenceService = new AttendanceOccurrenceService( rockContext );
             var selectedGroupLocationIds = cblGroupLocations.SelectedValuesAsInt;
 
-            List<AttendanceOccurrence> missingAttendanceOccurrenceList = new List<AttendanceOccurrence>();
-
-            foreach ( var occurrenceDate in occurrenceDateList )
-            {
-                List<AttendanceOccurrence> missingAttendanceOccurrencesForDate = attendanceOccurrenceService.CreateMissingAttendanceOccurrences( occurrenceDate, scheduleId.Value, selectedGroupLocationIds );
-                missingAttendanceOccurrenceList.AddRange( missingAttendanceOccurrencesForDate );
-            };
+            List<AttendanceOccurrence> missingAttendanceOccurrenceList = attendanceOccurrenceService.CreateMissingAttendanceOccurrences( occurrenceDateList, scheduleId.Value, selectedGroupLocationIds );
             if ( missingAttendanceOccurrenceList.Any() )
             {
                 attendanceOccurrenceService.AddRange( missingAttendanceOccurrenceList );
                 rockContext.SaveChanges();
             }
 
-            var attendanceOccurrenceGroupLocationScheduleConfigQuery = attendanceOccurrenceService.AttendanceOccurrenceGroupLocationScheduleConfigJoinQuery( occurrenceDateList, scheduleId.Value, selectedGroupLocationIds );
+            IQueryable<AttendanceOccurrenceService.AttendanceOccurrenceGroupLocationScheduleConfigJoinResult> attendanceOccurrenceGroupLocationScheduleConfigQuery = attendanceOccurrenceService.AttendanceOccurrenceGroupLocationScheduleConfigJoinQuery( occurrenceDateList, scheduleId.Value, selectedGroupLocationIds );
 
-            var attendanceOccurrencesOrderedList = attendanceOccurrenceGroupLocationScheduleConfigQuery.AsNoTracking()
+            var attendanceOccurrencesList = attendanceOccurrenceGroupLocationScheduleConfigQuery.AsNoTracking()
                 .OrderBy( a => a.GroupLocation.Order ).ThenBy( a => a.GroupLocation.Location.Name )
                 .Select( a => new AttendanceOccurrenceRowItem
                 {
                     LocationName = a.AttendanceOccurrence.Location.Name,
+                    GroupLocationOrder = a.GroupLocation.Order,
                     LocationId = a.AttendanceOccurrence.LocationId,
+                    Schedule = a.AttendanceOccurrence.Schedule,
+                    OccurrenceDate = a.AttendanceOccurrence.OccurrenceDate,
                     AttendanceOccurrenceId = a.AttendanceOccurrence.Id,
                     CapacityInfo = new CapacityInfo
                     {
@@ -631,6 +635,8 @@ btnCopyToClipboard.ClientID );
                 } ).ToList();
 
             var groupId = hfGroupId.Value.AsInteger();
+
+            var attendanceOccurrencesOrderedList = attendanceOccurrencesList.OrderBy( a => a.ScheduledDateTime ).ThenBy( a => a.GroupLocationOrder ).ThenBy( a => a.LocationName ).ToList();
 
             var unassignedLocationOccurrence = attendanceOccurrenceService.Queryable()
                 .Where( a => occurrenceDateList.Contains( a.OccurrenceDate ) && a.ScheduleId == scheduleId.Value && a.GroupId == groupId && a.LocationId.HasValue == false )
@@ -723,6 +729,44 @@ btnCopyToClipboard.ClientID );
             /// The location identifier.
             /// </value>
             public int? LocationId { get; set; }
+
+            /// <summary>
+            /// Gets or sets the schedule.
+            /// </summary>
+            /// <value>
+            /// The schedule.
+            /// </value>
+            public Schedule Schedule { get; set; }
+
+            /// <summary>
+            /// Gets the Schedule's scheduled date time the Occurrence Date
+            /// </summary>
+            /// <value>
+            /// The scheduled date time.
+            /// </value>
+            public DateTime? ScheduledDateTime
+            {
+                get
+                {
+                    return Schedule.GetNextStartDateTime( this.OccurrenceDate );
+                }
+            }
+
+            /// <summary>
+            /// Gets or sets the occurrence date.
+            /// </summary>
+            /// <value>
+            /// The occurrence date.
+            /// </value>
+            public DateTime OccurrenceDate { get; set; }
+
+            /// <summary>
+            /// Gets or sets the group location order.
+            /// </summary>
+            /// <value>
+            /// The group location order.
+            /// </value>
+            public int GroupLocationOrder { get; internal set; }
         }
 
         /// <summary>
@@ -736,6 +780,7 @@ btnCopyToClipboard.ClientID );
             var attendanceOccurrenceId = attendanceOccurrenceRowItem.AttendanceOccurrenceId;
             var pnlScheduledOccurrence = e.Item.FindControl( "pnlScheduledOccurrence" ) as Panel;
             var pnlStatusLabels = e.Item.FindControl( "pnlStatusLabels" ) as Panel;
+            var lOccurrenceScheduledDateTime = e.Item.FindControl( "lOccurrenceScheduledDateTime" ) as Literal;
 
             // hide the scheduled occurrence when it is empty if is the one that doesn't have a Location assigned
             bool hasLocation = attendanceOccurrenceRowItem.LocationId.HasValue;
@@ -745,6 +790,7 @@ btnCopyToClipboard.ClientID );
             pnlStatusLabels.Visible = hasLocation;
 
             var hfAttendanceOccurrenceId = e.Item.FindControl( "hfAttendanceOccurrenceId" ) as HiddenField;
+            var hfAttendanceOccurrenceDate = e.Item.FindControl( "hfAttendanceOccurrenceDate" ) as HiddenField;
             var hfLocationScheduleMinimumCapacity = e.Item.FindControl( "hfLocationScheduleMinimumCapacity" ) as HiddenField;
             var hfLocationScheduleDesiredCapacity = e.Item.FindControl( "hfLocationScheduleDesiredCapacity" ) as HiddenField;
             var hfLocationScheduleMaximumCapacity = e.Item.FindControl( "hfLocationScheduleMaximumCapacity" ) as HiddenField;
@@ -759,6 +805,11 @@ btnCopyToClipboard.ClientID );
             }
 
             lLocationTitle.Text = attendanceOccurrenceRowItem.LocationName;
+            if ( attendanceOccurrenceRowItem.ScheduledDateTime.HasValue )
+            {
+                lOccurrenceScheduledDateTime.Text = attendanceOccurrenceRowItem.ScheduledDateTime.Value.ToShortDateTimeString();
+                hfAttendanceOccurrenceDate.Value = attendanceOccurrenceRowItem.ScheduledDateTime.Value.Date.ToISO8601DateString();
+            }
         }
 
         #endregion
