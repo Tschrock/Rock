@@ -205,7 +205,7 @@ namespace Rock.Field.Types
 
             var service = GetEntityService( rockContext );
 
-            var getInfo = service.GetType().GetMethod( "Get", new Type[] { typeof( Guid ) } );
+            var getInfo = service.GetType().GetMethod( "GetNoTracking", new Type[] { typeof( Guid ) } );
 
             var entity = getInfo.Invoke( service, new object[] { guid.Value } );
 
@@ -227,7 +227,7 @@ namespace Rock.Field.Types
 
             var service = GetEntityService( rockContext );
 
-            var getInfo = service.GetType().GetMethod( "Get", new Type[] { typeof( int ) } );
+            var getInfo = service.GetType().GetMethod( "GetNoTracking", new Type[] { typeof( int ) } );
 
             var entity = getInfo.Invoke( service, new object[] { id.Value } );
 
