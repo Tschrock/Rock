@@ -31,7 +31,7 @@
                         <Rock:ModalAlert ID="mdGridWarning" runat="server" />
 
                         <div class="grid grid-panel">
-                            <Rock:GridFilter ID="rFilter" runat="server" OnDisplayFilterValue="rFilter_DisplayFilterValue" OnClearFilterClick="rFilter_ClearFilterClick" FieldLayout="Custom">
+                            <Rock:GridFilter ID="rFilter" runat="server" FieldLayout="Custom">
                                 <div class="row">
                                     <div class="col-lg-6">
                                         <Rock:RockTextBox ID="tbFirstName" runat="server" Label="First Name" />

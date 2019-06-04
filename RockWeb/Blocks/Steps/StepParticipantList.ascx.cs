@@ -299,6 +299,8 @@ namespace RockWeb.Blocks.Steps
             e.MergeValues.Add( "StepAttributes", dynamicAttributeCarrier );
         }
 
+        #region Filter Settings
+
         /// <summary>
         /// Handles the ApplyFilterClick event of the rFilter control.
         /// </summary>
@@ -317,31 +319,19 @@ namespace RockWeb.Blocks.Steps
         }
 
         /// <summary>
-        /// Rs the filter_ display filter value.
+        /// Format a filter value to friendly text for display.
         /// </summary>
         /// <param name="sender">The sender.</param>
-        /// <param name="e">The e.</param>
+        /// <param name="e">The <see cref="EventArgs"/> instance containing the event data.</param>
         protected void rFilter_DisplayFilterValue( object sender, GridFilter.DisplayFilterValueArgs e )
         {
-            if ( e.Key == FilterKey.FirstName )
-            {
-                return;
-            }
-            else if ( e.Key == FilterKey.LastName )
-            {
-                return;
-            }
-            else if ( e.Key == FilterKey.StepStatus )
+            if ( e.Key == FilterKey.StepStatus )
             {
                 e.Value = GetStepStatusNames( e.Value, cblStepStatus );
             }
             else if ( e.Key == FilterKey.DateStarted || e.Key == FilterKey.DateCompleted )
             {
                 e.Value = DateRangePicker.FormatDelimitedValues( e.Value );
-            }
-            else
-            {
-                e.Value = string.Empty;
             }
         }
 
@@ -355,6 +345,8 @@ namespace RockWeb.Blocks.Steps
             rFilter.DeleteUserPreferences();
             BindFilter();
         }
+
+        #endregion
 
         /// <summary>
         /// Handles the Click event of the delete/archive button in the grid
@@ -503,6 +495,7 @@ namespace RockWeb.Blocks.Steps
 
             rFilter.ApplyFilterClick += rFilter_ApplyFilterClick;
             rFilter.DisplayFilterValue += rFilter_DisplayFilterValue;
+            rFilter.ClearFilterClick += rFilter_ClearFilterClick;
         }
 
         /// <summary>
@@ -562,6 +555,7 @@ namespace RockWeb.Blocks.Steps
 
             tbFirstName.Text = rFilter.GetUserPreference( FilterKey.FirstName );
             tbLastName.Text = rFilter.GetUserPreference( FilterKey.LastName );
+            tbNote.Text = rFilter.GetUserPreference( FilterKey.Note );
 
             string statusValue = rFilter.GetUserPreference( FilterKey.StepStatus );
             if ( !string.IsNullOrWhiteSpace( statusValue ) )
