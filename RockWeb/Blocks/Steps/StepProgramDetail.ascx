@@ -8,6 +8,7 @@
 
 <asp:UpdatePanel ID="upStepProgram" runat="server">
     <ContentTemplate>
+        <Rock:NotificationBox ID="nbBlockStatus" runat="server" NotificationBoxType="Info" Visible="false" />
         <asp:Panel ID="pnlDetails" CssClass="panel panel-block" runat="server" Visible="false">
             <asp:HiddenField ID="hfStepProgramId" runat="server" />
 
