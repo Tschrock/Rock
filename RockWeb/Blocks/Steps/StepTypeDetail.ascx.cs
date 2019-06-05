@@ -116,7 +116,6 @@ namespace RockWeb.Blocks.Steps
         private int _stepTypeId = 0;
         private RockContext _dataContext = null;
         private bool _blockContextIsValid = false;
-        private RockBlockNotificationManager _notificationManager;
 
         #endregion Private Variables
 
@@ -130,9 +129,8 @@ namespace RockWeb.Blocks.Steps
         {
             base.OnInit( e );
 
+            this.InitializeBlockNotification( nbBlockStatus, pnlDetails );
             this.InitializeSettingsNotification( upStepType );
-
-            _notificationManager = new RockBlockNotificationManager( this, nbBlockStatus, pnlDetails );
 
             _blockContextIsValid = this.InitializeBlockContext();
 
@@ -317,9 +315,6 @@ namespace RockWeb.Blocks.Steps
             var rockContext = this.GetDataContext();
 
             var stepTypeService = new StepTypeService( rockContext );
-            var stepStatusService = new StepStatusService( rockContext );
-            var attributeService = new AttributeService( rockContext );
-            var qualifierService = new AttributeQualifierService( rockContext );
             var stepWorkflowService = new StepWorkflowService( rockContext );
             var stepWorkflowTriggerService = new StepWorkflowTriggerService( rockContext );
 
@@ -588,12 +583,12 @@ namespace RockWeb.Blocks.Steps
         }
 
         /// <summary>
-        /// Gs the workflows_ show edit.
+        /// Show the edit dialog for the specified Workflow Trigger.
         /// </summary>
-        /// <param name="stepWorkflowGuid">The connection workflow unique identifier.</param>
-        protected void gWorkflows_ShowEdit( Guid stepWorkflowGuid )
+        /// <param name="triggerGuid">The workflow trigger unique identifier.</param>
+        protected void gWorkflows_ShowEdit( Guid triggerGuid )
         {
-            var workflowTrigger = WorkflowsState.FirstOrDefault( l => l.Guid.Equals( stepWorkflowGuid ) );
+            var workflowTrigger = WorkflowsState.FirstOrDefault( l => l.Guid.Equals( triggerGuid ) );
 
             if ( workflowTrigger != null )
             {
@@ -607,7 +602,7 @@ namespace RockWeb.Blocks.Steps
                 ddlTriggerType.SelectedValue = StepWorkflowTrigger.WorkflowTriggerCondition.IsComplete.ToString();
             }
 
-            hfAddStepWorkflowGuid.Value = stepWorkflowGuid.ToString();
+            hfAddStepWorkflowGuid.Value = triggerGuid.ToString();
             ShowDialog( "StepWorkflows", true );
             UpdateTriggerQualifiers();
         }
@@ -693,7 +688,7 @@ namespace RockWeb.Blocks.Steps
         }
 
         /// <summary>
-        /// Binds the connection workflows grid.
+        /// Binds the workflow triggers grid.
         /// </summary>
         private void BindStepWorkflowsGrid()
         {
@@ -719,9 +714,9 @@ namespace RockWeb.Blocks.Steps
         }
 
         /// <summary>
-        /// Sets the connection workflow list order.
+        /// Sets the workflow triggers list order.
         /// </summary>
-        /// <param name="stepWorkflowList">The connection workflow list.</param>
+        /// <param name="stepWorkflowList">The workflow trigger list.</param>
         private void SetStepWorkflowListOrder( List<StepWorkflowTriggerViewModel> stepWorkflowList )
         {
             if ( stepWorkflowList != null )
@@ -777,7 +772,7 @@ namespace RockWeb.Blocks.Steps
             if ( _stepProgramId == 0
                  && _stepTypeId == 0 )
             {
-                _notificationManager.ShowFatal( "A new Step can't be added because there is no Step Program available in this context." );
+                ShowNotification( "A new Step cannot be added because there is no Step Program available in this context.", NotificationBoxType.Danger, true );
 
                 return false;
             }
@@ -832,7 +827,7 @@ namespace RockWeb.Blocks.Steps
         /// <summary>
         /// Shows the detail panel containing the main content of the block.
         /// </summary>
-        /// <param name="stepTypeId">The Connection Type Type identifier.</param>
+        /// <param name="stepTypeId">The entity id of the item to be shown.</param>
         public void ShowDetail( int stepTypeId )
         {
             pnlDetails.Visible = false;
@@ -897,7 +892,7 @@ namespace RockWeb.Blocks.Steps
         /// <summary>
         /// Shows the edit details.
         /// </summary>
-        /// <param name="stepType">Type of the connection.</param>
+        /// <param name="stepType">The entity instance to be displayed.</param>
         private void ShowEditDetails( StepType stepType )
         {
             if ( stepType == null )
@@ -964,7 +959,7 @@ namespace RockWeb.Blocks.Steps
         /// <summary>
         /// Shows the readonly details.
         /// </summary>
-        /// <param name="stepType">Type of the connection.</param>
+        /// <param name="stepType">The entity instance to be displayed.</param>
         private void ShowReadonlyDetails( StepType stepType )
         {
             SetEditMode( false );
@@ -1025,7 +1020,7 @@ namespace RockWeb.Blocks.Steps
         /// <summary>
         /// Gets the specified Step Type data model, or the current model if none is specified.
         /// </summary>
-        /// <param name="stepTypeId">The connection type identifier.</param>
+        /// <param name="stepType">The entity id of the instance to be retrieved.</param>
         /// <returns></returns>
         private StepType GetStepType( int? stepTypeId = null, bool forceLoadFromContext = false )
         {
@@ -1302,6 +1297,49 @@ namespace RockWeb.Blocks.Steps
                     WorkflowTypeName = trigger.WorkflowType.Name;
                 }
             }
+        }
+
+        #endregion
+
+        #region Block Notifications
+
+        private NotificationBox _notificationControl;
+        private Control _detailContainerControl;
+
+        /// <summary>
+        /// Initialize block-level notification message handlers for block configuration changes.
+        /// </summary>
+        /// <param name="triggerPanel"></param>
+        private void InitializeBlockNotification( NotificationBox notificationControl, Control detailContainerControl )
+        {
+            _notificationControl = notificationControl;
+            _detailContainerControl = detailContainerControl;
+
+            this.ClearBlockNotification();
+        }
+
+        /// <summary>
+        /// Reset the notification message for the block.
+        /// </summary>
+        public void ClearBlockNotification()
+        {
+            _notificationControl.Visible = false;
+            _detailContainerControl.Visible = true;
+        }
+
+        /// <summary>
+        /// Show a notification message for the block.
+        /// </summary>
+        /// <param name="notificationControl"></param>
+        /// <param name="message"></param>
+        /// <param name="notificationType"></param>
+        public void ShowNotification( string message, NotificationBoxType notificationType = NotificationBoxType.Info, bool hideBlockContent = false )
+        {
+            _notificationControl.Text = message;
+            _notificationControl.NotificationBoxType = notificationType;
+
+            _notificationControl.Visible = true;
+            _detailContainerControl.Visible = !hideBlockContent;
         }
 
         #endregion
