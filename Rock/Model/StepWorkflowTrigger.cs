@@ -205,8 +205,15 @@ namespace Rock.Model
 
             protected override void OnSetParameters( int version, IReadOnlyList<string> parameters )
             {
-                FromStatusId = parameters[0].AsIntegerOrNull();
-                ToStatusId = parameters[1].AsIntegerOrNull();
+                if ( parameters.Count > 0 )
+                {
+                    FromStatusId = parameters[0].AsIntegerOrNull();
+                }
+
+                if ( parameters.Count > 1 )
+                {
+                    ToStatusId = parameters[1].AsIntegerOrNull();
+                }
             }
         }
 
