@@ -109,7 +109,7 @@ namespace Rock.Model
         /// <returns></returns>
         public IEntityCache GetCacheObject()
         {
-            return DefinedTypeCache.Get( Id );
+            return SequenceCache.Get( Id );
         }
 
         /// <summary>
@@ -119,16 +119,7 @@ namespace Rock.Model
         /// <param name="dbContext">The database context.</param>
         public void UpdateCache( EntityState entityState, Rock.Data.DbContext dbContext )
         {
-            var cachedDefinedValues = DefinedTypeCache.Get( Id, ( RockContext ) dbContext )?.DefinedValues;
-            if ( cachedDefinedValues?.Any() == true )
-            {
-                foreach ( var cachedDefinedValue in cachedDefinedValues )
-                {
-                    DefinedValueCache.UpdateCachedEntity( cachedDefinedValue.Id, EntityState.Detached );
-                }
-            }
-
-            DefinedTypeCache.UpdateCachedEntity( Id, entityState );
+            SequenceCache.UpdateCachedEntity( Id, entityState );
         }
 
         #endregion ICacheable

@@ -3,7 +3,6 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Data.Entity;
 using System.Data.Entity.ModelConfiguration;
-using System.Linq;
 using System.Runtime.Serialization;
 using Rock.Data;
 using Rock.Web.Cache;
@@ -66,7 +65,7 @@ namespace Rock.Model
         /// <returns></returns>
         public IEntityCache GetCacheObject()
         {
-            return DefinedTypeCache.Get( Id );
+            return SequenceOccurrenceExclusionCache.Get( Id );
         }
 
         /// <summary>
@@ -76,16 +75,7 @@ namespace Rock.Model
         /// <param name="dbContext">The database context.</param>
         public void UpdateCache( EntityState entityState, Rock.Data.DbContext dbContext )
         {
-            var cachedDefinedValues = DefinedTypeCache.Get( Id, ( RockContext ) dbContext )?.DefinedValues;
-            if ( cachedDefinedValues?.Any() == true )
-            {
-                foreach ( var cachedDefinedValue in cachedDefinedValues )
-                {
-                    DefinedValueCache.UpdateCachedEntity( cachedDefinedValue.Id, EntityState.Detached );
-                }
-            }
-
-            DefinedTypeCache.UpdateCachedEntity( Id, entityState );
+            SequenceOccurrenceExclusionCache.UpdateCachedEntity( Id, entityState );
         }
 
         #endregion ICacheable
