@@ -166,5 +166,62 @@ namespace Rock.Rest.Controllers
 
             return schedules;
         }
+
+        /// <summary>
+        /// Returns the currently logged-in user or the person indicated's streak information. Provides the sequence for client-side
+        /// calculations as well as some pre-calculated info.
+        /// </summary>
+        /// <param name="sequenceId"></param>
+        /// <param name="personAliasId"></param>
+        /// <param name="startDate"></param>
+        /// <param name="endDate"></param>
+        /// <param name="createObjectArray"></param>
+        /// <returns></returns>
+        [Authenticate, Secured]
+        [HttpGet]
+        [EnableQuery]
+        [System.Web.Http.Route( "api/Sequences/EnrollmentStreak/{sequenceId}" )]
+        public virtual SequenceEnrollmentData GetEnrollmentStreak( int sequenceId, int? personAliasId = null, DateTime? startDate = null, DateTime? endDate = null, bool createObjectArray = false )
+        {
+            // Make sure the sequence exists
+            var sequence = SequenceCache.Get( sequenceId );
+
+            if ( sequence == null )
+            {
+                var errorResponse = ControllerContext.Request.CreateErrorResponse( HttpStatusCode.NotFound, "The sequenceId did not resolve" );
+                throw new HttpResponseException( errorResponse );
+            }
+
+            // If not specified, use the current person alias id
+            if ( !personAliasId.HasValue )
+            {
+                var rockContext = Service.Context as RockContext;
+                personAliasId = GetPersonAliasId( rockContext );
+
+                if ( !personAliasId.HasValue )
+                {
+                    var errorResponse = ControllerContext.Request.CreateErrorResponse( HttpStatusCode.BadRequest, "The personAliasId for the current user did not resolve" );
+                    throw new HttpResponseException( errorResponse );
+                }
+            }
+
+            // Get the data from the service
+            var sequenceService = Service as SequenceService;
+            var sequenceEnrollmentData = sequenceService.GetSequenceEnrollmentData( sequence, personAliasId.Value, out var errorMessage, startDate, endDate, createObjectArray );
+
+            if ( !errorMessage.IsNullOrWhiteSpace() )
+            {
+                var errorResponse = ControllerContext.Request.CreateErrorResponse( HttpStatusCode.BadRequest, errorMessage );
+                throw new HttpResponseException( errorResponse );
+            }
+
+            if ( sequenceEnrollmentData == null )
+            {
+                var errorResponse = ControllerContext.Request.CreateErrorResponse( HttpStatusCode.InternalServerError, "The sequence data retrieval was not successful but no error was specified" );
+                throw new HttpResponseException( errorResponse );
+            }
+
+            return sequenceEnrollmentData;
+        }
     }
 }
