@@ -432,6 +432,7 @@
     <Compile Include="Model\CodeGenerated\StepWorkflowService.cs" />
     <Compile Include="Model\CodeGenerated\StepWorkflowTriggerService.cs" />
     <Compile Include="Model\SequenceOccurrenceExclusionService.Partial.cs" />
+    <Compile Include="Model\SequenceEnrollmentService.Partial.cs" />
     <Compile Include="Model\SequenceService.Partial.cs" />
     <Compile Include="Model\GroupLocationScheduleConfig.cs" />
     <Compile Include="Model\GroupMemberAssignment.cs" />
