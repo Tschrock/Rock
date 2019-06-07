@@ -61,12 +61,12 @@
                             </div>
                         </div>
                     </div>
-                    <div class="row">
-                        <div class="col-md-12">
-                            <Rock:LineChart ID="lcSteps" runat="server" ChartHeight="280px" />
-                        </div>
-                    </div>
 
+                    <%-- Steps Activity Summary Line Chart --%>
+                    <div class="chart-container">
+                        <Rock:NotificationBox ID="nbStepsActivityLineChartMessage" runat="server" NotificationBoxType="Info" Text="No Steps Activity for this Program" />
+                        <canvas id="barChartCanvas" runat="server" style="height: 280px;" />
+                    </div>
 
                     <div class="row">
                         <div class="col-md-6">
@@ -124,8 +124,8 @@
                         <div class="grid">
                             <Rock:Grid ID="gWorkflows" runat="server" AllowPaging="false" DisplayType="Light" RowItemText="Workflow" ShowConfirmDeleteDialog="false">
                                 <Columns>
-                                    <Rock:RockBoundField DataField="WorkflowType" HeaderText="Workflow Type" />
-                                    <Rock:RockBoundField DataField="Trigger" HeaderText="Trigger" />
+                                    <Rock:RockBoundField DataField="WorkflowTypeName" HeaderText="Workflow Type" />
+                                    <Rock:RockBoundField DataField="TriggerDescription" HeaderText="Trigger" />
                                     <Rock:EditField OnClick="gWorkflows_Edit" />
                                     <Rock:DeleteField OnClick="gWorkflows_Delete" />
                                 </Columns>

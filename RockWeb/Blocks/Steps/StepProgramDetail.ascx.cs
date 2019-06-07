@@ -47,12 +47,6 @@ namespace RockWeb.Blocks.Steps
           Key = AttributeKey.ShowChart,
           DefaultValue = "true",
           Order = 0 )]
-    [DefinedValueField
-        ( Rock.SystemGuid.DefinedType.CHART_STYLES,
-         "Chart Style",
-         Key = AttributeKey.ChartStyle,
-         DefaultValue = Rock.SystemGuid.DefinedValue.CHART_STYLE_ROCK,
-         Order = 1 )]
     [SlidingDateRangeField
         ( "Default Chart Date Range",
           Key = AttributeKey.SlidingDateRange,
@@ -154,10 +148,11 @@ namespace RockWeb.Blocks.Steps
         {
             base.OnInit( e );
 
-            InitializeBlockNotification( nbBlockStatus, pnlDetails );
+            InitializeBlockNotification( nbBlockStatus, pnlDetails );            
             InitializeStatusesGrid();
             InitializeWorkflowsGrid();
             InitializeActionButtons();
+            InitializeChartScripts();
             InitializeChartFilter();
             InitializeSettingsNotification( upStepProgram );
         }
@@ -175,6 +170,10 @@ namespace RockWeb.Blocks.Steps
                 var stepProgramId = PageParameter( PageParameterKey.StepProgramId ).AsInteger();
 
                 ShowDetail( stepProgramId );
+            }
+            else
+            {
+                RefreshChart();
             }
         }
 
@@ -1251,63 +1250,63 @@ namespace RockWeb.Blocks.Steps
             StepProgram stepProgram = null;
 
             var dataContext = GetDataContext();
-            
+
+            if ( !stepProgramId.Equals( 0 ) )
+            {
+                stepProgram = GetStepProgram( stepProgramId, dataContext );
+                pdAuditDetails.SetEntity( stepProgram, ResolveRockUrl( "~" ) );
+            }
+
+            if ( stepProgram == null )
+            {
+                stepProgram = new StepProgram { Id = 0 };
+                // hide the panel drawer that show created and last modified dates
+                pdAuditDetails.Visible = false;
+            }
+
+            // Admin rights are required to edit a Step Program. Edit rights only allow adding/removing items.
+            bool adminAllowed = UserCanAdministrate || stepProgram.IsAuthorized( Authorization.ADMINISTRATE, CurrentPerson );
+            pnlDetails.Visible = true;
+            hfStepProgramId.Value = stepProgram.Id.ToString();
+            lIcon.Text = string.Format( "<i class='{0}'></i>", stepProgram.IconCssClass );
+            bool readOnly = false;
+
+            nbEditModeMessage.Text = string.Empty;
+            if ( !adminAllowed )
+            {
+                readOnly = true;
+                nbEditModeMessage.Text = EditModeMessage.ReadOnlyEditActionNotAllowed( StepProgram.FriendlyTypeName );
+            }
+
+            rblDefaultListView.Items.Clear();
+            rblDefaultListView.Items.Add( new ListItem( "Cards", StepProgram.ViewMode.Cards.ToString() ) );
+            rblDefaultListView.Items.Add( new ListItem( "Grid", StepProgram.ViewMode.Grid.ToString() ) );
+
+            if ( readOnly )
+            {
+                btnEdit.Visible = false;
+                btnDelete.Visible = false;
+                btnSecurity.Visible = false;
+                ShowReadonlyDetails( stepProgram );
+            }
+            else
+            {
+                btnEdit.Visible = true;
+                btnDelete.Visible = true;
+                btnSecurity.Visible = true;
+
+                btnSecurity.Title = "Secure " + stepProgram.Name;
+                btnSecurity.EntityId = stepProgram.Id;
+
                 if ( !stepProgramId.Equals( 0 ) )
                 {
-                    stepProgram = GetStepProgram( stepProgramId, dataContext );
-                    pdAuditDetails.SetEntity( stepProgram, ResolveRockUrl( "~" ) );
-                }
-
-                if ( stepProgram == null )
-                {
-                    stepProgram = new StepProgram { Id = 0 };
-                    // hide the panel drawer that show created and last modified dates
-                    pdAuditDetails.Visible = false;
-                }
-
-                // Admin rights are required to edit a Step Program. Edit rights only allow adding/removing items.
-                bool adminAllowed = UserCanAdministrate || stepProgram.IsAuthorized( Authorization.ADMINISTRATE, CurrentPerson );
-                pnlDetails.Visible = true;
-                hfStepProgramId.Value = stepProgram.Id.ToString();
-                lIcon.Text = string.Format( "<i class='{0}'></i>", stepProgram.IconCssClass );
-                bool readOnly = false;
-
-                nbEditModeMessage.Text = string.Empty;
-                if ( !adminAllowed )
-                {
-                    readOnly = true;
-                    nbEditModeMessage.Text = EditModeMessage.ReadOnlyEditActionNotAllowed( StepProgram.FriendlyTypeName );
-                }
-
-                rblDefaultListView.Items.Clear();
-                rblDefaultListView.Items.Add( new ListItem( "Cards", StepProgram.ViewMode.Cards.ToString() ) );
-                rblDefaultListView.Items.Add( new ListItem( "Grid", StepProgram.ViewMode.Grid.ToString() ) );
-
-                if ( readOnly )
-                {
-                    btnEdit.Visible = false;
-                    btnDelete.Visible = false;
-                    btnSecurity.Visible = false;
                     ShowReadonlyDetails( stepProgram );
                 }
                 else
                 {
-                    btnEdit.Visible = true;
-                    btnDelete.Visible = true;
-                    btnSecurity.Visible = true;
-
-                    btnSecurity.Title = "Secure " + stepProgram.Name;
-                    btnSecurity.EntityId = stepProgram.Id;
-
-                    if ( !stepProgramId.Equals( 0 ) )
-                    {
-                        ShowReadonlyDetails( stepProgram );
-                    }
-                    else
-                    {
-                        ShowEditDetails( stepProgram );
-                    }
+                    ShowEditDetails( stepProgram );
                 }
+            }
         }
 
         /// <summary>
@@ -1343,7 +1342,7 @@ namespace RockWeb.Blocks.Steps
 
             // Step Statuses
             StatusesState = stepProgram.StepStatuses.ToList();
-            
+
             BindStepStatusesGrid();
 
             // Workflow Triggers
@@ -1492,6 +1491,16 @@ namespace RockWeb.Blocks.Steps
         #region Step Activity Chart
 
         /// <summary>
+        /// Add scripts for Chart.js components
+        /// </summary>
+        private void InitializeChartScripts()
+        {
+            // NOTE: moment.js must be loaded before Chart.js
+            RockPage.AddScriptLink( "~/Scripts/moment.min.js", true );
+            RockPage.AddScriptLink( "~/Scripts/Chartjs/Chart.js", true );
+        }
+
+        /// <summary>
         /// Initialize the chart by applying block configuration settings.
         /// </summary>
         private void InitializeChartFilter()
@@ -1517,67 +1526,36 @@ namespace RockWeb.Blocks.Steps
         /// </summary>
         private void RefreshChart()
         {
+            // Add scripts for Chart.js components
+            RockPage.AddScriptLink( "~/Scripts/moment.min.js", true );
+            RockPage.AddScriptLink( "~/Scripts/Chartjs/Chart.js", true );
+
+            // Get chart data and add client script to construct the chart.
             var chartDateRange = SlidingDateRangePicker.CalculateDateRangeFromDelimitedValues( drpSlidingDateRange.DelimitedValues ?? "-1||" );
 
-            var chartData = GetChartData( chartDateRange.Start, chartDateRange.End );
+            var chartFactory = this.GetChartJsFactory( chartDateRange.Start, chartDateRange.End );
 
-            ConfigureChart( chartData, chartDateRange.Start, chartDateRange.End );
+            var chartDataJson = chartFactory.GetJson();
 
-            BindChart( chartData, chartDateRange.Start, chartDateRange.End );
+            string script = string.Format( @"
+var barCtx = $('#{0}')[0].getContext('2d');
+var barChart = new Chart(barCtx, {1});",
+                                            barChartCanvas.ClientID,
+                                            chartDataJson );
+
+            ScriptManager.RegisterStartupScript( this.Page, this.GetType(), "stepProgramActivityBarChartScript", script, true );
+
+            // If no data, show a notification.
+            nbStepsActivityLineChartMessage.Visible = !chartFactory.HasData;
         }
 
         /// <summary>
-        /// Configures the scale and appearance of the chart according to the dataset being displayed.
-        /// </summary>
-        /// <param name="chartData"></param>
-        /// <param name="startDate"></param>
-        /// <param name="endDate"></param>
-        private void ConfigureChart( FlotChartDataSet<TimeSeriesChartDataPoint> chartData, DateTime? startDate = null, DateTime? endDate = null )
-        {
-            lcSteps.StartDate = startDate ?? chartData.DataPoints.Min( x => x.DateTime );
-            lcSteps.EndDate = endDate ?? chartData.DataPoints.Max( x => x.DateTime );
-
-            lcSteps.Options.series = new SeriesOptions( false, true, false );
-
-            lcSteps.Options.yaxis = new AxisOptions
-            {
-                minTickSize = 1,
-                tickFormatter = "function (val, axis) { return val | 0 }"
-            };
-
-            lcSteps.Options.xaxis = new AxisOptions
-            {
-                mode = AxisMode.time,
-                timeformat = "%b-%y",
-                tickSize = new string[] { "1", "month" }
-            };
-
-            lcSteps.Options.grid = new GridOptions { hoverable = true, clickable = false };
-        }
-
-        /// <summary>
-        /// Bind the necessary data to the graph widgets.
-        /// </summary>
-        /// <param name="chartDataJson"></param>
-        private void BindChart( FlotChartDataSet<TimeSeriesChartDataPoint> chartData, DateTime? startDate = null, DateTime? endDate = null )
-        {
-            lcSteps.Visible = GetAttributeValue( AttributeKey.ShowChart ).AsBooleanOrNull() ?? true;
-
-            var chartDateRange = SlidingDateRangePicker.CalculateDateRangeFromDelimitedValues( drpSlidingDateRange.DelimitedValues ?? "-1||" );
-
-            lcSteps.StartDate = chartDateRange.Start;
-            lcSteps.EndDate = chartDateRange.End;
-
-            lcSteps.ChartData = chartData.GetRockChartJsonData();
-        }
-
-        /// <summary>
-        /// Gets the data set required for the chart.
+        /// Gets a configured factory that creates the data required for the chart.
         /// </summary>
         /// <returns></returns>
-        public FlotChartDataSet<TimeSeriesChartDataPoint> GetChartData( DateTime? startDate = null, DateTime? endDate = null )
+        public ChartJsTimeSeriesDataFactory<ChartJsTimeSeriesDataPoint> GetChartJsFactory( DateTime? startDate = null, DateTime? endDate = null )
         {
-            var dataContext = GetDataContext();
+            var dataContext = new RockContext();
 
             var stepService = new StepService( dataContext );
 
@@ -1605,19 +1583,35 @@ namespace RockWeb.Blocks.Steps
             var steps = stepsCompletedQuery.ToList();
 
             var stepTypeDataPoints = steps
-                .GroupBy( x => new { Month = new DateTime( x.CompletedDateTime.Value.Year, x.CompletedDateTime.Value.Month, 1 ), SeriesName = x.StepType.Name, Order = x.StepType.Order } )
-                .Select( x => new TimeSeriesChartDataPoint
+                .GroupBy( x => new { Month = new DateTime( x.CompletedDateTime.Value.Year, x.CompletedDateTime.Value.Month, 1 ), DatasetName = x.StepType.Name, Order = x.StepType.Order } )
+                .Select( x => new
                 {
-                    SeriesName = x.Key.SeriesName,
+                    DatasetName = x.Key.DatasetName,
                     DateTime = x.Key.Month,
                     SortKey = x.Key.Order.ToString(),
                     Value = x.Count()
                 } )
+                .OrderBy( x => x.SortKey )
                 .ToList();
 
-            var dataSource = new FlotChartDataSet<TimeSeriesChartDataPoint>();
+            var stepTypeDatasets = stepTypeDataPoints.Select( x => x.DatasetName ).Distinct().ToList();
 
-            dataSource.DataPoints.AddRange( stepTypeDataPoints );
+            var dataSource = new ChartJsTimeSeriesDataFactory<ChartJsTimeSeriesDataPoint>();
+
+            foreach ( var stepTypeDataset in stepTypeDatasets )
+            {
+                var dataset = new ChartJsTimeSeriesDataset();
+
+                dataset.Name = stepTypeDataset;
+
+                dataset.DataPoints = stepTypeDataPoints
+                                        .Where( x => x.DatasetName == stepTypeDataset )
+                                        .Select( x => new ChartJsTimeSeriesDataPoint { DateTime = x.DateTime, Value = x.Value } )
+                                        .Cast<IChartJsTimeSeriesDataPoint>()
+                                        .ToList();
+
+                dataSource.Datasets.Add( dataset );
+            }
 
             return dataSource;
         }
@@ -1632,13 +1626,10 @@ namespace RockWeb.Blocks.Steps
             public int Id { get; set; }
             public Guid Guid { get; set; }
             public string WorkflowTypeName { get; set; }
-
             public int? StepTypeId { get; set; }
             public int WorkflowTypeId { get; set; }
-
             public StepWorkflowTrigger.WorkflowTriggerCondition TriggerType { get; set; }
             public string TypeQualifier { get; set; }
-
             public string TriggerDescription { get; set; }
 
             public StepWorkflowTriggerViewModel()
@@ -1705,6 +1696,11 @@ namespace RockWeb.Blocks.Steps
             _detailContainerControl.Visible = !hideBlockContent;
         }
 
+        /// <summary>
+        /// Show an error message for the block and log the associated exception.
+        /// </summary>
+        /// <param name="ex"></param>
+        /// <param name="writeToLog"></param>
         public void ShowBlockException( Exception ex, bool writeToLog = true )
         {
             ShowBlockNotification( ex.Message, NotificationBoxType.Danger );
