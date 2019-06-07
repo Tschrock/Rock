@@ -129,15 +129,17 @@ namespace RockWeb.Blocks.Steps
         {
             base.OnInit( e );
 
-            this.InitializeBlockNotification( nbBlockStatus, pnlDetails );
-            this.InitializeSettingsNotification( upStepType );
+            InitializeBlockNotification( nbBlockStatus, pnlDetails );
+            InitializeSettingsNotification( upStepType );
 
-            _blockContextIsValid = this.InitializeBlockContext();
+            _blockContextIsValid = InitializeBlockContext();
 
             if ( !_blockContextIsValid )
             {
                 return;
             }
+
+            InitializeChartScripts();
 
             dvpAutocomplete.EntityTypeId = EntityTypeCache.Get( typeof( Rock.Model.Person ) ).Id;
             dvpAutocomplete.CategoryGuids = GetAttributeValue( AttributeKey.DataViewCategories ).SplitDelimitedValues().AsGuidList();
@@ -152,8 +154,6 @@ namespace RockWeb.Blocks.Steps
 
             btnDelete.Attributes["onclick"] = string.Format( "javascript: return Rock.dialogs.confirmDelete(event, '{0}', 'This will also delete the associated step participants.');", StepType.FriendlyTypeName );
             btnSecurity.EntityTypeId = EntityTypeCache.Get( typeof( Rock.Model.StepType ) ).Id;
-
-            this.InitializeChart();
         }
 
         /// <summary>
@@ -171,7 +171,11 @@ namespace RockWeb.Blocks.Steps
 
             if ( !Page.IsPostBack )
             {
-                this.ShowDetail( _stepTypeId );
+                ShowDetail( _stepTypeId );
+            }
+            else
+            {
+                RefreshChart();
             }
         }
 
@@ -223,7 +227,9 @@ namespace RockWeb.Blocks.Steps
             int? stepTypeId = PageParameter( pageReference, PageParameterKey.StepTypeId ).AsIntegerOrNull();
             if ( stepTypeId != null )
             {
-                var stepType = new StepTypeService( this.GetDataContext() ).Get( stepTypeId.Value );
+                var dataContext = GetDataContext();
+
+                var stepType = new StepTypeService( dataContext ).Get( stepTypeId.Value );
 
                 if ( stepType != null )
                 {
@@ -258,7 +264,7 @@ namespace RockWeb.Blocks.Steps
 
         protected void btnRefreshChart_Click( object sender, EventArgs e )
         {
-            this.RefreshChart();
+            RefreshChart();
         }
 
         /// <summary>
@@ -268,7 +274,7 @@ namespace RockWeb.Blocks.Steps
         /// <param name="e">The <see cref="EventArgs" /> instance containing the event data.</param>
         protected void btnEdit_Click( object sender, EventArgs e )
         {
-            var stepType = this.GetStepType();
+            var stepType = GetStepType();
 
             ShowEditDetails( stepType );
         }
@@ -280,7 +286,7 @@ namespace RockWeb.Blocks.Steps
         /// <param name="e">The <see cref="EventArgs"/> instance containing the event data.</param>
         protected void btnDelete_Click( object sender, EventArgs e )
         {
-            this.DeleteRecord();
+            DeleteRecord();
         }
 
         /// <summary>
@@ -290,7 +296,7 @@ namespace RockWeb.Blocks.Steps
         /// <param name="e">The <see cref="EventArgs" /> instance containing the event data.</param>
         protected void btnSave_Click( object sender, EventArgs e )
         {
-            var recordId = this.SaveRecord();
+            var recordId = SaveRecord();
 
             if ( recordId <= 0 )
             {
@@ -312,7 +318,7 @@ namespace RockWeb.Blocks.Steps
         {
             StepType stepType;
 
-            var rockContext = this.GetDataContext();
+            var rockContext = GetDataContext();
 
             var stepTypeService = new StepTypeService( rockContext );
             var stepWorkflowService = new StepWorkflowService( rockContext );
@@ -458,7 +464,7 @@ namespace RockWeb.Blocks.Steps
             }
             else
             {
-                ShowReadonlyDetails( this.GetStepType() );
+                ShowReadonlyDetails( GetStepType() );
             }
         }
 
@@ -526,7 +532,7 @@ namespace RockWeb.Blocks.Steps
 
             workflowTrigger.TypeQualifier = qualifierSettings.ToSelectionString();
 
-            var dataContext = this.GetDataContext();
+            var dataContext = GetDataContext();
 
             var workflowTypeService = new WorkflowTypeService( dataContext );
 
@@ -632,7 +638,7 @@ namespace RockWeb.Blocks.Steps
         /// </summary>
         private void UpdateTriggerQualifiers()
         {
-            var rockContext = this.GetDataContext();
+            var dataContext = GetDataContext();
 
             var workflowTrigger = WorkflowsState.FirstOrDefault( l => l.Guid.Equals( hfAddStepWorkflowGuid.Value.AsGuid() ) );
 
@@ -641,9 +647,9 @@ namespace RockWeb.Blocks.Steps
             if ( sStepWorkflowTriggerType == StepWorkflowTrigger.WorkflowTriggerCondition.StatusChanged )
             {
                 // Populate the selection lists for "To Status" and "From Status".
-                var stepType = this.GetStepType();
+                var stepType = GetStepType();
 
-                var statusList = new StepStatusService( rockContext ).Queryable().Where( s => s.StepProgramId == stepType.StepProgramId ).ToList();
+                var statusList = new StepStatusService( dataContext ).Queryable().Where( s => s.StepProgramId == stepType.StepProgramId ).ToList();
 
                 ddlPrimaryQualifier.Label = "From";
                 ddlPrimaryQualifier.Visible = true;
@@ -795,10 +801,10 @@ namespace RockWeb.Blocks.Steps
         /// </summary>
         private void LoadPrerequisiteStepsList()
         {
-            var dataContext = this.GetDataContext();
+            var dataContext = GetDataContext();
 
             // Load available Prerequisite Steps, being any other Step Types in this Step Program that are active.
-            var stepType = this.GetStepType();
+            var stepType = GetStepType();
 
             int programId = 0;
 
@@ -832,10 +838,10 @@ namespace RockWeb.Blocks.Steps
         {
             pnlDetails.Visible = false;
 
-            var rockContext = this.GetDataContext();
+            var dataContext = GetDataContext();
 
             // Get the Step Type data model
-            var stepType = this.GetStepType( stepTypeId );
+            var stepType = GetStepType( stepTypeId );
 
             if ( stepType.Id != 0 )
             {
@@ -911,8 +917,8 @@ namespace RockWeb.Blocks.Steps
 
             SetEditMode( true );
 
-            this.LoadPrerequisiteStepsList();
-            this.LoadWorkflowTriggerTypesSelectionList();
+            LoadPrerequisiteStepsList();
+            LoadWorkflowTriggerTypesSelectionList();
 
             // General properties
             tbName.Text = stepType.Name;
@@ -980,7 +986,7 @@ namespace RockWeb.Blocks.Steps
             // Configure Label: Inactive
             hlInactive.Visible = !stepType.IsActive;
 
-            this.RefreshChart();
+            RefreshChart();
         }
 
         /// <summary>
@@ -988,11 +994,11 @@ namespace RockWeb.Blocks.Steps
         /// </summary>
         private void DeleteRecord()
         {
-            var rockContext = this.GetDataContext();
+            var rockContext = GetDataContext();
 
             var stepTypeService = new StepTypeService( rockContext );
 
-            var stepType = this.GetStepType( forceLoadFromContext: true );
+            var stepType = GetStepType( forceLoadFromContext: true );
 
             if ( stepType != null )
             {                
@@ -1040,9 +1046,9 @@ namespace RockWeb.Blocks.Steps
 
             if ( stepType == null )
             {
-                var rockContext = this.GetDataContext();
+                var dataContext = GetDataContext();
 
-                stepType = new StepTypeService( rockContext ).Queryable()
+                stepType = new StepTypeService( dataContext ).Queryable()
                     .Where( c => c.Id == stepTypeId )
                     .FirstOrDefault();
 
@@ -1076,7 +1082,7 @@ namespace RockWeb.Blocks.Steps
             pnlEditDetails.Visible = editable;
             pnlViewDetails.Visible = !editable;
 
-            this.HideSecondaryBlocks( editable );
+            HideSecondaryBlocks( editable );
         }
 
         /// <summary>
@@ -1123,7 +1129,20 @@ namespace RockWeb.Blocks.Steps
 
         #region Step Activity Chart
 
-        private void InitializeChart()
+        /// <summary>
+        /// Add scripts for Chart.js components
+        /// </summary>
+        private void InitializeChartScripts()
+        {
+            // NOTE: moment.js must be loaded before Chart.js
+            RockPage.AddScriptLink( "~/Scripts/moment.min.js", true );
+            RockPage.AddScriptLink( "~/Scripts/Chartjs/Chart.js", true );
+        }
+
+        /// <summary>
+        /// Initialize the chart by applying block configuration settings.
+        /// </summary>
+        private void InitializeChartFilter()
         {
             // Set the default Date Range from the block settings.
             var dateRangeSettings = GetAttributeValue( AttributeKey.SlidingDateRange );
@@ -1141,69 +1160,37 @@ namespace RockWeb.Blocks.Steps
             }
         }
 
+        /// <summary>
+        /// Refresh the chart using the current filter settings.
+        /// </summary>
         private void RefreshChart()
         {
+            // Get chart data and add client script to construct the chart.
             var chartDateRange = SlidingDateRangePicker.CalculateDateRangeFromDelimitedValues( drpSlidingDateRange.DelimitedValues ?? "-1||" );
 
-            var chartData = this.GetChartData( chartDateRange.Start, chartDateRange.End );
+            var chartFactory = GetChartJsFactory( chartDateRange.Start, chartDateRange.End );
 
-            this.ConfigureChart( chartData, chartDateRange.Start, chartDateRange.End );
+            var chartDataJson = chartFactory.GetJson();
 
-            this.BindChart( chartData, chartDateRange.Start, chartDateRange.End );
+            string script = string.Format( @"
+var barCtx = $('#{0}')[0].getContext('2d');
+var barChart = new Chart(barCtx, {1});",
+                                            barChartCanvas.ClientID,
+                                            chartDataJson );
+
+            ScriptManager.RegisterStartupScript( this.Page, this.GetType(), "stepTypeActivityBarChartScript", script, true );
+
+            // If no data, show a notification.
+            nbStepsActivityLineChartMessage.Visible = !chartFactory.HasData;
         }
 
         /// <summary>
-        /// Configures the scale and appearance of the chart according to the dataset being displayed.
-        /// </summary>
-        /// <param name="chartData"></param>
-        /// <param name="startDate"></param>
-        /// <param name="endDate"></param>
-        private void ConfigureChart( FlotChartDataSet<TimeSeriesChartDataPoint> chartData, DateTime? startDate = null, DateTime? endDate = null )
-        {
-            lcSteps.StartDate = startDate ?? chartData.DataPoints.Min( x => x.DateTime );
-            lcSteps.EndDate = endDate ?? chartData.DataPoints.Max( x => x.DateTime );
-
-            lcSteps.Options.series = new SeriesOptions( false, true, false );
-
-            lcSteps.Options.yaxis = new AxisOptions
-            {
-                minTickSize = 1,
-                tickFormatter = "function (val, axis) { return val | 0 }"
-            };
-
-            lcSteps.Options.xaxis = new AxisOptions
-            {
-                mode = AxisMode.time,
-                timeformat = "%b-%y",
-                tickSize = new string[] { "1", "month" }
-            };
-
-            lcSteps.Options.grid = new GridOptions { hoverable = true, clickable = false };
-        }
-
-        /// <summary>
-        /// Bind the necessary data to the graph widgets.
-        /// </summary>
-        /// <param name="chartDataJson"></param>
-        private void BindChart( FlotChartDataSet<TimeSeriesChartDataPoint> chartData, DateTime? startDate = null, DateTime? endDate = null )
-        {
-            lcSteps.Visible = GetAttributeValue( AttributeKey.ShowChart ).AsBooleanOrNull() ?? true;
-
-            var chartDateRange = SlidingDateRangePicker.CalculateDateRangeFromDelimitedValues( drpSlidingDateRange.DelimitedValues ?? "-1||" );
-
-            lcSteps.StartDate = chartDateRange.Start;
-            lcSteps.EndDate = chartDateRange.End;
-
-            lcSteps.ChartData = chartData.GetRockChartJsonData();
-        }
-
-        /// <summary>
-        /// Gets the steps started and completed within the specified date period.
+        /// Gets a configured factory that creates the data required for the chart.
         /// </summary>
         /// <returns></returns>
-        public FlotChartDataSet<TimeSeriesChartDataPoint> GetChartData( DateTime? startDate = null, DateTime? endDate = null )
+        public ChartJsTimeSeriesDataFactory<ChartJsTimeSeriesDataPoint> GetChartJsFactory( DateTime? startDate = null, DateTime? endDate = null )
         {
-            var dataContext = this.GetDataContext();
+            var dataContext = GetDataContext();
 
             var stepService = new StepService( dataContext );
 
@@ -1230,33 +1217,48 @@ namespace RockWeb.Blocks.Steps
                 stepsCompletedQuery = stepsCompletedQuery.Where( x => x.CompletedDateTime < compareDate );
             }
 
-            var chartData = new FlotChartDataSet<TimeSeriesChartDataPoint>();
-
-            var startedSeriesData = stepsStartedQuery.ToList()
+            var startedSeriesDataPoints = stepsStartedQuery.ToList()
                 .GroupBy( x => new DateTime( x.StartDateTime.Value.Year, x.StartDateTime.Value.Month, 1 ) )
-                .Select( x => new TimeSeriesChartDataPoint
+                .Select( x => new
                 {
-                    SeriesName = "Started",
+                    DatasetName = "Started",
                     DateTime = x.Key,
                     Value = x.Count(),
                     SortKey = "1"
                 } );
 
-            var completedSeriesData = stepsCompletedQuery.ToList()
+            var completedSeriesDataPoints = stepsCompletedQuery.ToList()
                 .GroupBy( x => new DateTime( x.CompletedDateTime.Value.Year, x.CompletedDateTime.Value.Month, 1 ) )
-                .Select( x => new TimeSeriesChartDataPoint
+                .Select( x => new
                 {
-                    SeriesName = "Completed",
+                    DatasetName = "Completed",
                     DateTime = x.Key,
                     Value = x.Count(),
                     SortKey = "2"
                 } );
 
-            var allSeriesData = startedSeriesData.Union( completedSeriesData ).OrderBy( x => x.SortKey ).ThenBy( x => x.DateTime );
+            var allDataPoints = startedSeriesDataPoints.Union( completedSeriesDataPoints ).OrderBy( x => x.SortKey ).ThenBy( x => x.DateTime );
+            
+            var dataSetNames = allDataPoints.Select( x => x.DatasetName ).Distinct().ToList();
 
-            chartData.DataPoints.AddRange( allSeriesData );
+            var dataSource = new ChartJsTimeSeriesDataFactory<ChartJsTimeSeriesDataPoint>();
 
-            return chartData;
+            foreach ( var datasetName in dataSetNames )
+            {
+                var dataset = new ChartJsTimeSeriesDataset();
+
+                dataset.Name = datasetName;
+
+                dataset.DataPoints = allDataPoints
+                                        .Where( x => x.DatasetName == datasetName )
+                                        .Select( x => new ChartJsTimeSeriesDataPoint { DateTime = x.DateTime, Value = x.Value } )
+                                        .Cast<IChartJsTimeSeriesDataPoint>()
+                                        .ToList();
+
+                dataSource.Datasets.Add( dataset );
+            }
+
+            return dataSource;
         }
 
         #endregion
@@ -1315,7 +1317,7 @@ namespace RockWeb.Blocks.Steps
             _notificationControl = notificationControl;
             _detailContainerControl = detailContainerControl;
 
-            this.ClearBlockNotification();
+            ClearBlockNotification();
         }
 
         /// <summary>
