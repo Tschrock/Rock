@@ -39,13 +39,14 @@ namespace Rock.Rest.Controllers
         /// Enroll the currently logged-in user into the sequence.
         /// </summary>
         /// <param name="sequenceId"></param>
+        /// <param name="personAliasId">Defaults to the current person</param>
         /// <param name="enrollmentDate">Defaults to the current date if omitted</param>
         /// <param name="locationId">Defaults to the person's campus if omitted</param>
         /// <returns></returns>
         [Authenticate, Secured]
         [HttpPost]
         [System.Web.Http.Route( "api/Sequences/Enroll/{sequenceId}" )]
-        public virtual HttpResponseMessage Enroll( int sequenceId, [FromUri] DateTime? enrollmentDate = null, [FromUri] int? locationId = null )
+        public virtual HttpResponseMessage Enroll( int sequenceId, [FromUri]int? personAliasId = null, [FromUri] DateTime? enrollmentDate = null, [FromUri] int? locationId = null )
         {
             // Make sure the sequence exists
             var sequence = SequenceCache.Get( sequenceId );
@@ -56,17 +57,21 @@ namespace Rock.Rest.Controllers
                 throw new HttpResponseException( errorResponse );
             }
 
-            // Make sure the current user has a person alias id
-            var personAliasId = GetPersonAliasId();
+            // If not specified, use the current person alias id
+            var rockContext = Service.Context as RockContext;
 
             if ( !personAliasId.HasValue )
             {
-                var errorResponse = ControllerContext.Request.CreateErrorResponse( HttpStatusCode.NotFound, "The current personAliasId did not resolve" );
-                throw new HttpResponseException( errorResponse );
+                personAliasId = GetPersonAliasId( rockContext );
+
+                if ( !personAliasId.HasValue )
+                {
+                    var errorResponse = ControllerContext.Request.CreateErrorResponse( HttpStatusCode.BadRequest, "The personAliasId for the current user did not resolve" );
+                    throw new HttpResponseException( errorResponse );
+                }
             }
 
             // Create the enrollment
-            var rockContext = Service.Context as RockContext;
             var sequenceService = Service as SequenceService;
             var sequenceEnrollment = sequenceService.Enroll( sequence, personAliasId.Value, out var errorMessage, enrollmentDate, locationId );
 
@@ -168,11 +173,10 @@ namespace Rock.Rest.Controllers
         }
 
         /// <summary>
-        /// Returns the currently logged-in user or the person indicated's streak information. Provides the sequence for client-side
-        /// calculations as well as some pre-calculated info.
+        /// Returns the currently logged-in user or the person indicated's streak information.
         /// </summary>
         /// <param name="sequenceId"></param>
-        /// <param name="personAliasId"></param>
+        /// <param name="personAliasId">Defaults to the current person</param>
         /// <param name="startDate">Defaults to the sequence start date</param>
         /// <param name="endDate">Defaults to now</param>
         /// <param name="createObjectArray">Defaults to false. This may be a costly operation if enabled.</param>
@@ -180,9 +184,10 @@ namespace Rock.Rest.Controllers
         /// <returns></returns>
         [Authenticate, Secured]
         [HttpGet]
-        [EnableQuery]
         [System.Web.Http.Route( "api/Sequences/EnrollmentStreak/{sequenceId}" )]
-        public virtual SequenceEnrollmentData GetEnrollmentStreak( int sequenceId, int? personAliasId = null, DateTime? startDate = null, DateTime? endDate = null, bool createObjectArray = false, bool includeBitMaps = false )
+        public virtual SequenceEnrollmentData GetEnrollmentStreak( int sequenceId,
+            [FromUri]int? personAliasId = null, [FromUri]DateTime? startDate = null, [FromUri]DateTime? endDate = null,
+            [FromUri]bool createObjectArray = false, [FromUri]bool includeBitMaps = false )
         {
             // Make sure the sequence exists
             var sequence = SequenceCache.Get( sequenceId );
@@ -223,6 +228,56 @@ namespace Rock.Rest.Controllers
             }
 
             return sequenceEnrollmentData;
+        }
+
+        /// <summary>
+        /// Notes that the person is present. This will update the SequenceEnrollment map and also attendance (if enabled).
+        /// </summary>
+        /// <param name="sequenceId"></param>
+        /// <param name="personAliasId">Defaults to the current person</param>
+        /// <param name="dateOfAttendance">Defaults to now</param>
+        /// <returns></returns>
+        [Authenticate, Secured]
+        [HttpPost]
+        [System.Web.Http.Route( "api/Sequences/MarkAttendance/{sequenceId}" )]
+        public virtual HttpResponseMessage MarkAttendance( int sequenceId, [FromUri]int? personAliasId = null, [FromUri]DateTime? dateOfAttendance = null )
+        {
+            // Make sure the sequence exists
+            var sequence = SequenceCache.Get( sequenceId );
+
+            if ( sequence == null )
+            {
+                var errorResponse = ControllerContext.Request.CreateErrorResponse( HttpStatusCode.NotFound, "The sequenceId did not resolve" );
+                throw new HttpResponseException( errorResponse );
+            }
+
+            // If not specified, use the current person alias id
+            var rockContext = Service.Context as RockContext;
+
+            if ( !personAliasId.HasValue )
+            {                
+                personAliasId = GetPersonAliasId( rockContext );
+
+                if ( !personAliasId.HasValue )
+                {
+                    var errorResponse = ControllerContext.Request.CreateErrorResponse( HttpStatusCode.BadRequest, "The personAliasId for the current user did not resolve" );
+                    throw new HttpResponseException( errorResponse );
+                }
+            }
+
+            // Get the data from the service
+            var sequenceService = Service as SequenceService;
+            sequenceService.MarkAttendance( sequence, personAliasId.Value, out var errorMessage, dateOfAttendance );
+
+            if ( !errorMessage.IsNullOrWhiteSpace() )
+            {
+                var errorResponse = ControllerContext.Request.CreateErrorResponse( HttpStatusCode.BadRequest, errorMessage );
+                throw new HttpResponseException( errorResponse );
+            }
+
+            // Save to the DB
+            rockContext.SaveChanges();
+            return ControllerContext.Request.CreateResponse( HttpStatusCode.OK );
         }
     }
 }

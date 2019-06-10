@@ -70,25 +70,10 @@ namespace Rock.Model
                 return null;
             }
 
-            var rockContext = Context as RockContext;
-
-            if ( locationId.HasValue )
-            {
-                var locationService = new LocationService( rockContext );
-                var location = locationService.Get( locationId.Value );
-
-                if ( location == null )
-                {
-                    errorMessage = "The locationId is not valid";
-                    return null;
-                }
-            }
-
             // Make sure the enrollment does not already exist for the person
+            var rockContext = Context as RockContext;
             var sequenceEnrollmentService = new SequenceEnrollmentService( rockContext );
-            var alreadyEnrolled = sequenceEnrollmentService.Queryable()
-                .AsNoTracking()
-                .Any( se => se.PersonAliasId == personAliasId && se.SequenceId == sequence.Id );
+            var alreadyEnrolled = sequenceEnrollmentService.IsEnrolled( sequence.Id, personAliasId );
 
             if ( alreadyEnrolled )
             {
@@ -147,7 +132,6 @@ namespace Rock.Model
             return groupLocationsQuery.Select( gl => gl.Location )
                 .DistinctBy( l => l.Id )
                 .AsQueryable();
-            ;
         }
 
         /// <summary>
@@ -322,40 +306,42 @@ namespace Rock.Model
                 if ( hasOccurrence )
                 {
                     occurrenceCount++;
-                }
 
-                if ( hasOccurrence && hasAttendance )
-                {
-                    attendanceCount++;
-
-                    // If starting a new streak, record the date
-                    if ( currentStreak == 0 )
+                    if ( hasAttendance )
                     {
-                        currentStreakStartDate = GetDateOfMapBit( startDate.Value, unitsSinceStart, sequence.OccurenceFrequency );
+                        attendanceCount++;
+
+                        // If starting a new streak, record the date
+                        if ( currentStreak == 0 )
+                        {
+                            currentStreakStartDate = GetDateOfMapBit( startDate.Value, unitsSinceStart, sequence.OccurenceFrequency );
+                        }
+
+                        // Count this attendance toward the current streak
+                        currentStreak++;
+
+                        // If this is now the longest streak, update the longest counters
+                        if ( currentStreak > longestStreak )
+                        {
+                            longestStreak = currentStreak;
+                            longestStreakStartDate = currentStreakStartDate;
+                            longestStreakEndDate = GetDateOfMapBit( startDate.Value, unitsSinceStart, sequence.OccurenceFrequency );
+                        }
                     }
-
-                    // Counts toward streak
-                    currentStreak++;
-
-                    // If this is the longest streak, update those counters
-                    if ( currentStreak > longestStreak )
+                    else if ( hasExclusion )
                     {
-                        longestStreak = currentStreak;
-                        longestStreakStartDate = currentStreakStartDate;
-                        longestStreakEndDate = GetDateOfMapBit( startDate.Value, unitsSinceStart, sequence.OccurenceFrequency );
+                        // Excluded/excused absences don't count toward streaks in a positive nor a negative manner, just ignore other
+                        // than this count
+                        excludedAbsenceCount++;
                     }
-                }
-                else if ( hasOccurrence && !hasExclusion && !hasAttendance )
-                {
-                    absenceCount++;
+                    else
+                    {
+                        absenceCount++;
 
-                    // Break streak
-                    currentStreak = 0;
-                    currentStreakStartDate = null;
-                }
-                else if ( hasOccurrence && hasExclusion && !hasAttendance )
-                {
-                    excludedAbsenceCount++;
+                        // Break the current streak
+                        currentStreak = 0;
+                        currentStreakStartDate = null;
+                    }
                 }
 
                 if ( createObjectArray )
@@ -390,6 +376,94 @@ namespace Rock.Model
                 ExcludedAbsenceCount = excludedAbsenceCount,
                 OccurrenceCount = occurrenceCount
             };
+        }
+
+        /// <summary>
+        /// Notes that the currently logged in person is present. This will update the SequenceEnrollment map and also
+        /// Attendance (if enabled).
+        /// </summary>
+        /// <param name="sequence"></param>
+        /// <param name="personAliasId"></param>
+        /// <param name="errorMessage"></param>
+        /// <param name="dateOfAttendance">Defaults to today or this week</param>
+        public void MarkAttendance( SequenceCache sequence, int personAliasId, out string errorMessage, DateTime? dateOfAttendance )
+        {
+            errorMessage = string.Empty;
+
+            // Validate the sequence
+            if ( sequence == null )
+            {
+                errorMessage = "A valid sequence is required";
+                return;
+            }
+
+            if ( !sequence.IsActive )
+            {
+                errorMessage = "An active sequence is required";
+                return;
+            }
+
+            // Apply default values to parameters
+            var isDaily = sequence.OccurenceFrequency == SequenceOccurenceFrequency.Daily;
+
+            if ( !dateOfAttendance.HasValue && !isDaily )
+            {
+                dateOfAttendance = RockDateTime.Now.SundayDate();
+            }
+            else if ( !dateOfAttendance.HasValue )
+            {
+                dateOfAttendance = RockDateTime.Now.Date;
+            }
+            else
+            {
+                dateOfAttendance = dateOfAttendance.Value.Date;
+            }
+
+            // Validate the attendance date
+            if ( isDaily && dateOfAttendance < sequence.StartDate.Date )
+            {
+                errorMessage = "Cannot mark attendance before the sequence began";
+                return;
+            }
+
+            if ( !isDaily && dateOfAttendance < sequence.StartDate.SundayDate() )
+            {
+                errorMessage = "Cannot mark attendance before the sequence began";
+                return;
+            }
+
+            // Get the enrollment if it exists
+            var rockContext = Context as RockContext;
+            var sequenceEnrollmentService = new SequenceEnrollmentService( rockContext );
+            var sequenceEnrollment = sequenceEnrollmentService.GetBySequenceAndPersonAlias( sequence.Id, personAliasId );
+
+            if ( sequenceEnrollment == null && sequence.RequiresEnrollment )
+            {
+                errorMessage = "This sequence requires enrollment";
+                return;
+            }
+
+            if ( sequenceEnrollment == null )
+            {
+                // Enroll the person since they are marking attendance and enrollment is not required
+                sequenceEnrollment = Enroll( sequence, personAliasId, out errorMessage );
+
+                if ( !errorMessage.IsNullOrWhiteSpace() )
+                {
+                    return;
+                }
+
+                if ( sequenceEnrollment == null )
+                {
+                    errorMessage = "The enrollment was not successful but no error was specified";
+                    return;
+                }
+            }
+
+            // Mark attendance on the enrollment attendance map
+            var attendanceMap = GetBoolArray( sequenceEnrollment.AttendanceMap );
+            SetBit( attendanceMap, sequence.StartDate, dateOfAttendance.Value, true, sequence.OccurenceFrequency, out errorMessage );
+            // TODO - Copy the map back to the model
         }
 
         /// <summary>
@@ -472,6 +546,43 @@ namespace Rock.Model
         #region Bit Manipulation
 
         /// <summary>
+        /// Set the bit that corresponds to bitDate. This method works in-place unless the array has to grow.
+        /// </summary>
+        /// <param name="map"></param>
+        /// <param name="startDate"></param>
+        /// <param name="bitDate"></param>
+        /// <param name="newValue"></param>
+        /// <param name="occurenceFrequency"></param>
+        /// <param name="errorMessage"></param>
+        /// <returns></returns>
+        private bool[] SetBit( bool[] map, DateTime startDate, DateTime bitDate, bool newValue, SequenceOccurenceFrequency occurenceFrequency, out string errorMessage )
+        {
+            errorMessage = string.Empty;
+
+            if ( bitDate < startDate )
+            {
+                errorMessage = "The specified date occurs before the sequence begins";
+                return map;
+            }
+
+            var bitIndex = GetFrequencyUnitDifference( startDate, bitDate, occurenceFrequency, false );
+
+            if ( map == null )
+            {
+                map = new bool[bitIndex + 1];
+            }
+            else if ( bitIndex >= map.Length )
+            {
+                // Grow the map to accommodate the new value
+                var growthNeeded = bitIndex - map.Length;
+                map = PadLeft( map, growthNeeded );
+            }
+
+            map[bitIndex] = newValue;
+            return map;
+        }
+
+        /// <summary>
         /// Assumes the arrays are the same length and then ORs the bits in-place on top of array a.
         /// </summary>
         /// <param name="a"></param>
@@ -508,6 +619,11 @@ namespace Rock.Model
         /// <returns></returns>
         private bool[] GetBoolArray( byte[] byteArray )
         {
+            if ( byteArray == null )
+            {
+                return null;
+            }
+
             return byteArray.SelectMany( GetBits ).ToArray();
         }
 
@@ -583,7 +699,7 @@ namespace Rock.Model
         /// Adds 0's to the end or right side of the map
         /// </summary>
         /// <param name="map"></param>
-        /// <param name="count"></param>
+        /// <param name="count">The number of values to add</param>
         /// <returns></returns>
         private bool[] PadRight( bool[] map, int count )
         {
@@ -607,7 +723,7 @@ namespace Rock.Model
         /// Adds 0's to the start or left side of the map
         /// </summary>
         /// <param name="map"></param>
-        /// <param name="count"></param>
+        /// <param name="count">The number of values to add</param>
         /// <returns></returns>
         private bool[] PadLeft( bool[] map, int count )
         {
@@ -631,7 +747,7 @@ namespace Rock.Model
         /// Removes bits from the end or right side of the map
         /// </summary>
         /// <param name="map"></param>
-        /// <param name="count"></param>
+        /// <param name="count">The number of values to remove</param>
         /// <returns></returns>
         private bool[] RemoveFromRight( bool[] map, int count )
         {
@@ -655,7 +771,7 @@ namespace Rock.Model
         /// Removes bits from the start or left side of the map
         /// </summary>
         /// <param name="map"></param>
-        /// <param name="count"></param>
+        /// <param name="count">The number of values to remove</param>
         /// <returns></returns>
         private bool[] RemoveFromLeft( bool[] map, int count )
         {

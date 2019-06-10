@@ -14,6 +14,7 @@
 // limitations under the License.
 // </copyright>
 //
+using System.Data.Entity;
 using System.Linq;
 
 namespace Rock.Model
@@ -32,6 +33,17 @@ namespace Rock.Model
         public SequenceEnrollment GetBySequenceAndPersonAlias( int sequenceId, int personAliasId )
         {
             return Queryable().FirstOrDefault( se => se.SequenceId == sequenceId && se.PersonAliasId == personAliasId );
+        }
+
+        /// <summary>
+        /// Is the person enrolled in the sequence
+        /// </summary>
+        /// <param name="sequenceId"></param>
+        /// <param name="personAliasId"></param>
+        /// <returns></returns>
+        public bool IsEnrolled( int sequenceId, int personAliasId )
+        {
+            return Queryable().AsNoTracking().Any( se => se.SequenceId == sequenceId && se.PersonAliasId == personAliasId );
         }
     }
 }
