@@ -47,7 +47,7 @@ namespace RockWeb.Blocks.Assessments
             public const string EntityId = "AssessmentTypeId";
         }
 
-        #endregion Page Parameter Keys
+        #endregion
 
         #region Private Variables
 
@@ -56,13 +56,14 @@ namespace RockWeb.Blocks.Assessments
         private RockContext _dataContext = null;
         private bool _blockContextIsValid = false;
 
-        #endregion Private Variables
+        #endregion
 
         #region Configuration Properties
 
         public string BlockIconCssClass = "fa fa-directions";
         public string DeleteItemDetailMessage = "This action will also remove all of the associated Assessments.";
-        private Type EntitySystemType = typeof( Rock.Model.AssessmentType );
+
+        private Type _entitySystemType = typeof( Rock.Model.AssessmentType );
 
         #endregion
 
@@ -145,8 +146,6 @@ namespace RockWeb.Blocks.Assessments
 
         #endregion
 
-        #region Events
-
         #region Control Events
 
         /// <summary>
@@ -178,7 +177,7 @@ namespace RockWeb.Blocks.Assessments
         /// <param name="e">The <see cref="EventArgs" /> instance containing the event data.</param>
         protected void btnSave_Click( object sender, EventArgs e )
         {
-            var recordId = this.SaveRecord();
+            var recordId = this.SaveCurrentEntity();
 
             if ( recordId <= 0 )
             {
@@ -190,56 +189,6 @@ namespace RockWeb.Blocks.Assessments
             qryParams[PageParameterKey.EntityId] = recordId.ToString();
 
             NavigateToPage( this.RockPage.Guid, qryParams );
-        }
-
-        /// <summary>
-        /// Save the current record.
-        /// </summary>
-        /// <returns>The Id of the new record, or -1 if the process could not be completed.</returns>
-        private int SaveRecord()
-        {
-            AssessmentType assessmentType;
-
-            var rockContext = this.GetDataContext();
-
-            var assessmentTypeService = new AssessmentTypeService( rockContext );
-
-            int assessmentTypeId = int.Parse( hfEntityId.Value );
-
-            if ( assessmentTypeId == 0 )
-            {
-                assessmentType = new AssessmentType();
-
-                assessmentTypeService.Add( assessmentType );
-            }
-            else
-            {
-                assessmentType = assessmentTypeService.Queryable()
-                                          .Where( c => c.Id == assessmentTypeId )
-                                          .FirstOrDefault();
-            }
-
-
-            // Update Basic properties
-            assessmentType.Title = tbTitle.Text;
-            assessmentType.IsActive = cbIsActive.Checked;
-            assessmentType.Description = tbDescription.Text;
-
-            assessmentType.AssessmentPath = tbAssessmentPath.Text;
-            assessmentType.AssessmentResultsPath = tbResultsPath.Text;
-
-            assessmentType.RequiresRequest = cbRequiresRequest.Checked;
-            assessmentType.MinimumDaysToRetake = nbDaysBeforeRetake.Text.AsInteger();
-
-            if ( !assessmentType.IsValid )
-            {
-                // Controls will render the error messages
-                return -1;
-            }
-
-            rockContext.SaveChanges();
-
-            return assessmentType.Id;
         }
 
         /// <summary>
@@ -289,10 +238,61 @@ namespace RockWeb.Blocks.Assessments
 
         #endregion
 
-        #endregion
-
         #region Internal Methods
 
+        /// <summary>
+        /// Save the current record.
+        /// </summary>
+        /// <returns>The Id of the new record, or -1 if the process could not be completed.</returns>
+        private int SaveCurrentEntity()
+        {
+            AssessmentType assessmentType;
+
+            var rockContext = this.GetDataContext();
+
+            var assessmentTypeService = new AssessmentTypeService( rockContext );
+
+            int assessmentTypeId = int.Parse( hfEntityId.Value );
+
+            if ( assessmentTypeId == 0 )
+            {
+                assessmentType = new AssessmentType();
+
+                assessmentTypeService.Add( assessmentType );
+            }
+            else
+            {
+                assessmentType = assessmentTypeService.Queryable()
+                                          .Where( c => c.Id == assessmentTypeId )
+                                          .FirstOrDefault();
+            }
+
+
+            // Update Basic properties
+            assessmentType.Title = tbTitle.Text;
+            assessmentType.IsActive = cbIsActive.Checked;
+            assessmentType.Description = tbDescription.Text;
+
+            assessmentType.AssessmentPath = tbAssessmentPath.Text;
+            assessmentType.AssessmentResultsPath = tbResultsPath.Text;
+
+            assessmentType.RequiresRequest = cbRequiresRequest.Checked;
+            assessmentType.MinimumDaysToRetake = nbDaysBeforeRetake.Text.AsInteger();
+
+            if ( !assessmentType.IsValid )
+            {
+                // Controls will render the error messages
+                return -1;
+            }
+
+            rockContext.SaveChanges();
+
+            return assessmentType.Id;
+        }
+
+        /// <summary>
+        /// Initialize buttons that perform entity-specific actions.
+        /// </summary>
         private void InitializeActionButtons()
         {
             var currentEntity = this.GetTargetEntity();
@@ -314,7 +314,7 @@ namespace RockWeb.Blocks.Assessments
         /// <returns></returns>
         private bool InitializeEntityType()
         {
-            _entityType = EntityTypeCache.Get( this.EntitySystemType );
+            _entityType = EntityTypeCache.Get( this._entitySystemType );
 
             return ( _entityType != null );
         }
