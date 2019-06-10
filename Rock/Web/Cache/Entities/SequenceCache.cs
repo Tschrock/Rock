@@ -89,8 +89,8 @@ namespace Rock.Web.Cache
         public DateTime StartDate { get; private set; }
 
         /// <summary>
-        /// The sequence of bits that represent occurences where attendance was possible. The first bit is representative of the StartDate.
-        /// Subsequent bits represent StartDate + (index * Days per OccurenceFrequency).
+        /// The sequence of bits that represent occurrences where attendance was possible. The least significant bit (right side) is
+        /// representative of the StartDate. More significant bits (going left) are more recent dates.
         /// </summary>
         [DataMember]
         public byte[] OccurenceMap { get; private set; }

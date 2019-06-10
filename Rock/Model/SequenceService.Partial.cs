@@ -19,6 +19,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Data.Entity;
 using System.Linq;
+using System.Text;
 using Rock.Data;
 using Rock.Web.Cache;
 
@@ -95,7 +96,7 @@ namespace Rock.Model
                 return null;
             }
 
-            // Add the enrollment, matching the occurence map's length with the same length array of 0/false bits
+            // Add the enrollment, matching the occurrence map's length with the same length array of 0/false bits
             var sequenceEnrollment = new SequenceEnrollment
             {
                 SequenceId = sequence.Id,
@@ -199,10 +200,11 @@ namespace Rock.Model
         /// <param name="startDate">Defaults to the sequence start date</param>
         /// <param name="endDate">Defaults to now</param>
         /// <param name="createObjectArray">Defaults to false. This may be a costly operation if enabled.</param>
+        /// <param name="includeBitMaps">Defaults to false. This may be a costly operation if enabled.</param>
         /// <param name="errorMessage"></param>
         /// <returns></returns>
         public SequenceEnrollmentData GetSequenceEnrollmentData( SequenceCache sequence, int personAliasId, out string errorMessage,
-            DateTime? startDate = null, DateTime? endDate = null, bool createObjectArray = false )
+            DateTime? startDate = null, DateTime? endDate = null, bool createObjectArray = false, bool includeBitMaps = false )
         {
             errorMessage = string.Empty;
             var now = RockDateTime.Now;
@@ -245,7 +247,13 @@ namespace Rock.Model
                 return null;
             }
 
-            if ( endDate > now )
+            if ( sequence.OccurenceFrequency == SequenceOccurenceFrequency.Daily && endDate > now )
+            {
+                errorMessage = "EndDate cannot be in the future";
+                return null;
+            }
+
+            if ( sequence.OccurenceFrequency == SequenceOccurenceFrequency.Weekly && endDate > now.SundayDate() )
             {
                 errorMessage = "EndDate cannot be in the future";
                 return null;
@@ -258,66 +266,145 @@ namespace Rock.Model
             }
 
             // Calculate the difference in start dates from the parameter to what these maps are based upon
-            var startDateShiftRightUnits = GetFrequencyUnitDifference( sequence.StartDate, startDate.Value, sequence.OccurenceFrequency, false );
+            var slideStartUnitsToFuture = GetFrequencyUnitDifference( sequence.StartDate, startDate.Value, sequence.OccurenceFrequency, false );
 
             // Calculate the number of frequency units that the results are based upon (inclusive)
             var numberOfFrequencyUnits = GetFrequencyUnitDifference( startDate.Value, endDate.Value, sequence.OccurenceFrequency, true );
 
             // Conform the sequence occurrences to the date range
-            var occurrenceMap = ConformMapToDateRange( sequence.OccurenceMap, startDateShiftRightUnits, numberOfFrequencyUnits );
+            var occurrenceMap = ConformMapToDateRange( sequence.OccurenceMap, slideStartUnitsToFuture, numberOfFrequencyUnits );
 
             // Get the enrollment if it exists
             var rockContext = Context as RockContext;
             var sequenceEnrollmentService = new SequenceEnrollmentService( rockContext );
             var sequenceEnrollment = sequenceEnrollmentService.GetBySequenceAndPersonAlias( sequence.Id, personAliasId );
-            var attendanceMap = ConformMapToDateRange( sequenceEnrollment?.AttendanceMap, startDateShiftRightUnits, numberOfFrequencyUnits );
+            var attendanceMap = ConformMapToDateRange( sequenceEnrollment?.AttendanceMap, slideStartUnitsToFuture, numberOfFrequencyUnits );
             var locationId = sequenceEnrollment?.LocationId;
 
             // Calculate the aggregate exclusion map
             var exclusionMaps = sequence.SequenceOccurrenceExclusions
                 .Where( soe => soe.LocationId == locationId )
-                .Select( soe => ConformMapToDateRange( soe.ExclusionMap, startDateShiftRightUnits, numberOfFrequencyUnits ) )
-                .ToList();
+                .Select( soe => ConformMapToDateRange( soe.ExclusionMap, slideStartUnitsToFuture, numberOfFrequencyUnits ) )
+                .ToArray();
 
-            var aggregateExclusionMap = new BitArray( numberOfFrequencyUnits, false );
-            foreach ( var exclusionMap in exclusionMaps )
+            var aggregateExclusionMap = exclusionMaps.Length == 0 ? new bool[numberOfFrequencyUnits] : exclusionMaps[0];
+
+            for ( var i = 1; i < exclusionMaps.Length; i++ )
             {
-                aggregateExclusionMap.Or( exclusionMap );
+                OrBitOperation( aggregateExclusionMap, exclusionMaps[i] );
+            }
+
+            // Calculate streaks and object array if requested
+            var currentStreak = 0;
+            var currentStreakStartDate = ( DateTime? ) null;
+
+            var longestStreak = 0;
+            var longestStreakStartDate = ( DateTime? ) null;
+            var longestStreakEndDate = ( DateTime? ) null;
+
+            var occurrenceCount = 0;
+            var attendanceCount = 0;
+            var absenceCount = 0;
+            var excludedAbsenceCount = 0;
+
+            var objectArray = createObjectArray ? new List<SequenceEnrollmentData.FrequencyUnitData>( numberOfFrequencyUnits ) : null;
+
+            for ( var unitsSinceStart = 0; unitsSinceStart < numberOfFrequencyUnits; unitsSinceStart++ )
+            {
+                // Use a reverse index to read from the arrays since the bits at the end of the array correspond to the past
+                // and the bits at the front are nearer to the present
+                var reverseIndex = numberOfFrequencyUnits - unitsSinceStart - 1;
+
+                var hasAttendance = attendanceMap[reverseIndex];
+                var hasExclusion = aggregateExclusionMap[reverseIndex];
+                var hasOccurrence = occurrenceMap[reverseIndex];
+
+                if ( hasOccurrence )
+                {
+                    occurrenceCount++;
+                }
+
+                if ( hasOccurrence && hasAttendance )
+                {
+                    attendanceCount++;
+
+                    // If starting a new streak, record the date
+                    if ( currentStreak == 0 )
+                    {
+                        currentStreakStartDate = GetDateOfMapBit( startDate.Value, unitsSinceStart, sequence.OccurenceFrequency );
+                    }
+
+                    // Counts toward streak
+                    currentStreak++;
+
+                    // If this is the longest streak, update those counters
+                    if ( currentStreak > longestStreak )
+                    {
+                        longestStreak = currentStreak;
+                        longestStreakStartDate = currentStreakStartDate;
+                        longestStreakEndDate = GetDateOfMapBit( startDate.Value, unitsSinceStart, sequence.OccurenceFrequency );
+                    }
+                }
+                else if ( hasOccurrence && !hasExclusion && !hasAttendance )
+                {
+                    absenceCount++;
+
+                    // Break streak
+                    currentStreak = 0;
+                    currentStreakStartDate = null;
+                }
+                else if ( hasOccurrence && hasExclusion && !hasAttendance )
+                {
+                    excludedAbsenceCount++;
+                }
+
+                if ( createObjectArray )
+                {
+                    objectArray.Add( new SequenceEnrollmentData.FrequencyUnitData
+                    {
+                        DateTime = GetDateOfMapBit( startDate.Value, unitsSinceStart, sequence.OccurenceFrequency ),
+                        HasAttendance = hasAttendance,
+                        HasExclusion = hasExclusion,
+                        HasOccurrence = hasOccurrence
+                    } );
+                }
             }
 
             // Create the return object
-            var sequenceEnrollmentData = new SequenceEnrollmentData
+            return new SequenceEnrollmentData
             {
                 StartDate = startDate.Value,
                 EndDate = endDate.Value,
-                OccurenceMap = GetByteArray( occurrenceMap ),
-                ExclusionMap = GetByteArray( aggregateExclusionMap ),
-                AttendanceMap = GetByteArray( attendanceMap ),
-                OccurenceFrequency = sequence.OccurenceFrequency
+                OccurenceMap = includeBitMaps ? GetBitString( occurrenceMap ) : null,
+                ExclusionMap = includeBitMaps ? GetBitString( aggregateExclusionMap ) : null,
+                AttendanceMap = includeBitMaps ? GetBitString( attendanceMap ) : null,
+                OccurenceFrequency = sequence.OccurenceFrequency,
+                CurrentStreakCount = currentStreak,
+                CurrentStreakStartDate = currentStreakStartDate,
+                LongestStreakCount = longestStreak,
+                LongestStreakStartDate = longestStreakStartDate,
+                LongestStreakEndDate = longestStreakEndDate,
+                PerFrequencyUnit = objectArray,
+                AbsenceCount = absenceCount,
+                AttendanceCount = attendanceCount,
+                ExcludedAbsenceCount = excludedAbsenceCount,
+                OccurrenceCount = occurrenceCount
             };
+        }
 
-            // Create the object array if requested
-            if ( createObjectArray )
-            {
-                var objectArray = new List<SequenceEnrollmentData.SequenceEnrollmentDataByFrequency>();
-
-                for (var i = 0; i < numberOfFrequencyUnits; i++)
-                {
-                    var daysAfterStart = i * ( sequence.OccurenceFrequency == SequenceOccurenceFrequency.Daily ? 1 : DaysPerWeek );
-                    var date = startDate.Value.AddDays( daysAfterStart );
-
-                    objectArray.Add( new SequenceEnrollmentData.SequenceEnrollmentDataByFrequency {
-                        DateTime = sequence.OccurenceFrequency == SequenceOccurenceFrequency.Daily ? date.Date : date.SundayDate().Date,
-                        HasAttendance = attendanceMap[i],
-                        HasExclusion = aggregateExclusionMap[i],
-                        HasOccurrence = occurrenceMap[i]
-                    } );
-                }
-
-                sequenceEnrollmentData.ByFrequency = objectArray;
-            }
-
-            return sequenceEnrollmentData;
+        /// <summary>
+        /// Calculate the date represented by a map bit
+        /// </summary>
+        /// <param name="startDate"></param>
+        /// <param name="frequencyUnits"></param>
+        /// <param name="sequenceOccurenceFrequency"></param>
+        /// <returns></returns>
+        private DateTime GetDateOfMapBit( DateTime startDate, int frequencyUnits, SequenceOccurenceFrequency sequenceOccurenceFrequency )
+        {
+            var isDaily = sequenceOccurenceFrequency == SequenceOccurenceFrequency.Daily;
+            var daysAfterStart = frequencyUnits * ( isDaily ? 1 : DaysPerWeek );
+            var date = startDate.AddDays( daysAfterStart );
+            return isDaily ? date.Date : date.SundayDate().Date;
         }
 
         /// <summary>
@@ -384,67 +471,109 @@ namespace Rock.Model
 
         #region Bit Manipulation
 
+        /// <summary>
+        /// Assumes the arrays are the same length and then ORs the bits in-place on top of array a.
+        /// </summary>
+        /// <param name="a"></param>
+        /// <param name="b"></param>
+        private void OrBitOperation( bool[] a, bool[] b )
+        {
+            for ( var i = 0; i < a.Length; i++ )
+            {
+                a[i] |= b[i];
+            }
+        }
 
         /// <summary>
-        /// Copy the bit array into a byte array
+        /// Copy the bit array into a bit string
         /// </summary>
         /// <param name="map"></param>
         /// <returns></returns>
-        public byte[] GetByteArray( BitArray map )
+        private string GetBitString( bool[] map )
         {
-            var byteArray = new byte[( map.Length - 1 ) / 8 + 1];
-            map.CopyTo( byteArray, 0 );
-            return byteArray;
+            var stringBuilder = new StringBuilder();
+
+            for ( var i = 0; i < map.Length; i++ )
+            {
+                stringBuilder.Append( map[i] ? "1" : "0" );
+            }
+
+            return stringBuilder.ToString();
+        }
+
+        /// <summary>
+        /// Get an array of booleans from the byte array
+        /// </summary>
+        /// <param name="byteArray"></param>
+        /// <returns></returns>
+        private bool[] GetBoolArray( byte[] byteArray )
+        {
+            return byteArray.SelectMany( GetBits ).ToArray();
+        }
+
+        /// <summary>
+        /// Get the boolean values from the byte
+        /// From https://stackoverflow.com/a/2548060
+        /// </summary>
+        /// <param name="theByte"></param>
+        /// <returns></returns>
+        private IEnumerable<bool> GetBits( byte theByte )
+        {
+            for ( int i = 0; i < BitsPerByte; i++ )
+            {
+                yield return ( theByte & 0x80 ) != 0;
+                theByte *= 2;
+            }
         }
 
         /// <summary>
         /// Adjust the map to match some other starting point and length
         /// </summary>
         /// <param name="byteArrayMap"></param>
-        /// <param name="startShiftToFutureCount">A positive value means the new start date is after the original (shift the start
+        /// <param name="slideStartToFutureCount">A positive value means the new start date is after the original (slide the start
         /// date toward the future)</param>
         /// <param name="newLength"></param>
         /// <returns></returns>
-        private BitArray ConformMapToDateRange( byte[] byteArrayMap, int startShiftToFutureCount, int newLength )
+        private bool[] ConformMapToDateRange( byte[] byteArrayMap, int slideStartToFutureCount, int newLength )
         {
             if ( byteArrayMap == null || byteArrayMap.Length == 0 )
             {
-                return new BitArray( newLength, false );
+                return new bool[newLength];
             }
 
-            var map = new BitArray( byteArrayMap );
+            var map = GetBoolArray( byteArrayMap );
 
             // This should happen frequently if the sequence start date is used and the end date is left as today so we
             // can skip all the other calculations for speed
-            if ( startShiftToFutureCount == 0 && newLength == map.Length )
+            if ( slideStartToFutureCount == 0 && newLength == map.Length )
             {
                 return map;
             }
 
-            // Conform the beginning (left-side) of the map
-            if ( startShiftToFutureCount > 0 )
+            // Conform the beginning (right-side, least significant) of the map
+            if ( slideStartToFutureCount > 0 )
             {
-                // If date moved right, then we need to remove the bits that are before the new start date
-                map = RemoveFromLeft( map, startShiftToFutureCount );
-            }            
-            else if ( startShiftToFutureCount < 0 )
+                // If date moved more recent, then we need to remove the bits that are before the new start date
+                map = RemoveFromRight( map, slideStartToFutureCount );
+            }
+            else if ( slideStartToFutureCount < 0 )
             {
-                // If date moved left, then we need to add the bits that are before the original start date
-                map = PadLeft( map, 0 - startShiftToFutureCount );
+                // If date moved less recent, then we need to add the bits that are before the original start date
+                map = PadRight( map, 0 - slideStartToFutureCount );
             }
 
-            // Conform the length by adjusting the end (right-side) of the map
-            var endShiftToFutureCount = newLength - map.Length;
+            // Conform the length by adjusting the end (left-side, most significant) of the map
+            var slideEndToFutureCount = newLength - map.Length;
 
-            if ( endShiftToFutureCount > 0)
+            if ( slideEndToFutureCount > 0 )
             {
-                // If the ending needs to shift into the future, then add bits to the end
-                map = PadRight( map, endShiftToFutureCount );
+                // If the ending needs to shift into the future, then add bits to the end (left, most significant)
+                map = PadLeft( map, slideEndToFutureCount );
             }
-            else if (endShiftToFutureCount < 0)
+            else if ( slideEndToFutureCount < 0 )
             {
-                // If the ending needs to shift into the past, then remove bits from the end
-                map = RemoveFromRight( map, 0 - endShiftToFutureCount );
+                // If the ending needs to shift into the past, then remove bits from the end (left, most significant)
+                map = RemoveFromLeft( map, 0 - slideEndToFutureCount );
             }
 
             return map;
@@ -456,15 +585,15 @@ namespace Rock.Model
         /// <param name="map"></param>
         /// <param name="count"></param>
         /// <returns></returns>
-        private BitArray PadRight( BitArray map, int count )
+        private bool[] PadRight( bool[] map, int count )
         {
-            if (count == 0)
+            if ( count == 0 )
             {
                 return map;
             }
 
             var newLength = map.Length + count;
-            var newMap = new BitArray( newLength );
+            var newMap = new bool[newLength];
 
             for ( var i = 0; i < map.Length; i++ )
             {
@@ -480,7 +609,7 @@ namespace Rock.Model
         /// <param name="map"></param>
         /// <param name="count"></param>
         /// <returns></returns>
-        private BitArray PadLeft( BitArray map, int count )
+        private bool[] PadLeft( bool[] map, int count )
         {
             if ( count == 0 )
             {
@@ -488,11 +617,11 @@ namespace Rock.Model
             }
 
             var newLength = map.Length + count;
-            var newMap = new BitArray( newLength );
+            var newMap = new bool[newLength];
 
-            for ( var i = count; i < newLength; i++ )
+            for ( var i = 0; i < map.Length; i++ )
             {
-                newMap[i] = map[i];
+                newMap[i + count] = map[i];
             }
 
             return newMap;
@@ -504,7 +633,7 @@ namespace Rock.Model
         /// <param name="map"></param>
         /// <param name="count"></param>
         /// <returns></returns>
-        private BitArray RemoveFromRight( BitArray map, int count )
+        private bool[] RemoveFromRight( bool[] map, int count )
         {
             if ( count == 0 )
             {
@@ -512,7 +641,7 @@ namespace Rock.Model
             }
 
             var newLength = map.Length - count;
-            var newMap = new BitArray( newLength );
+            var newMap = new bool[newLength];
 
             for ( var i = 0; i < newLength; i++ )
             {
@@ -528,7 +657,7 @@ namespace Rock.Model
         /// <param name="map"></param>
         /// <param name="count"></param>
         /// <returns></returns>
-        private BitArray RemoveFromLeft( BitArray map, int count )
+        private bool[] RemoveFromLeft( bool[] map, int count )
         {
             if ( count == 0 )
             {
@@ -536,7 +665,7 @@ namespace Rock.Model
             }
 
             var newLength = map.Length - count;
-            var newMap = new BitArray( newLength );
+            var newMap = new bool[newLength];
 
             for ( var i = 0; i < newLength; i++ )
             {
@@ -566,25 +695,20 @@ namespace Rock.Model
         public DateTime EndDate { get; set; }
 
         /// <summary>
-        /// The sequence of bits that represent attendance. The first bit is representative of the StartDate. Subsequent
-        /// bits represent StartDate + (index * Days per OccurenceFrequency). A "1" represents a day or week where the person
-        /// had attendance.
+        /// The sequence of bits that represent attendance. The least significant bit (rightmost) represents the start date.
         /// </summary>
-        public byte[] AttendanceMap { get; set; }
+        public string AttendanceMap { get; set; }
 
         /// <summary>
-        /// The sequence of bits that represent occurrences where attendance was possible. The first bit is representative of the StartDate.
-        /// Subsequent bits represent StartDate + (index * Days per OccurenceFrequency). A "1" represents a day or week where attendance
-        /// was possible.
+        /// The sequence of bits that represent occurrences where attendance was possible.  The least significant bit (rightmost)
+        /// represents the start date.
         /// </summary>
-        public byte[] OccurenceMap { get; set; }
+        public string OccurenceMap { get; set; }
 
         /// <summary>
-        /// The sequence of bits that represent exclusions. The first bit is representative of the StartDate. Subsequent
-        /// bits represent StartDate + (index * Days per OccurenceFrequency). A "1" represents a day or week that should be
-        /// excluded from the streak calculations.
+        /// The sequence of bits that represent exclusions.  The least significant bit (rightmost) represents the start date.
         /// </summary>
-        public byte[] ExclusionMap { get; set; }
+        public string ExclusionMap { get; set; }
 
         /// <summary>
         /// Gets or sets the timespan that each map bit represents (<see cref="Rock.Model.SequenceOccurenceFrequency"/>).
@@ -592,15 +716,60 @@ namespace Rock.Model
         public SequenceOccurenceFrequency OccurenceFrequency { get; set; }
 
         /// <summary>
+        /// The date that the current streak began
+        /// </summary>
+        public DateTime? CurrentStreakStartDate { get; set; }
+
+        /// <summary>
+        /// The current number of non excluded occurrences attended in a row
+        /// </summary>
+        public int CurrentStreakCount { get; set; }
+
+        /// <summary>
+        /// The date the longest streak began
+        /// </summary>
+        public DateTime? LongestStreakStartDate { get; set; }
+
+        /// <summary>
+        /// The date the longest streak ended
+        /// </summary>
+        public DateTime? LongestStreakEndDate { get; set; }
+
+        /// <summary>
+        /// The longest number of non excluded occurrences attended in a row
+        /// </summary>
+        public int LongestStreakCount { get; set; }
+
+        /// <summary>
+        /// The number of occurrences within the date range
+        /// </summary>
+        public int OccurrenceCount { get; set; }
+
+        /// <summary>
+        /// The number of attendances on occurrences within the date range
+        /// </summary>
+        public int AttendanceCount { get; set; }
+
+        /// <summary>
+        /// The number of absences on occurrences within the date range
+        /// </summary>
+        public int AbsenceCount { get; set; }
+
+        /// <summary>
+        /// The number of excluded absences on occurrences within the date range
+        /// </summary>
+        public int ExcludedAbsenceCount { get; set; }
+
+        /// <summary>
         /// A list of object representing days or weeks from start to end containing the date and its attendance, occurrence, and
         /// exclusion data.
         /// </summary>
-        public List<SequenceEnrollmentDataByFrequency> ByFrequency { get; set; }
+        public List<FrequencyUnitData> PerFrequencyUnit { get; set; }
 
         /// <summary>
-        /// The object representing a single day or week in a streak
+        /// The object representing a single day or week (frequency unit) in a streak
         /// </summary>
-        public class SequenceEnrollmentDataByFrequency
+        public class FrequencyUnitData
         {
             /// <summary>
             /// The day or week represented

@@ -45,8 +45,8 @@ namespace Rock.Web.Cache
         public int? LocationId { get; private set; }
 
         /// <summary>
-        /// The sequence of bits that represent exclusions. The first bit is representative of the Sequence's StartDate. Subsequent
-        /// bits represent StartDate + (index * Days per OccurenceFrequency). A 1 represents an exclusion.
+        /// The sequence of bits that represent exclusions. The least significant bit is representative of the Sequence's StartDate.
+        /// More significant bits (going left) are more recent dates.
         /// </summary>
         [DataMember]
         public byte[] ExclusionMap { get; private set; }

@@ -173,15 +173,16 @@ namespace Rock.Rest.Controllers
         /// </summary>
         /// <param name="sequenceId"></param>
         /// <param name="personAliasId"></param>
-        /// <param name="startDate"></param>
-        /// <param name="endDate"></param>
-        /// <param name="createObjectArray"></param>
+        /// <param name="startDate">Defaults to the sequence start date</param>
+        /// <param name="endDate">Defaults to now</param>
+        /// <param name="createObjectArray">Defaults to false. This may be a costly operation if enabled.</param>
+        /// <param name="includeBitMaps">Defaults to false. This may be a costly operation if enabled.</param>
         /// <returns></returns>
         [Authenticate, Secured]
         [HttpGet]
         [EnableQuery]
         [System.Web.Http.Route( "api/Sequences/EnrollmentStreak/{sequenceId}" )]
-        public virtual SequenceEnrollmentData GetEnrollmentStreak( int sequenceId, int? personAliasId = null, DateTime? startDate = null, DateTime? endDate = null, bool createObjectArray = false )
+        public virtual SequenceEnrollmentData GetEnrollmentStreak( int sequenceId, int? personAliasId = null, DateTime? startDate = null, DateTime? endDate = null, bool createObjectArray = false, bool includeBitMaps = false )
         {
             // Make sure the sequence exists
             var sequence = SequenceCache.Get( sequenceId );
@@ -207,7 +208,7 @@ namespace Rock.Rest.Controllers
 
             // Get the data from the service
             var sequenceService = Service as SequenceService;
-            var sequenceEnrollmentData = sequenceService.GetSequenceEnrollmentData( sequence, personAliasId.Value, out var errorMessage, startDate, endDate, createObjectArray );
+            var sequenceEnrollmentData = sequenceService.GetSequenceEnrollmentData( sequence, personAliasId.Value, out var errorMessage, startDate, endDate, createObjectArray, includeBitMaps );
 
             if ( !errorMessage.IsNullOrWhiteSpace() )
             {

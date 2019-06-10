@@ -54,8 +54,8 @@ namespace Rock.Model
         public int? LocationId { get; set; }
 
         /// <summary>
-        /// The sequence of bits that represent attendance. The first bit is representative of the Sequence's StartDate. Subsequent
-        /// bits represent StartDate + (index * Days per OccurenceFrequency).
+        /// The sequence of bits that represent attendance. The least significant bit (right side) is representative of the Sequence's
+        /// StartDate. More significant bits (going left) are more recent dates.
         /// </summary>
         [DataMember]
         public byte[] AttendanceMap { get; set; }
