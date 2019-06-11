@@ -385,8 +385,12 @@ namespace Rock.Model
         /// <param name="sequence"></param>
         /// <param name="personAliasId"></param>
         /// <param name="errorMessage"></param>
-        /// <param name="dateOfAttendance">Defaults to today or this week</param>
-        public void MarkAttendance( SequenceCache sequence, int personAliasId, out string errorMessage, DateTime? dateOfAttendance )
+        /// <param name="dateOfAttendance">Defaults to today</param>
+        /// <param name="groupId">This is required for marking attendance unless the sequence is a group structure type</param>
+        /// <param name="locationId"></param>
+        /// <param name="scheduleId"></param>
+        public void MarkAttendance( SequenceCache sequence, int personAliasId, out string errorMessage,
+            DateTime? dateOfAttendance, int? groupId, int?locationId, int? scheduleId )
         {
             errorMessage = string.Empty;
 
@@ -401,6 +405,12 @@ namespace Rock.Model
             {
                 errorMessage = "An active sequence is required";
                 return;
+            }
+
+            // Override the group id if the sequence is explicit about the group
+            if ( sequence.StructureType == SequenceStructureType.Group && sequence.StructureEntityId.HasValue )
+            {
+                groupId = sequence.StructureEntityId;
             }
 
             // Apply default values to parameters
@@ -461,9 +471,23 @@ namespace Rock.Model
             }
 
             // Mark attendance on the enrollment attendance map
-            var attendanceMap = GetBoolArray( sequenceEnrollment.AttendanceMap );
-            SetBit( attendanceMap, sequence.StartDate, dateOfAttendance.Value, true, sequence.OccurenceFrequency, out errorMessage );
-            // TODO - Copy the map back to the model
+            var boolMap = GetBoolArray( sequenceEnrollment.AttendanceMap );
+            boolMap = SetBit( boolMap, sequence.StartDate, dateOfAttendance.Value, true, sequence.OccurenceFrequency, out errorMessage );
+
+            if ( !errorMessage.IsNullOrWhiteSpace() )
+            {
+                return;
+            }
+
+            // Set the map on the model
+            sequenceEnrollment.AttendanceMap = GetByteArray( boolMap );
+
+            // If attendance is enabled and we are able to identify at least the group, then update attendance models
+            if ( sequence.EnableAttendance && groupId.HasValue )
+            {
+                var attendanceService = new AttendanceService( rockContext );
+                attendanceService.AddOrUpdate( personAliasId, dateOfAttendance.Value, groupId, locationId, scheduleId, null );
+            }
         }
 
         /// <summary>
@@ -565,20 +589,20 @@ namespace Rock.Model
                 return map;
             }
 
-            var bitIndex = GetFrequencyUnitDifference( startDate, bitDate, occurenceFrequency, false );
+            var unitsFromStart = GetFrequencyUnitDifference( startDate, bitDate, occurenceFrequency, false );
 
             if ( map == null )
             {
-                map = new bool[bitIndex + 1];
+                map = new bool[unitsFromStart + 1];
             }
-            else if ( bitIndex >= map.Length )
+            else if ( unitsFromStart >= map.Length )
             {
                 // Grow the map to accommodate the new value
-                var growthNeeded = bitIndex - map.Length;
+                var growthNeeded = unitsFromStart - map.Length + 1;
                 map = PadLeft( map, growthNeeded );
             }
 
-            map[bitIndex] = newValue;
+            map[map.Length - unitsFromStart - 1] = newValue;
             return map;
         }
 
@@ -640,6 +664,49 @@ namespace Rock.Model
                 yield return ( theByte & 0x80 ) != 0;
                 theByte *= 2;
             }
+        }
+
+        /// <summary>
+        /// Get the bytes represented by the boolean array
+        /// </summary>
+        /// <param name="boolArray"></param>
+        /// <returns></returns>
+        private byte[] GetByteArray( bool[] boolArray )
+        {
+            if ( boolArray == null )
+            {
+                return null;
+            }
+
+            // Create the resulting byte array. Add 1 instead of checking remainder since 0's padding the
+            // left of a number don't mean anything
+            var bitCount = boolArray.Length;
+            var byteCount = bitCount / BitsPerByte + 1;
+            var byteArray = new byte[byteCount];
+
+            // We are walking through each bit in the bool array. Each 8 bools will become a byte. So we need
+            // to track the current byte and the current bit within the current byte
+            var currentByteIndex = byteCount - 1;
+            var currentByteBitIndex = 0;
+
+            // Loop backwards over the bit array since the least significant bit is at the end of the array
+            for ( var bitIndex = boolArray.Length - 1; bitIndex >= 0; bitIndex-- )
+            {
+                if ( boolArray[bitIndex] )
+                {
+                    byteArray[currentByteIndex] |= ( byte ) ( 1 << currentByteBitIndex );
+                }
+
+                currentByteBitIndex++;
+
+                if (currentByteBitIndex >= BitsPerByte)
+                {
+                    currentByteBitIndex = 0;
+                    currentByteIndex--;
+                }
+            }
+
+            return byteArray;
         }
 
         /// <summary>

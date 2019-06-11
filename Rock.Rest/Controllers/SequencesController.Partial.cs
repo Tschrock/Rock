@@ -236,11 +236,15 @@ namespace Rock.Rest.Controllers
         /// <param name="sequenceId"></param>
         /// <param name="personAliasId">Defaults to the current person</param>
         /// <param name="dateOfAttendance">Defaults to now</param>
+        /// <param name="groupId">This is required for marking attendance unless the sequence is a group structure type</param>
+        /// <param name="locationId"></param>
+        /// <param name="scheduleId"></param>
         /// <returns></returns>
         [Authenticate, Secured]
         [HttpPost]
         [System.Web.Http.Route( "api/Sequences/MarkAttendance/{sequenceId}" )]
-        public virtual HttpResponseMessage MarkAttendance( int sequenceId, [FromUri]int? personAliasId = null, [FromUri]DateTime? dateOfAttendance = null )
+        public virtual HttpResponseMessage MarkAttendance( int sequenceId, [FromUri]int? personAliasId = null,
+            [FromUri]DateTime? dateOfAttendance = null, [FromUri]int? groupId = null, [FromUri]int? locationId = null, [FromUri]int? scheduleId = null )
         {
             // Make sure the sequence exists
             var sequence = SequenceCache.Get( sequenceId );
@@ -267,7 +271,8 @@ namespace Rock.Rest.Controllers
 
             // Get the data from the service
             var sequenceService = Service as SequenceService;
-            sequenceService.MarkAttendance( sequence, personAliasId.Value, out var errorMessage, dateOfAttendance );
+            sequenceService.MarkAttendance( sequence, personAliasId.Value, out var errorMessage,
+                dateOfAttendance, groupId, locationId, scheduleId );
 
             if ( !errorMessage.IsNullOrWhiteSpace() )
             {
