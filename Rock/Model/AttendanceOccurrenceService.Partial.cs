@@ -32,17 +32,18 @@ namespace Rock.Model
         /// <summary>
         /// Gets the specified occurrence record.
         /// </summary>
-        /// <param name="occurrenceDate">The occurrence date, the time wil be removed.</param>
+        /// <param name="occurrenceDate">The occurrence date, the time will be removed.</param>
         /// <param name="groupId">The group identifier.</param>
         /// <param name="locationId">The location identifier.</param>
         /// <param name="scheduleId">The schedule identifier.</param>
+        /// <param name="includes">Allows including attendance occurrence virtual properties like Attendees.</param>
         /// <returns></returns>
-        public AttendanceOccurrence Get( DateTime occurrenceDate, int? groupId, int? locationId, int? scheduleId )
+        public AttendanceOccurrence Get( DateTime occurrenceDate, int? groupId, int? locationId, int? scheduleId, string includes )
         {
             // We only want the date. Time need not apply.
             occurrenceDate = occurrenceDate.Date;
 
-            var qry = Queryable().Where( o => o.OccurrenceDate == occurrenceDate );
+            var qry = Queryable( includes ).Where( o => o.OccurrenceDate == occurrenceDate );
 
             qry = groupId.HasValue ?
                 qry.Where( o => o.GroupId.HasValue && o.GroupId.Value == groupId.Value ) :
@@ -57,6 +58,19 @@ namespace Rock.Model
                 qry.Where( o => !o.ScheduleId.HasValue );
 
             return qry.FirstOrDefault();
+        }
+
+        /// <summary>
+        /// Gets the specified occurrence record.
+        /// </summary>
+        /// <param name="occurrenceDate">The occurrence date, the time will be removed.</param>
+        /// <param name="groupId">The group identifier.</param>
+        /// <param name="locationId">The location identifier.</param>
+        /// <param name="scheduleId">The schedule identifier.</param>
+        /// <returns></returns>
+        public AttendanceOccurrence Get( DateTime occurrenceDate, int? groupId, int? locationId, int? scheduleId )
+        {
+            return Get( occurrenceDate, groupId, locationId, scheduleId, null );
         }
 
         /// <summary>

@@ -105,7 +105,7 @@ namespace Rock.Model
         {
             // Check to see if an occurrence exists already
             var occurrenceService = new AttendanceOccurrenceService( ( RockContext ) Context );
-            var occurrence = occurrenceService.Get( checkinDateTime.Date, groupId, locationId, scheduleId );
+            var occurrence = occurrenceService.Get( checkinDateTime.Date, groupId, locationId, scheduleId, "Attendees" );
 
             if ( occurrence == null )
             {
