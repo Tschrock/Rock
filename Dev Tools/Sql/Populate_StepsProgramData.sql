@@ -1,6 +1,3 @@
-use rock_spark_steps
-go
-
 /*
  Script to populate a Rock RMS database with sample data for the Steps module.
 
@@ -18,7 +15,7 @@ declare
     -- Enabling this option will remove only those Step Participicants that were added by this script.
     ,@deleteExistingSteps bit = 1
     -- Set this flag to indicate if sample data should be added.
-    ,@addSampleData bit = 1	
+    ,@addSampleData bit = 1
     -- Set this value to the number of people for whom steps will be created.
     ,@maxPersonCount int = 100
     -- Set this value to the maximum number of days between consecutive step achievements.
@@ -272,7 +269,7 @@ begin
                 StepProgramId
                 ,Name
                 ,AllowMultiple
-                ,HasEndDate			
+                ,HasEndDate
                 ,IsActive
                 ,[Order]
                 ,Guid
@@ -456,13 +453,13 @@ begin
     declare @programIds table ( id Int )
     declare @programIdProcessList table ( id Int );
     declare @stepTypeIds table ( id Int, rowNo Int );
-    declare	@stepStatusIds table ( id int,stepProgramId int,isCompleteStatus bit );
+    declare @stepStatusIds table ( id int,stepProgramId int,isCompleteStatus bit );
     declare @personAliasIds table ( id Int not null );
 
     declare
          @stepTable table (
             [StepTypeId] [int] NOT NULL,
-            [StepStatusId] [int] NULL,	   
+            [StepStatusId] [int] NULL,
             [PersonAliasId] [int] NULL,
             [CampusId] [int] NULL,
             [CompletedDateTime] [datetime] NULL,
@@ -475,7 +472,7 @@ begin
             [ModifiedDateTime] [datetime] NULL,
             [CreatedByPersonAliasId] [int] NULL,
             [ModifiedByPersonAliasId] [int] NULL,
-            [ForeignKey] [nvarchar](100) NULL		
+            [ForeignKey] [nvarchar](100) NULL
         );
 
     begin
@@ -519,7 +516,7 @@ begin
         ,@newStepDateTime datetime
         ,@campusId int
         ,@maxStepTypeCount int
-        ,@stepsToAddCount int	
+        ,@stepsToAddCount int
         ,@programsToAddCount int
         ,@nextStepTypeId int = 0
         ,@statusId int = 0
@@ -547,9 +544,9 @@ begin
             set @stepProgramId = (select top 1 Id from @programIds)
 
             while ( @stepProgramId is not null)
-            begin							
+            begin
                 set @newStepDateTime = @startDateTime
-                set @campusId = (select top 1 Id from Campus order by newid()) 
+                set @campusId = (select top 1 Id from Campus order by newid())
 
                 set @maxStepTypeCount = (SELECT COUNT(Id) from StepType where StepProgramId = @stepProgramId);
 
@@ -558,7 +555,7 @@ begin
                 -- Add a row number so that the Steps can be added from last to first, to ensure that some data always exists in the current year.
                 set @stepsToAddCount = (SELECT FLOOR(RAND()*(@maxStepTypeCount)+1))
 
-    print N'Addings Steps: PersonAliasId: ' + CAST(@personAliasId AS nvarchar(10)) + ', ProgramId=' + CAST(@stepProgramId AS nvarchar(10)) + ', Steps='+ CAST(@stepsToAddCount AS nvarchar(10));
+                print N'Addings Steps: PersonAliasId: ' + CAST(@personAliasId AS nvarchar(10)) + ', ProgramId=' + CAST(@stepProgramId AS nvarchar(10)) + ', Steps='+ CAST(@stepsToAddCount AS nvarchar(10));
 
                 insert into @stepTypeIds
                         select top (@stepsToAddCount)
@@ -566,11 +563,11 @@ begin
                         ,ROW_NUMBER() OVER(order by [Order] DESC) rowNo
                         from StepType
                         where StepProgramId = @stepProgramId order by [Order]
-        
+
                 set @stepTypeId = (select top 1 Id from @stepTypeIds order by rowNo)
 
                 while ( @stepTypeId is not null)
-                begin			
+                begin
                     if (@stepCounter > 0 and @stepCounter % 100 = 0)
                     begin
                         print N'--> (' + CAST(@stepCounter AS nvarchar(10)) + ' added)...';
@@ -579,11 +576,11 @@ begin
                     -- Get the next Step Type to process.
                     delete from @stepTypeIds
                         where Id = @stepTypeId
-            
+
                     set @nextStepTypeId = (select top 1 Id from @stepTypeIds order by [rowNo])
 
                     -- Set the step status. If not the last step, make sure the status represents a completion.
-                    if ( @nextStepTypeId is null )						
+                    if ( @nextStepTypeId is null )
                         set @isCompleted = 1;
                     else
                         set @isCompleted = IIF((SELECT FLOOR(RAND()*100) ) <= @percentChanceOfLastStepCompletion, 1, 0 );
@@ -600,51 +597,51 @@ begin
                     else
                         set @completedDateTime = null
 
-    print N'Add Step: PersonAliasId=' + CAST(@personAliasId AS nvarchar(10)) + ', ProgramId=' + CAST(@stepProgramId AS nvarchar(10)) + ', StepTypeId='+ CAST(@stepTypeId AS nvarchar(10)) + ', Status=' + CAST(@statusId AS nvarchar(10));
+                    print N'Add Step: PersonAliasId=' + CAST(@personAliasId AS nvarchar(10)) + ', ProgramId=' + CAST(@stepProgramId AS nvarchar(10)) + ', StepTypeId='+ CAST(@stepTypeId AS nvarchar(10)) + ', Status=' + CAST(@statusId AS nvarchar(10));
 
                     insert into @stepTable
                                 ([StepTypeId]
-                                ,[StepStatusId] 
+                                ,[StepStatusId]
                                 ,[PersonAliasId]
                                 ,[CampusId]
                                 ,[StartDateTime]
-                                ,[CompletedDateTime]							
+                                ,[CompletedDateTime]
                                 ,[Order]
                                 ,[Guid]
                                 ,[CreatedDateTime]
                                 ,[CreatedByPersonAliasId]
-                                ,[ForeignKey])		
+                                ,[ForeignKey])
                             values (@stepTypeId
                                 ,@statusId
                                 ,@personAliasId
                                 ,@campusId
                                 ,@newStepDateTime
-                                ,@completedDateTime							
+                                ,@completedDateTime
                                 ,0
                                 ,NEWID()
                                 ,@createdDateTime
                                 ,@createdByPersonAliasId
                                 ,@stepSampleDataForeignKey)
-        
+
                     set @stepCounter += 1;
-                    set @stepTypeId = @nextStepTypeId;        
+                    set @stepTypeId = @nextStepTypeId;
                 end
 
                 -- Get the next Program to process.
                 delete from @programIdProcessList where Id = @stepProgramId
                 set @stepProgramId = (select top 1 Id from @programIdProcessList)
             end
-  
+
             -- Get the next person.
             delete from @personAliasIds where Id = @personAliasId
             set @personAliasId = (select top 1 Id from @personAliasIds)
         end
-    
+
         print N'--> Created ' + CAST(@stepCounter AS nvarchar(10)) + ' steps for ' + CAST(@personCounter AS nvarchar(10)) + ' people.';
-    
+
         insert into Step
                     ([StepTypeId]
-                    ,[StepStatusId] 
+                    ,[StepStatusId]
                     ,[PersonAliasId]
                     ,[CampusId]
                     ,[CompletedDateTime]
@@ -656,7 +653,7 @@ begin
                     ,[CreatedByPersonAliasId]
                     ,[ForeignKey])
             select  [StepTypeId]
-                    ,[StepStatusId] 
+                    ,[StepStatusId]
                     ,[PersonAliasId]
                     ,[CampusId]
                     ,[CompletedDateTime]
@@ -664,11 +661,11 @@ begin
                     ,[Order]
                     ,[Note]
                     ,[Guid]
-                    ,[CreatedDateTime]				
+                    ,[CreatedDateTime]
                     ,[CreatedByPersonAliasId]
                     ,[ForeignKey]
             from @stepTable
-            order by [PersonAliasId], [CompletedDateTime]	
+            order by [PersonAliasId], [CompletedDateTime]
     end
 
 end
