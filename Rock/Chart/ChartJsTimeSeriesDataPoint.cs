@@ -62,15 +62,9 @@ namespace Rock.Chart
         }
 
         /// <summary>
-        /// The value of this data point, plotted on the Y-axis
+        /// The value of this data point, plotted on the Y-axis.
         /// </summary>
         public decimal Value { get; set; }
-
-        /// <summary>
-        /// The name of the dataset to which this data point belongs.
-        /// Data points in the same dataset form a single time/value sequence.
-        /// </summary>
-        //public string DatasetName { get; set; }
 
         /// <summary>
         /// Gets or sets an arbitrary sort key that can be used to sort this data point within the data set.

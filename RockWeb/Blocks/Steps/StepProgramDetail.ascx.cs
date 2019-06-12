@@ -53,6 +53,15 @@ namespace RockWeb.Blocks.Steps
           DefaultValue = "Current||Year||",
           EnabledSlidingDateRangeTypes = "Last,Previous,Current,DateRange",
           Order = 2 )]
+    //[CodeEditorField( "Description Panel Template",
+    //    Key = AttributeKey.ResultsMessage,
+    //    Description = "The text (HTML) to display as the read-only description of this item.<span class='tip tip-lava'></span><span class='tip tip-html'></span>",
+    //    EditorMode = CodeEditorMode.Html,
+    //    EditorTheme = CodeEditorTheme.Rock,
+    //    EditorHeight = 400,
+    //    IsRequired = true,
+    //    DefaultValue = DescriptionTemplateDefaultValue,
+    //    Order = 3 )]
 
     #endregion Block Attributes
 
@@ -66,12 +75,27 @@ namespace RockWeb.Blocks.Steps
         protected static class AttributeKey
         {
             public const string ShowChart = "Show Chart";
-            public const string ChartStyle = "Chart Style";
             public const string SlidingDateRange = "SlidingDateRange";
-            public const string CombineChartSeries = "CombineChartSeries";
         }
 
-        #endregion Attribute Keys
+        #endregion
+
+        #region Attribute Default Values
+
+        private const string DescriptionTemplateDefaultValue = @"
+<h2>Steps Activity</h2>
+<p>
+    Growth Propensity measures your perceived mindset on a continuum between a growth mindset and
+    fixed mindset. These are two ends of a spectrum about how we view our own capacity and potential.
+</p>
+    {[chart type:'horizontalBar' chartheight:'200px' ]}
+    {% for motivatorThemeScore in MotivatorThemeScores %}
+        [[dataitem label:'{{ motivatorThemeScore.DefinedValue.Value }}' value:'{{ motivatorThemeScore.Value }}' fillcolor:'{{ motivatorThemeScore.DefinedValue | Attribute:'Color' }}' ]]
+        [[enddataitem]]
+    {% endfor %}
+    {[endchart]}
+";
+        #endregion
 
         #region Page Parameter Keys
 
@@ -148,7 +172,7 @@ namespace RockWeb.Blocks.Steps
         {
             base.OnInit( e );
 
-            InitializeBlockNotification( nbBlockStatus, pnlDetails );            
+            InitializeBlockNotification( nbBlockStatus, pnlDetails );
             InitializeStatusesGrid();
             InitializeWorkflowsGrid();
             InitializeActionButtons();
@@ -771,232 +795,6 @@ namespace RockWeb.Blocks.Steps
 
         #endregion
 
-        /*
-                #region StepWorkflow Events (old)
-
-                /// <summary>
-                /// Handles the SaveClick event of the dlgStepWorkflow control.
-                /// </summary>
-                /// <param name="sender">The source of the event.</param>
-                /// <param name="e">The <see cref="EventArgs"/> instance containing the event data.</param>
-                protected void dlgStepWorkflow_SaveClick( object sender, EventArgs e )
-                {
-                    StepWorkflowTrigger workflowTrigger = null;
-                    var guid = hfAddStepWorkflowGuid.Value.AsGuid();
-                    if ( !guid.IsEmpty() )
-                    {
-                        workflowTrigger = WorkflowsState.FirstOrDefault( l => l.Guid.Equals( guid ) );
-                    }
-
-                    if ( workflowTrigger == null )
-                    {
-                        workflowTrigger = new StepWorkflowTrigger();
-                    }
-                    try
-                    {
-                        workflowTrigger.WorkflowType = new WorkflowTypeService( new RockContext() ).Get( wpWorkflowType.SelectedValueAsId().Value );
-                    }
-                    catch { }
-
-                    workflowTrigger.WorkflowTypeId = wpWorkflowType.SelectedValueAsId().Value;
-                    workflowTrigger.TriggerType = ddlTriggerType.SelectedValueAsEnum<StepWorkflowTrigger.WorkflowTriggerCondition>();
-                    workflowTrigger.TypeQualifier = String.Format( "|{0}|{1}|", ddlPrimaryQualifier.SelectedValue, ddlSecondaryQualifier.SelectedValue );
-                    workflowTrigger.StepProgramId = 0;
-
-                    if ( !workflowTrigger.IsValid )
-                    {
-                        return;
-                    }
-                    if ( WorkflowsState.Any( a => a.Guid.Equals( workflowTrigger.Guid ) ) )
-                    {
-                        WorkflowsState.RemoveEntity( workflowTrigger.Guid );
-                    }
-
-                    WorkflowsState.Add( workflowTrigger );
-                    BindStepWorkflowsGrid();
-                    HideDialog();
-                }
-
-                /// <summary>
-                /// Handles the Delete event of the gWorkflows control.
-                /// </summary>
-                /// <param name="sender">The source of the event.</param>
-                /// <param name="e">The <see cref="RowEventArgs"/> instance containing the event data.</param>
-                protected void gWorkflows_Delete( object sender, RowEventArgs e )
-                {
-                    Guid rowGuid = ( Guid ) e.RowKeyValue;
-                    WorkflowsState.RemoveEntity( rowGuid );
-
-                    BindStepWorkflowsGrid();
-                }
-
-                /// <summary>
-                /// Handles the GridRebind event of the gWorkflows control.
-                /// </summary>
-                /// <param name="sender">The source of the event.</param>
-                /// <param name="e">The <see cref="EventArgs"/> instance containing the event data.</param>
-                private void gWorkflows_GridRebind( object sender, EventArgs e )
-                {
-                    BindStepWorkflowsGrid();
-                }
-
-                /// <summary>
-                /// Handles the Edit event of the gWorkflows control.
-                /// </summary>
-                /// <param name="sender">The source of the event.</param>
-                /// <param name="e">The <see cref="RowEventArgs"/> instance containing the event data.</param>
-                protected void gWorkflows_Edit( object sender, RowEventArgs e )
-                {
-                    Guid stepWorkflowGuid = ( Guid ) e.RowKeyValue;
-                    gWorkflows_ShowEdit( stepWorkflowGuid );
-                }
-
-                /// <summary>
-                /// Shows the edit dialog for the specified Workflow Trigger.
-                /// </summary>
-                /// <param name="triggerGuid">The workflow trigger unique identifier.</param>
-                protected void gWorkflows_ShowEdit( Guid triggerGuid )
-                {
-                    var workflowTrigger = WorkflowsState.FirstOrDefault( l => l.Guid.Equals( triggerGuid ) );
-
-                    if ( workflowTrigger != null )
-                    {
-                        wpWorkflowType.SetValue( workflowTrigger.WorkflowTypeId );
-                        ddlTriggerType.SelectedValue = workflowTrigger.TriggerType.ToString();
-                    }
-
-
-                    hfAddStepWorkflowGuid.Value = triggerGuid.ToString();
-                    ShowDialog( "StepWorkflows", true );
-                    UpdateTriggerQualifiers();
-                }
-
-                /// <summary>
-                /// Handles the Add event of the gWorkflows control.
-                /// </summary>
-                /// <param name="sender">The source of the event.</param>
-                /// <param name="e">The <see cref="EventArgs"/> instance containing the event data.</param>
-                private void gWorkflows_Add( object sender, EventArgs e )
-                {
-                    gWorkflows_ShowEdit( Guid.Empty );
-                }
-
-                /// <summary>
-                /// Handles the SelectedIndexChanged event of the ddlTriggerType control.
-                /// </summary>
-                /// <param name="sender">The source of the event.</param>
-                /// <param name="e">The <see cref="EventArgs"/> instance containing the event data.</param>
-                protected void ddlTriggerType_SelectedIndexChanged( object sender, EventArgs e )
-                {
-                    UpdateTriggerQualifiers();
-                }
-
-                /// <summary>
-                /// Updates the trigger qualifiers.
-                /// </summary>
-                private void UpdateTriggerQualifiers()
-                {
-                    using ( var rockContext = new RockContext() )
-                    {
-                        var qualifierValues = new String[2];
-
-                        var workflowTrigger = WorkflowsState.FirstOrDefault( l => l.Guid.Equals( hfAddStepWorkflowGuid.Value.AsGuid() ) );
-
-                        var sStepWorkflowTriggerType = ddlTriggerType.SelectedValueAsEnum<StepWorkflowTrigger.WorkflowTriggerCondition>();
-
-                        int stepProgramId = int.Parse( hfStepProgramId.Value );
-
-                        switch ( sStepWorkflowTriggerType )
-                        {
-                            case StepWorkflowTrigger.WorkflowTriggerCondition.Manual:
-                                {
-                                    ddlPrimaryQualifier.Visible = false;
-                                    ddlPrimaryQualifier.Items.Clear();
-                                    ddlSecondaryQualifier.Visible = false;
-                                    ddlSecondaryQualifier.Items.Clear();
-                                    break;
-                                }
-                            case StepWorkflowTrigger.WorkflowTriggerCondition.StatusChanged:
-                                {
-                                    var statusList = new StepStatusService( rockContext ).Queryable().Where( s => s.StepProgramId == stepProgramId ).ToList();
-                                    ddlPrimaryQualifier.Label = "From";
-                                    ddlPrimaryQualifier.Visible = true;
-                                    ddlPrimaryQualifier.Items.Clear();
-                                    ddlPrimaryQualifier.Items.Add( new ListItem( string.Empty, string.Empty ) );
-                                    foreach ( var status in statusList )
-                                    {
-                                        ddlPrimaryQualifier.Items.Add( new ListItem( status.Name, status.Id.ToString().ToUpper() ) );
-                                    }
-                                    ddlSecondaryQualifier.Label = "To";
-                                    ddlSecondaryQualifier.Visible = true;
-                                    ddlSecondaryQualifier.Items.Clear();
-                                    ddlSecondaryQualifier.Items.Add( new ListItem( string.Empty, string.Empty ) );
-                                    foreach ( var status in statusList )
-                                    {
-                                        ddlSecondaryQualifier.Items.Add( new ListItem( status.Name, status.Id.ToString().ToUpper() ) );
-                                    }
-                                    break;
-                                }
-                        }
-
-                        if ( workflowTrigger != null )
-                        {
-                            if ( workflowTrigger.TriggerType == sStepWorkflowTriggerType )
-                            {
-                                qualifierValues = workflowTrigger.TypeQualifier.SplitDelimitedValues();
-                                if ( ddlPrimaryQualifier.Visible && qualifierValues.Length > 0 )
-                                {
-                                    ddlPrimaryQualifier.SelectedValue = qualifierValues[0];
-                                }
-
-                                if ( ddlSecondaryQualifier.Visible && qualifierValues.Length > 1 )
-                                {
-                                    ddlSecondaryQualifier.SelectedValue = qualifierValues[1];
-                                }
-                            }
-                        }
-                    }
-
-                }
-
-                /// <summary>
-                /// Binds the workflow triggers grid.
-                /// </summary>
-                private void BindStepWorkflowsGrid()
-                {
-                    if ( WorkflowsState != null )
-                    {
-                        SetStepWorkflowListOrder( WorkflowsState );
-                        gWorkflows.DataSource = WorkflowsState.Select( c => new
-                        {
-                            c.Id,
-                            c.Guid,
-                            WorkflowType = c.WorkflowType.Name,
-                            Trigger = c.TriggerType.ConvertToString()
-                        } ).ToList();
-                    }
-
-                    gWorkflows.DataBind();
-                }
-
-                /// <summary>
-                /// Sets the workflow trigger list order.
-                /// </summary>
-                /// <param name="triggerList">The workflow trigger list.</param>
-                private void SetStepWorkflowListOrder( List<StepWorkflowTrigger> triggerList )
-                {
-                    if ( triggerList != null )
-                    {
-                        if ( triggerList.Any() )
-                        {
-                            triggerList.OrderBy( c => c.WorkflowType.Name ).ThenBy( c => c.TriggerType.ConvertToString() ).ToList();
-                        }
-                    }
-                }
-
-                #endregion
-    */
-
         #endregion
 
         #region Data Context
@@ -1526,27 +1324,38 @@ namespace RockWeb.Blocks.Steps
         /// </summary>
         private void RefreshChart()
         {
-            // Add scripts for Chart.js components
-            RockPage.AddScriptLink( "~/Scripts/moment.min.js", true );
-            RockPage.AddScriptLink( "~/Scripts/Chartjs/Chart.js", true );
-
             // Get chart data and add client script to construct the chart.
             var chartDateRange = SlidingDateRangePicker.CalculateDateRangeFromDelimitedValues( drpSlidingDateRange.DelimitedValues ?? "-1||" );
 
             var chartFactory = this.GetChartJsFactory( chartDateRange.Start, chartDateRange.End );
 
+            // If no data, show a notification.
+            nbStepsActivityLineChartMessage.Visible = !chartFactory.HasData;
+
+            if ( !chartFactory.HasData )
+            {
+                return;
+            }
+
+            // Update the chart.
+            lavStepsActivityBarChart.Text = chartFactory.GetLavaChartShortCodeText();
+
+            // TODO: Reinstate this code to render Chart.js using JavaScript.
+            /*
+            // Add scripts for Chart.js components
+            RockPage.AddScriptLink( "~/Scripts/moment.min.js", true );
+            RockPage.AddScriptLink( "~/Scripts/Chartjs/Chart.js", true );
+
             var chartDataJson = chartFactory.GetJson();
 
             string script = string.Format( @"
-var barCtx = $('#{0}')[0].getContext('2d');
-var barChart = new Chart(barCtx, {1});",
-                                            barChartCanvas.ClientID,
-                                            chartDataJson );
+            var barCtx = $('#{0}')[0].getContext('2d');
+            var barChart = new Chart(barCtx, {1});",
+                                    barChartCanvas.ClientID,
+                                    chartDataJson );
 
             ScriptManager.RegisterStartupScript( this.Page, this.GetType(), "stepProgramActivityBarChartScript", script, true );
-
-            // If no data, show a notification.
-            nbStepsActivityLineChartMessage.Visible = !chartFactory.HasData;
+            */
         }
 
         /// <summary>
@@ -1596,7 +1405,10 @@ var barChart = new Chart(barCtx, {1});",
 
             var stepTypeDatasets = stepTypeDataPoints.Select( x => x.DatasetName ).Distinct().ToList();
 
-            var dataSource = new ChartJsTimeSeriesDataFactory<ChartJsTimeSeriesDataPoint>();
+            var factory = new ChartJsTimeSeriesDataFactory<ChartJsTimeSeriesDataPoint>();
+
+            factory.TimeScale = ChartJsTimeSeriesTimeScaleSpecifier.Month;
+            factory.ChartHeight = 280;
 
             foreach ( var stepTypeDataset in stepTypeDatasets )
             {
@@ -1610,10 +1422,10 @@ var barChart = new Chart(barCtx, {1});",
                                         .Cast<IChartJsTimeSeriesDataPoint>()
                                         .ToList();
 
-                dataSource.Datasets.Add( dataset );
+                factory.Datasets.Add( dataset );
             }
 
-            return dataSource;
+            return factory;
         }
 
         #endregion

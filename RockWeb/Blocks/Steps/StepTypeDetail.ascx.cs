@@ -1001,7 +1001,7 @@ namespace RockWeb.Blocks.Steps
             var stepType = GetStepType( forceLoadFromContext: true );
 
             if ( stepType != null )
-            {                
+            {
                 if ( !stepType.IsAuthorized( Authorization.ADMINISTRATE, this.CurrentPerson ) )
                 {
                     mdDeleteWarning.Show( "You are not authorized to delete this item.", ModalAlertType.Information );
@@ -1238,10 +1238,13 @@ var barChart = new Chart(barCtx, {1});",
                 } );
 
             var allDataPoints = startedSeriesDataPoints.Union( completedSeriesDataPoints ).OrderBy( x => x.SortKey ).ThenBy( x => x.DateTime );
-            
+
             var dataSetNames = allDataPoints.Select( x => x.DatasetName ).Distinct().ToList();
 
-            var dataSource = new ChartJsTimeSeriesDataFactory<ChartJsTimeSeriesDataPoint>();
+            var factory = new ChartJsTimeSeriesDataFactory<ChartJsTimeSeriesDataPoint>();
+
+            factory.TimeScale = ChartJsTimeSeriesTimeScaleSpecifier.Month;
+            factory.ChartHeight = 280;
 
             foreach ( var datasetName in dataSetNames )
             {
@@ -1255,10 +1258,10 @@ var barChart = new Chart(barCtx, {1});",
                                         .Cast<IChartJsTimeSeriesDataPoint>()
                                         .ToList();
 
-                dataSource.Datasets.Add( dataset );
+                factory.Datasets.Add( dataset );
             }
 
-            return dataSource;
+            return factory;
         }
 
         #endregion

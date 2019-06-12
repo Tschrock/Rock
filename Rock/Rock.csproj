@@ -391,7 +391,6 @@
     <Compile Include="Attribute\WorkflowTypeFieldAttribute.cs" />
     <Compile Include="Chart\ChartJsTimeSeriesDataFactory.cs" />
     <Compile Include="Chart\FlotChartDataSet.cs" />
-    <Compile Include="Chart\ChartJsTimeSeriesDataPoint.cs" />
     <Compile Include="Chart\TimeSeriesChartDataPoint.cs" />
     <Compile Include="Communication\SmsActions\SmsActionComponent.cs" />
     <Compile Include="Communication\SmsActions\SmsActionContainer.cs" />
@@ -2471,6 +2470,7 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="bin\Auth\" />
+    <Folder Include="Chart\ChartJs\" />
     <Folder Include="Pbx\Provider\" />
     <Folder Include="Web\UI\Controls\Finance\" />
   </ItemGroup>
